@@ -2,9 +2,12 @@
 
 namespace App\Services\Auth;
 
+use App\Mail\Auth\SendOtp;
 use App\Models\OtpCode;
 use App\Models\User;
+use App\Services\SmsService;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Validation\ValidationException;
 
 class ForgotPasswordService
@@ -17,8 +20,10 @@ class ForgotPasswordService
 
     private int $OTP_EXPIRES_IN_MINUTES;
 
-    public function __construct()
-    {
+    public function __construct(
+        private SmsService $smsService
+
+    ) {
         $this->OTP_EXPIRES_IN_MINUTES = (int) config('services.otp.expires_in_minutes', 10);
         $this->OTP_LENGTH = (int) config('services.otp.length', 6);
         $this->OTP_TYPE = config('services.otp.otp_type', 'reset_password');
@@ -30,11 +35,13 @@ class ForgotPasswordService
         $identifier = trim((string) $validated['email_or_phone']);
         $user = $this->resolveUserByMethod($identifier, $method);
 
-        DB::transaction(function () use ($user, $method, $identifier): void {
+        $otp = DB::transaction(function () use ($user, $method, $identifier): string {
             $this->invalidateExistingOtps($user, $method, $identifier);
 
-            $this->createOtp($user, $method, $identifier);
+            return $this->createOtp($user, $method, $identifier);
         });
+
+        $this->sendOtp($user, $method, $identifier, $otp);
     }
 
     public function verifyResetOtp(array $validated): void
@@ -148,11 +155,12 @@ class ForgotPasswordService
         $identifier = trim((string) $validated['email_or_phone']);
         $user = $this->resolveUserByMethod($identifier, $method);
 
-        DB::transaction(function () use ($user, $method, $identifier): void {
+        $otp = DB::transaction(function () use ($user, $method, $identifier): string {
             $this->invalidateExistingOtps($user, $method, $identifier);
 
-            $this->createOtp($user, $method, $identifier);
+            return $this->createOtp($user, $method, $identifier);
         });
+        $this->sendOtp($user, $method, $identifier, $otp);
     }
 
     private function invalidateExistingOtps(User $user, string $method, string $identifier): void
@@ -191,18 +199,32 @@ class ForgotPasswordService
 
         return (string) random_int($min, $max);
     }
-    private function createOtp(User $user, string $method, string $identifier): void
+    private function createOtp(User $user, string $method, string $identifier): string
     {
+        $otp = $this->generateOtp();
 
         OtpCode::create([
             'user_type' => $this->USER_TYPE,
             'user_id' => $user->id,
             'email' => $method === 'email' ? $identifier : null,
             'phone' => $method === 'phone' ? $identifier : null,
-            'code' => $this->generateOtp(),
+            'code' => $otp,
             'type' => $this->OTP_TYPE,
             'expires_at' => now()->addMinutes($this->OTP_EXPIRES_IN_MINUTES),
             'verified_at' => null,
         ]);
+
+        return $otp;
+    }
+
+    private function sendOtp(User $user, string $method, string $identifier, string $otp): void
+    {
+        if ($method === 'email') {
+            // Send OTP via email (you can use Laravel's Mailables or any email service)
+            Mail::to($user->email)->send(new SendOtp($otp));
+        } else {
+            // Send OTP via SMS using the SmsService
+            $this->smsService->send($identifier, "Your password reset OTP is: $otp");
+        }
     }
 }
