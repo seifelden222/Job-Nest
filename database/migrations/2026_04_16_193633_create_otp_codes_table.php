@@ -18,7 +18,6 @@ return new class extends Migration
             $table->timestamp('expires_at');
             $table->timestamp('verified_at')->nullable();
             $table->timestamps();
-
             $table->index(['user_type', 'user_id']);
             $table->index(['email', 'type']);
         });

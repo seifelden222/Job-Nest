@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class OtpCode extends Model
 {
@@ -13,6 +14,7 @@ class OtpCode extends Model
         'user_type',
         'user_id',
         'email',
+        'phone',
         'code',
         'type',
         'expires_at',
@@ -27,21 +29,8 @@ class OtpCode extends Model
         ];
     }
 
-    public function user()
+    public function user(): BelongsTo
     {
-        if ($this->user_type !== 'user') {
-            return null;
-        }
-
         return $this->belongsTo(User::class, 'user_id');
-    }
-
-    public function admin()
-    {
-        if ($this->user_type !== 'admin') {
-            return null;
-        }
-
-        return $this->belongsTo(Admin::class, 'user_id');
     }
 }

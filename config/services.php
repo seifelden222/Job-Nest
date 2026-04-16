@@ -34,5 +34,12 @@ return [
             'channel' => env('SLACK_BOT_USER_DEFAULT_CHANNEL'),
         ],
     ],
+    'otp' => [
+        'expires_in_minutes' => env('OTP_EXPIRES_IN_MINUTES', 10),
+        'length' => env('OTP_LENGTH', 6),
+        'otp_type'=> env('OTP_TYPE', 'reset_password'),
+        'user_type' => env('OTP_USER_TYPE', 'user'),
+
+    ],
 
 ];

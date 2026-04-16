@@ -3,19 +3,26 @@
 namespace App\Http\Controllers\Api\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Api\Auth\ForgotPasswordRequest;
 use App\Http\Requests\Api\Auth\LoginRequest;
 use App\Http\Requests\Api\Auth\RegisterStepOneRequest;
 use App\Http\Requests\Api\Auth\RegisterStepThreeRequest;
 use App\Http\Requests\Api\Auth\RegisterStepTwoRequest;
+use App\Http\Requests\Api\Auth\ResetPasswordRequest;
+use App\Http\Requests\Api\Auth\VerifyResetOtpRequest;
 use App\Http\Resources\Auth\UserResource;
 use App\Models\User;
 use App\Services\Auth\AuthService;
+use App\Services\Auth\ForgotPasswordService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class AuthController extends Controller
 {
-    public function __construct(private AuthService $authService) {}
+    public function __construct(
+        private AuthService $authService,
+        private ForgotPasswordService $forgotPasswordService,
+    ) {}
 
     public function registerStepOne(RegisterStepOneRequest $request): JsonResponse
     {
@@ -98,6 +105,33 @@ class AuthController extends Controller
 
         return response()->json([
             'message' => 'Logged out successfully.',
+        ]);
+    }
+
+    public function forgotPassword(ForgotPasswordRequest $request): JsonResponse
+    {
+        $this->forgotPasswordService->sendResetOtp($request->validated());
+
+        return response()->json([
+            'message' => 'OTP sent successfully.',
+        ]);
+    }
+
+    public function verifyResetOtp(VerifyResetOtpRequest $request): JsonResponse
+    {
+        $this->forgotPasswordService->verifyResetOtp($request->validated());
+
+        return response()->json([
+            'message' => 'OTP verified successfully.',
+        ]);
+    }
+
+    public function resetPassword(ResetPasswordRequest $request): JsonResponse
+    {
+        $this->forgotPasswordService->resetPassword($request->validated());
+
+        return response()->json([
+            'message' => 'Password reset successfully.',
         ]);
     }
 
