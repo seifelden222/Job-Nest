@@ -2,24 +2,21 @@
 
 namespace App\Services\Auth;
 
+use App\Http\Requests\Api\Auth\RegisterStepThreeRequest;
 use App\Models\CompanyProfile;
 use App\Models\PersonProfile;
 use App\Models\User;
-use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
+use Laravel\Sanctum\PersonalAccessToken;
 
 class AuthService
 {
-    /**
-     * @param  array<string, mixed>  $validated
-     * @return array{user: User, token: string}
-     */
     public function registerStepOne(array $validated): array
     {
         return DB::transaction(function () use ($validated): array {
-            $user = User::query()->create([
+            $user = User::create([
                 'name' => $validated['name'],
                 'email' => $validated['email'],
                 'phone' => $validated['phone'] ?? null,
@@ -31,70 +28,42 @@ class AuthService
             $this->createProfileForUser($user, $validated);
 
             return [
-                'user' => $this->loadUserRelations($user),
+                'user' => $this->loadUserProfiles($user),
                 'token' => $user->createToken('auth_token')->plainTextToken,
             ];
         });
     }
 
-    /**
-     * @param  array<string, mixed>  $validated
-     */
     public function registerStepTwo(User $user, array $validated): User
     {
         return DB::transaction(function () use ($user, $validated): User {
             if ($user->isPerson()) {
-                $this->updatePersonStepTwo($user->personProfile()->firstOrFail(), $validated);
+                $this->updatePersonStepTwo($user->personProfile, $validated);
             }
 
             if ($user->isCompany()) {
-                $this->updateCompanyStepTwo($user->companyProfile()->firstOrFail(), $validated);
+                $this->updateCompanyStepTwo($user->companyProfile, $validated);
             }
 
-            return $this->refreshUser($user);
+            return $this->loadUserProfiles($user->fresh());
         });
     }
 
-    /**
-     * @param  array<string, mixed>  $validated
-     * @param  array<int, UploadedFile>  $certificates
-     */
-    public function registerStepThree(
-        User $user,
-        array $validated,
-        ?UploadedFile $profilePhoto = null,
-        ?UploadedFile $cv = null,
-        array $certificates = [],
-        ?UploadedFile $logo = null,
-    ): User {
-        return DB::transaction(function () use ($user, $validated, $profilePhoto, $cv, $certificates, $logo): User {
+    public function registerStepThree(RegisterStepThreeRequest $request, User $user, array $validated): User
+    {
+        return DB::transaction(function () use ($request, $user, $validated): User {
             if ($user->isPerson()) {
-                $this->updatePersonStepThree(
-                    user: $user,
-                    profile: $user->personProfile()->firstOrFail(),
-                    validated: $validated,
-                    profilePhoto: $profilePhoto,
-                    cv: $cv,
-                    certificates: $certificates,
-                );
+                $this->updatePersonStepThree($request, $user, $validated);
             }
 
             if ($user->isCompany()) {
-                $this->updateCompanyStepThree(
-                    profile: $user->companyProfile()->firstOrFail(),
-                    validated: $validated,
-                    logo: $logo,
-                );
+                $this->updateCompanyStepThree($request, $user->companyProfile, $validated);
             }
 
-            return $this->refreshUser($user);
+            return $this->loadUserProfiles($user->fresh());
         });
     }
 
-    /**
-     * @param  array<string, mixed>  $validated
-     * @return array{user: User, token: string}
-     */
     public function login(array $validated): array
     {
         $user = User::query()
@@ -108,28 +77,30 @@ class AuthService
         }
 
         return [
-            'user' => $this->loadUserRelations($user),
+            'user' => $this->loadUserProfiles($user),
             'token' => $user->createToken('auth_token')->plainTextToken,
         ];
     }
 
     public function me(User $user): User
     {
-        return $this->loadUserRelations($user);
+        return $this->loadUserProfiles($user);
     }
 
     public function logout(User $user): void
     {
-        $user->currentAccessToken()?->delete();
+        $accessToken = $user->currentAccessToken();
+
+        if ($accessToken instanceof PersonalAccessToken) {
+            $accessToken->delete();
+        }
     }
 
-    /**
-     * @param  array<string, mixed>  $validated
-     */
     private function createProfileForUser(User $user, array $validated): void
     {
         if ($user->isPerson()) {
-            $user->personProfile()->create([
+            PersonProfile::create([
+                'user_id' => $user->id,
                 'university' => $validated['university'] ?? null,
                 'major' => $validated['major'] ?? null,
                 'onboarding_step' => 1,
@@ -139,7 +110,8 @@ class AuthService
             return;
         }
 
-        $user->companyProfile()->create([
+        CompanyProfile::create([
+            'user_id' => $user->id,
             'company_name' => $validated['company_name'],
             'website' => $validated['website'] ?? null,
             'company_size' => $validated['company_size'] ?? null,
@@ -150,9 +122,6 @@ class AuthService
         ]);
     }
 
-    /**
-     * @param  array<string, mixed>  $validated
-     */
     private function updatePersonStepTwo(PersonProfile $profile, array $validated): void
     {
         $profile->update([
@@ -164,9 +133,6 @@ class AuthService
         ]);
     }
 
-    /**
-     * @param  array<string, mixed>  $validated
-     */
     private function updateCompanyStepTwo(CompanyProfile $profile, array $validated): void
     {
         $profile->update([
@@ -179,43 +145,32 @@ class AuthService
         ]);
     }
 
-    /**
-     * @param  array<string, mixed>  $validated
-     * @param  array<int, UploadedFile>  $certificates
-     */
-    private function updatePersonStepThree(
-        User $user,
-        PersonProfile $profile,
-        array $validated,
-        ?UploadedFile $profilePhoto,
-        ?UploadedFile $cv,
-        array $certificates,
-    ): void {
-        if ($profilePhoto !== null) {
+    private function updatePersonStepThree(RegisterStepThreeRequest $request, User $user, array $validated): void
+    {
+        if ($request->hasFile('profile_photo')) {
             $user->update([
-                'profile_photo' => $profilePhoto->store('profile-photos', 'public'),
+                'profile_photo' => $request->file('profile_photo')->store('profile-photos', 'public'),
             ]);
         }
 
-        if ($cv !== null) {
-            $cv->store('documents/cv', 'public');
+        if ($request->hasFile('cv')) {
+            $request->file('cv')->store('documents/cv', 'public');
         }
 
-        foreach ($certificates as $certificate) {
-            $certificate->store('documents/certificates', 'public');
+        if ($request->hasFile('certificates')) {
+            foreach ($request->file('certificates') as $certificate) {
+                $certificate->store('documents/certificates', 'public');
+            }
         }
 
-        $profile->update([
-            'about' => $validated['about'] ?? $profile->about,
+        $user->personProfile->update([
+            'about' => $validated['about'] ?? $user->personProfile->about,
             'onboarding_step' => 3,
             'is_profile_completed' => true,
         ]);
     }
 
-    /**
-     * @param  array<string, mixed>  $validated
-     */
-    private function updateCompanyStepThree(CompanyProfile $profile, array $validated, ?UploadedFile $logo): void
+    private function updateCompanyStepThree(RegisterStepThreeRequest $request, CompanyProfile $profile, array $validated): void
     {
         $attributes = [
             'about' => $validated['about'] ?? $profile->about,
@@ -223,22 +178,15 @@ class AuthService
             'is_profile_completed' => true,
         ];
 
-        if ($logo !== null) {
-            $attributes['logo'] = $logo->store('company-logos', 'public');
+        if ($request->hasFile('logo')) {
+            $attributes['logo'] = $request->file('logo')->store('company-logos', 'public');
         }
 
         $profile->update($attributes);
     }
 
-    private function loadUserRelations(User $user): User
+    private function loadUserProfiles(User $user): User
     {
         return $user->loadMissing(['personProfile', 'companyProfile']);
-    }
-
-    private function refreshUser(User $user): User
-    {
-        return User::query()
-            ->with(['personProfile', 'companyProfile'])
-            ->findOrFail($user->getKey());
     }
 }
