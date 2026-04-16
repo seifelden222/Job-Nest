@@ -9,12 +9,24 @@ return new class extends Migration
     /**
      * Run the migrations.
      */
+    // users
+
+    // - profile_photo
+    // - status                -- active, inactive, suspended
+    // - email_verified_at
+    // - remember_token
+    // - created_at
+    // - updated_at
     public function up(): void
     {
         Schema::create('users', function (Blueprint $table) {
             $table->id();
             $table->string('name');
             $table->string('email')->unique();
+            $table->integer('phone');
+            $table->enum('account_type', ['person', 'company'])->default('person');
+            $table->string('profile_photo')->nullable();
+            $table->enum('status', ['active', 'inactive', 'suspended'])->default('active');
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
             $table->rememberToken();
