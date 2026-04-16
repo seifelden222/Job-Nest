@@ -1,0 +1,4 @@
+[mcp_servers.laravel-boost]
+command = "php"
+args = ["artisan", "boost:mcp"]
+cwd = "/home/seifelden-hamdy/Coding/Web/BackProject-PHP/laravel12/SELF_Projects/shawi/Job-Nest"
