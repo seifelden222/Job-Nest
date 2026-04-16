@@ -185,6 +185,19 @@ class AuthService
         $profile->update($attributes);
     }
 
+    public function changePassword(User $user, array $validated): void
+    {
+        if (! Hash::check($validated['old_password'], $user->password)) {
+            throw ValidationException::withMessages([
+                'old_password' => ['The provided old password is incorrect.'],
+            ]);
+        }
+
+        $user->update([
+            'password' => Hash::make($validated['password']),
+        ]);
+    }
+
     private function loadUserProfiles(User $user): User
     {
         return $user->loadMissing(['personProfile', 'companyProfile']);

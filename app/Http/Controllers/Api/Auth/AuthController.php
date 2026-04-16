@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Api\Auth\ChangePasswordRequest;
 use App\Http\Requests\Api\Auth\ForgotPasswordRequest;
 use App\Http\Requests\Api\Auth\LoginRequest;
 use App\Http\Requests\Api\Auth\RegisterStepOneRequest;
@@ -10,6 +11,7 @@ use App\Http\Requests\Api\Auth\RegisterStepThreeRequest;
 use App\Http\Requests\Api\Auth\RegisterStepTwoRequest;
 use App\Http\Requests\Api\Auth\ResetPasswordRequest;
 use App\Http\Requests\Api\Auth\VerifyResetOtpRequest;
+use App\Http\Requests\Api\Auth\ResendResetOtpRequest;
 use App\Http\Resources\Auth\UserResource;
 use App\Models\User;
 use App\Services\Auth\AuthService;
@@ -117,6 +119,14 @@ class AuthController extends Controller
         ]);
     }
 
+    public function resendResetOtp(ResendResetOtpRequest $request): JsonResponse
+    {
+        $this->forgotPasswordService->resendResetOtp($request->validated());
+
+        return response()->json([
+            'message' => 'OTP resent successfully.',
+        ]);
+    }
     public function verifyResetOtp(VerifyResetOtpRequest $request): JsonResponse
     {
         $this->forgotPasswordService->verifyResetOtp($request->validated());
@@ -134,6 +144,24 @@ class AuthController extends Controller
             'message' => 'Password reset successfully.',
         ]);
     }
+
+    public function changePassword(ChangePasswordRequest $request): JsonResponse
+    {
+
+        try {
+            $this->authService->changePassword($request->user(), $request->validated());
+
+            return response()->json([
+                'message' => 'Password changed successfully.',
+            ]);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'message' => 'Password change failed.',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
 
     private function authResponse(
         string $message,

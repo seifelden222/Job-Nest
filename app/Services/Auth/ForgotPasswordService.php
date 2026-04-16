@@ -4,7 +4,6 @@ namespace App\Services\Auth;
 
 use App\Models\OtpCode;
 use App\Models\User;
-use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
@@ -18,7 +17,8 @@ class ForgotPasswordService
 
     private int $OTP_EXPIRES_IN_MINUTES;
 
-    public function __construct(){
+    public function __construct()
+    {
         $this->OTP_EXPIRES_IN_MINUTES = (int) config('services.otp.expires_in_minutes', 10);
         $this->OTP_LENGTH = (int) config('services.otp.length', 6);
         $this->OTP_TYPE = config('services.otp.otp_type', 'reset_password');
@@ -33,16 +33,7 @@ class ForgotPasswordService
         DB::transaction(function () use ($user, $method, $identifier): void {
             $this->invalidateExistingOtps($user, $method, $identifier);
 
-            OtpCode::create([
-                'user_type' => $this->USER_TYPE,
-                'user_id' => $user->id,
-                'email' => $method === 'email' ? $identifier : null,
-                'phone' => $method === 'phone' ? $identifier : null,
-                'code' => $this->generateOtp(),
-                'type' => $this->OTP_TYPE,
-                'expires_at' => now()->addMinutes($this->OTP_EXPIRES_IN_MINUTES),
-                'verified_at' => null,
-            ]);
+            $this->createOtp($user, $method, $identifier);
         });
     }
 
@@ -75,8 +66,8 @@ class ForgotPasswordService
             ->where('expires_at', '>', now())
             ->when(
                 $method === 'email',
-                fn ($query) => $query->where('email', $identifier),
-                fn ($query) => $query->where('phone', $identifier)
+                fn($query) => $query->where('email', $identifier),
+                fn($query) => $query->where('phone', $identifier)
             )
             ->latest('id')
             ->first();
@@ -137,8 +128,8 @@ class ForgotPasswordService
             ->where('expires_at', '>', now())
             ->when(
                 $method === 'email',
-                fn ($query) => $query->where('email', $identifier),
-                fn ($query) => $query->where('phone', $identifier)
+                fn($query) => $query->where('email', $identifier),
+                fn($query) => $query->where('phone', $identifier)
             )
             ->latest('id')
             ->first();
@@ -151,6 +142,18 @@ class ForgotPasswordService
 
         return $otpCode;
     }
+    public function resendResetOtp(array $validated): void
+    {
+        $method = $validated['method'];
+        $identifier = trim((string) $validated['email_or_phone']);
+        $user = $this->resolveUserByMethod($identifier, $method);
+
+        DB::transaction(function () use ($user, $method, $identifier): void {
+            $this->invalidateExistingOtps($user, $method, $identifier);
+
+            $this->createOtp($user, $method, $identifier);
+        });
+    }
 
     private function invalidateExistingOtps(User $user, string $method, string $identifier): void
     {
@@ -161,8 +164,8 @@ class ForgotPasswordService
             ->whereNull('verified_at')
             ->when(
                 $method === 'email',
-                fn ($query) => $query->where('email', $identifier),
-                fn ($query) => $query->where('phone', $identifier)
+                fn($query) => $query->where('email', $identifier),
+                fn($query) => $query->where('phone', $identifier)
             )
             ->delete();
     }
@@ -175,8 +178,8 @@ class ForgotPasswordService
             ->where('type', $this->OTP_TYPE)
             ->when(
                 $method === 'email',
-                fn ($query) => $query->where('email', $identifier),
-                fn ($query) => $query->where('phone', $identifier)
+                fn($query) => $query->where('email', $identifier),
+                fn($query) => $query->where('phone', $identifier)
             )
             ->delete();
     }
@@ -187,5 +190,19 @@ class ForgotPasswordService
         $max = (10 ** $this->OTP_LENGTH) - 1;
 
         return (string) random_int($min, $max);
+    }
+    private function createOtp(User $user, string $method, string $identifier): void
+    {
+
+        OtpCode::create([
+            'user_type' => $this->USER_TYPE,
+            'user_id' => $user->id,
+            'email' => $method === 'email' ? $identifier : null,
+            'phone' => $method === 'phone' ? $identifier : null,
+            'code' => $this->generateOtp(),
+            'type' => $this->OTP_TYPE,
+            'expires_at' => now()->addMinutes($this->OTP_EXPIRES_IN_MINUTES),
+            'verified_at' => null,
+        ]);
     }
 }
