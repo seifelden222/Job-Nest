@@ -6,9 +6,11 @@ use App\Models\Language;
 use App\Models\OtpCode;
 use App\Models\Skill;
 use App\Models\User;
+use App\Services\Auth\AuthTokenService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 
@@ -101,6 +103,31 @@ test('person can complete register step 2 with skills and languages', function (
     $this->assertDatabaseHas('user_languages', ['user_id' => $user->id, 'language_id' => $language->id]);
 });
 
+test('company can complete register step 2', function () {
+    $user = User::factory()->company()->create();
+    $user->companyProfile()->create([
+        'user_id' => $user->id,
+        'company_name' => 'Tech Corp Ltd',
+        'onboarding_step' => 1,
+    ]);
+
+    $this->withToken($user->createToken('test')->plainTextToken)
+        ->postJson(route('auth.register.step2'), [
+            'website' => 'https://updated-techcorp.com',
+            'company_size' => '201-500',
+            'industry' => 'Software',
+            'location' => 'Giza',
+            'about' => 'Scaling a hiring platform.',
+        ])
+        ->assertSuccessful();
+
+    $this->assertDatabaseHas('company_profiles', [
+        'user_id' => $user->id,
+        'website' => 'https://updated-techcorp.com',
+        'onboarding_step' => 2,
+    ]);
+});
+
 // ─── Register Step 3 ────────────────────────────────────────────────────────
 
 test('person can complete register step 3 and upload files', function () {
@@ -137,7 +164,8 @@ test('user can login with correct credentials', function () {
         'password' => 'password123',
     ])
         ->assertSuccessful()
-        ->assertJsonStructure(['message', 'token', 'user']);
+        ->assertJsonStructure(['message', 'token', 'token_type', 'current_token_id', 'current_token', 'user'])
+        ->assertJsonPath('token_type', 'Bearer');
 });
 
 test('login fails with wrong password', function () {
@@ -164,12 +192,86 @@ test('authenticated user can fetch their profile', function () {
 
 test('user can logout and token is deleted', function () {
     $user = User::factory()->create();
+    $currentToken = $user->createToken('current-device');
+    $user->createToken('other-device');
 
-    $this->withToken($user->createToken('test')->plainTextToken)
+    $this->withToken($currentToken->plainTextToken)
         ->postJson(route('auth.logout'))
         ->assertSuccessful();
 
+    $this->assertDatabaseMissing('personal_access_tokens', [
+        'id' => $currentToken->accessToken->getKey(),
+    ]);
+    $this->assertDatabaseCount('personal_access_tokens', 1);
+});
+
+test('user can logout from all devices', function () {
+    $user = User::factory()->create();
+    $currentToken = $user->createToken('current-device');
+    $user->createToken('tablet');
+    $user->createToken('laptop');
+
+    $this->withToken($currentToken->plainTextToken)
+        ->postJson(route('auth.logout-all'))
+        ->assertSuccessful()
+        ->assertJsonPath('revoked_tokens_count', 3);
+
     $this->assertDatabaseCount('personal_access_tokens', 0);
+});
+
+test('authenticated user can list active sessions', function () {
+    $user = User::factory()->create();
+    $currentToken = $user->createToken('pixel-8');
+    $secondaryToken = $user->createToken('macbook-pro');
+
+    $response = $this->withToken($currentToken->plainTextToken)
+        ->getJson(route('auth.sessions.index'))
+        ->assertSuccessful()
+        ->assertJsonStructure([
+            'message',
+            'current_token_id',
+            'sessions' => [
+                '*' => ['id', 'name', 'current', 'abilities', 'last_used_at', 'created_at', 'expires_at'],
+            ],
+        ]);
+
+    $sessionNames = collect($response->json('sessions'))->pluck('name');
+
+    expect($sessionNames)->toContain('pixel-8')->toContain('macbook-pro');
+
+    $currentSession = collect($response->json('sessions'))->firstWhere('current', true);
+
+    expect($currentSession['id'])->toBe(app(AuthTokenService::class)->toPublicId($currentToken->accessToken))
+        ->and($response->json('current_token_id'))->toBe($currentSession['id'])
+        ->and($secondaryToken->accessToken->fresh())->not->toBeNull();
+});
+
+test('authenticated user can revoke a specific session', function () {
+    $user = User::factory()->create();
+    $currentToken = $user->createToken('current-device');
+    $secondaryToken = $user->createToken('shared-ipad');
+    $sessionId = app(AuthTokenService::class)->toPublicId($secondaryToken->accessToken);
+
+    $this->withToken($currentToken->plainTextToken)
+        ->deleteJson(route('auth.sessions.revoke', ['sessionId' => $sessionId]))
+        ->assertSuccessful();
+
+    $this->assertDatabaseMissing('personal_access_tokens', [
+        'id' => $secondaryToken->accessToken->getKey(),
+    ]);
+    $this->assertDatabaseHas('personal_access_tokens', [
+        'id' => $currentToken->accessToken->getKey(),
+    ]);
+});
+
+test('revoking an unknown session returns a validation error', function () {
+    $user = User::factory()->create();
+    $currentToken = $user->createToken('current-device');
+
+    $this->withToken($currentToken->plainTextToken)
+        ->deleteJson(route('auth.sessions.revoke', ['sessionId' => str_repeat('a', 64)]))
+        ->assertUnprocessable()
+        ->assertJsonValidationErrors(['session_id']);
 });
 
 // ─── Forgot Password ────────────────────────────────────────────────────────
@@ -316,6 +418,91 @@ test('reset password fails with unverified OTP', function () {
     ])
         ->assertUnprocessable()
         ->assertJsonValidationErrors(['otp']);
+});
+
+test('google login returns a token for a new person account', function () {
+    config()->set('services.google.client_id', 'google-client-id');
+    Http::preventStrayRequests();
+
+    Http::fake([
+        'https://oauth2.googleapis.com/tokeninfo*' => Http::response([
+            'iss' => 'https://accounts.google.com',
+            'aud' => 'google-client-id',
+            'sub' => 'google-user-123',
+            'email' => 'google-user@example.com',
+            'name' => 'Google User',
+            'exp' => now()->addHour()->timestamp,
+        ]),
+    ]);
+
+    $this->postJson(route('auth.google.login'), [
+        'id_token' => 'valid-google-id-token',
+        'device_name' => 'flutter-android',
+    ])
+        ->assertSuccessful()
+        ->assertJsonPath('token_type', 'Bearer')
+        ->assertJsonPath('is_new_user', true)
+        ->assertJsonPath('user.email', 'google-user@example.com')
+        ->assertJsonPath('user.account_type', 'person');
+
+    $this->assertDatabaseHas('users', [
+        'email' => 'google-user@example.com',
+        'google_id' => 'google-user-123',
+        'account_type' => 'person',
+    ]);
+    $this->assertDatabaseHas('person_profiles', [
+        'user_id' => User::query()->where('email', 'google-user@example.com')->value('id'),
+        'onboarding_step' => 1,
+        'is_profile_completed' => false,
+    ]);
+});
+
+test('google login links an existing user by email', function () {
+    config()->set('services.google.client_id', 'google-client-id');
+    Http::preventStrayRequests();
+
+    $user = User::factory()->create([
+        'email' => 'existing@example.com',
+        'google_id' => null,
+    ]);
+    $user->personProfile()->create(['user_id' => $user->id, 'onboarding_step' => 1]);
+
+    Http::fake([
+        'https://oauth2.googleapis.com/tokeninfo*' => Http::response([
+            'iss' => 'https://accounts.google.com',
+            'aud' => 'google-client-id',
+            'sub' => 'google-user-456',
+            'email' => 'existing@example.com',
+            'name' => 'Existing User',
+            'exp' => now()->addHour()->timestamp,
+        ]),
+    ]);
+
+    $this->postJson(route('auth.google.login'), [
+        'id_token' => 'another-valid-google-id-token',
+    ])
+        ->assertSuccessful()
+        ->assertJsonPath('is_new_user', false)
+        ->assertJsonPath('user.id', $user->id);
+
+    expect($user->fresh()->google_id)->toBe('google-user-456');
+});
+
+test('google login fails when the token is invalid', function () {
+    config()->set('services.google.client_id', 'google-client-id');
+    Http::preventStrayRequests();
+
+    Http::fake([
+        'https://oauth2.googleapis.com/tokeninfo*' => Http::response([
+            'error_description' => 'Invalid Value',
+        ], 400),
+    ]);
+
+    $this->postJson(route('auth.google.login'), [
+        'id_token' => 'invalid-google-id-token',
+    ])
+        ->assertUnprocessable()
+        ->assertJsonValidationErrors(['id_token']);
 });
 
 // ─── Change Password ─────────────────────────────────────────────────────────

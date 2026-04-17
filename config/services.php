@@ -45,5 +45,8 @@ return [
         'token' => env('TWILIO_AUTH_TOKEN'),
         'from' => env('TWILIO_FROM_NUMBER'),
     ],
+    'google' => [
+        'client_id' => env('GOOGLE_CLIENT_ID'),
+    ],
 
 ];

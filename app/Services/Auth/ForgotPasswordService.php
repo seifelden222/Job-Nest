@@ -5,6 +5,7 @@ namespace App\Services\Auth;
 use App\Mail\Auth\SendOtp;
 use App\Models\OtpCode;
 use App\Models\User;
+use App\Notifications\Auth\mailotpnotfication;
 use App\Services\SmsService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -73,8 +74,8 @@ class ForgotPasswordService
             ->where('expires_at', '>', now())
             ->when(
                 $method === 'email',
-                fn ($query) => $query->where('email', $identifier),
-                fn ($query) => $query->where('phone', $identifier)
+                fn($query) => $query->where('email', $identifier),
+                fn($query) => $query->where('phone', $identifier)
             )
             ->latest('id')
             ->first();
@@ -135,8 +136,8 @@ class ForgotPasswordService
             ->where('expires_at', '>', now())
             ->when(
                 $method === 'email',
-                fn ($query) => $query->where('email', $identifier),
-                fn ($query) => $query->where('phone', $identifier)
+                fn($query) => $query->where('email', $identifier),
+                fn($query) => $query->where('phone', $identifier)
             )
             ->latest('id')
             ->first();
@@ -173,8 +174,8 @@ class ForgotPasswordService
             ->whereNull('verified_at')
             ->when(
                 $method === 'email',
-                fn ($query) => $query->where('email', $identifier),
-                fn ($query) => $query->where('phone', $identifier)
+                fn($query) => $query->where('email', $identifier),
+                fn($query) => $query->where('phone', $identifier)
             )
             ->delete();
     }
@@ -187,8 +188,8 @@ class ForgotPasswordService
             ->where('type', $this->OTP_TYPE)
             ->when(
                 $method === 'email',
-                fn ($query) => $query->where('email', $identifier),
-                fn ($query) => $query->where('phone', $identifier)
+                fn($query) => $query->where('email', $identifier),
+                fn($query) => $query->where('phone', $identifier)
             )
             ->delete();
     }
@@ -223,6 +224,7 @@ class ForgotPasswordService
     {
         if ($method === 'email') {
             Mail::to($user->email)->send(new SendOtp($otp));
+            $user->notify(new mailotpnotfication($otp));
         } else {
             // SMS path — resolve SmsService only when needed so tests can easily fake it
             try {
