@@ -23,7 +23,7 @@ return new class extends Migration
             $table->id();
             $table->string('name');
             $table->string('email')->unique();
-            $table->integer('phone');
+            $table->string('phone', 30)->nullable()->unique();
             $table->enum('account_type', ['person', 'company'])->default('person');
             $table->string('profile_photo')->nullable();
             $table->enum('status', ['active', 'inactive', 'suspended'])->default('active');

@@ -37,9 +37,13 @@ return [
     'otp' => [
         'expires_in_minutes' => env('OTP_EXPIRES_IN_MINUTES', 10),
         'length' => env('OTP_LENGTH', 6),
-        'otp_type'=> env('OTP_TYPE', 'reset_password'),
+        'otp_type' => env('OTP_TYPE', 'reset_password'),
         'user_type' => env('OTP_USER_TYPE', 'user'),
-
+    ],
+    'twilio' => [
+        'sid' => env('TWILIO_ACCOUNT_SID'),
+        'token' => env('TWILIO_AUTH_TOKEN'),
+        'from' => env('TWILIO_FROM_NUMBER'),
     ],
 
 ];

@@ -2,10 +2,13 @@
 
 namespace App\Services\Auth;
 
+use App\Mail\Auth\SendOtp;
 use App\Models\OtpCode;
 use App\Models\User;
-use Illuminate\Support\Carbon;
+use App\Services\SmsService;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Validation\ValidationException;
 
 class ForgotPasswordService
@@ -18,32 +21,27 @@ class ForgotPasswordService
 
     private int $OTP_EXPIRES_IN_MINUTES;
 
-    public function __construct(){
+    public function __construct()
+    {
         $this->OTP_EXPIRES_IN_MINUTES = (int) config('services.otp.expires_in_minutes', 10);
         $this->OTP_LENGTH = (int) config('services.otp.length', 6);
         $this->OTP_TYPE = config('services.otp.otp_type', 'reset_password');
         $this->USER_TYPE = config('services.otp.user_type', 'user');
     }
+
     public function sendResetOtp(array $validated): void
     {
         $method = $validated['method'];
         $identifier = trim((string) $validated['email_or_phone']);
         $user = $this->resolveUserByMethod($identifier, $method);
 
-        DB::transaction(function () use ($user, $method, $identifier): void {
+        $otp = DB::transaction(function () use ($user, $method, $identifier): string {
             $this->invalidateExistingOtps($user, $method, $identifier);
 
-            OtpCode::create([
-                'user_type' => $this->USER_TYPE,
-                'user_id' => $user->id,
-                'email' => $method === 'email' ? $identifier : null,
-                'phone' => $method === 'phone' ? $identifier : null,
-                'code' => $this->generateOtp(),
-                'type' => $this->OTP_TYPE,
-                'expires_at' => now()->addMinutes($this->OTP_EXPIRES_IN_MINUTES),
-                'verified_at' => null,
-            ]);
+            return $this->createOtp($user, $method, $identifier);
         });
+
+        $this->sendOtp($user, $method, $identifier, $otp);
     }
 
     public function verifyResetOtp(array $validated): void
@@ -152,6 +150,20 @@ class ForgotPasswordService
         return $otpCode;
     }
 
+    public function resendResetOtp(array $validated): void
+    {
+        $method = $validated['method'];
+        $identifier = trim((string) $validated['email_or_phone']);
+        $user = $this->resolveUserByMethod($identifier, $method);
+
+        $otp = DB::transaction(function () use ($user, $method, $identifier): string {
+            $this->invalidateExistingOtps($user, $method, $identifier);
+
+            return $this->createOtp($user, $method, $identifier);
+        });
+        $this->sendOtp($user, $method, $identifier, $otp);
+    }
+
     private function invalidateExistingOtps(User $user, string $method, string $identifier): void
     {
         OtpCode::query()
@@ -187,5 +199,37 @@ class ForgotPasswordService
         $max = (10 ** $this->OTP_LENGTH) - 1;
 
         return (string) random_int($min, $max);
+    }
+
+    private function createOtp(User $user, string $method, string $identifier): string
+    {
+        $otp = $this->generateOtp();
+
+        OtpCode::create([
+            'user_type' => $this->USER_TYPE,
+            'user_id' => $user->id,
+            'email' => $method === 'email' ? $identifier : null,
+            'phone' => $method === 'phone' ? $identifier : null,
+            'code' => $otp,
+            'type' => $this->OTP_TYPE,
+            'expires_at' => now()->addMinutes($this->OTP_EXPIRES_IN_MINUTES),
+            'verified_at' => null,
+        ]);
+
+        return $otp;
+    }
+
+    private function sendOtp(User $user, string $method, string $identifier, string $otp): void
+    {
+        if ($method === 'email') {
+            Mail::to($user->email)->send(new SendOtp($otp));
+        } else {
+            // SMS path — resolve SmsService only when needed so tests can easily fake it
+            try {
+                app(SmsService::class)->send($identifier, "Your password reset OTP is: {$otp}");
+            } catch (\Throwable $e) {
+                Log::error('SMS OTP send failed', ['phone' => $identifier, 'error' => $e->getMessage()]);
+            }
+        }
     }
 }

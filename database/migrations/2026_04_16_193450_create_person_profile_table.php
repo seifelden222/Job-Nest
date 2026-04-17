@@ -11,18 +11,28 @@ return new class extends Migration
         Schema::create('person_profiles', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->unique()->constrained('users')->cascadeOnDelete();
+
             $table->string('university')->nullable();
             $table->string('major')->nullable();
-            $table->string('current_job_title')->nullable();
+
             $table->string('employment_status')->nullable();
-            $table->decimal('expected_salary_min', 10, 2)->nullable();
-            $table->decimal('expected_salary_max', 10, 2)->nullable();
-            $table->enum('preferred_work_location', ['onsite', 'remote', 'hybrid'])->nullable();
+            $table->string('employment_type')->nullable();
+            $table->string('current_job_title')->nullable();
+            $table->string('company_name')->nullable();
+
             $table->string('linkedin_url')->nullable();
             $table->string('portfolio_url')->nullable();
+
+            $table->enum('preferred_work_location', ['onsite', 'remote', 'hybrid'])->nullable();
+
+            $table->decimal('expected_salary_min', 10, 2)->nullable();
+            $table->decimal('expected_salary_max', 10, 2)->nullable();
+
             $table->text('about')->nullable();
+
             $table->unsignedTinyInteger('onboarding_step')->default(1);
             $table->boolean('is_profile_completed')->default(false);
+
             $table->timestamps();
         });
     }

@@ -4,6 +4,7 @@ namespace App\Services\Auth;
 
 use App\Http\Requests\Api\Auth\RegisterStepThreeRequest;
 use App\Models\CompanyProfile;
+use App\Models\Document;
 use App\Models\PersonProfile;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
@@ -38,7 +39,7 @@ class AuthService
     {
         return DB::transaction(function () use ($user, $validated): User {
             if ($user->isPerson()) {
-                $this->updatePersonStepTwo($user->personProfile, $validated);
+                $this->updatePersonStepTwo($user, $validated);
             }
 
             if ($user->isCompany()) {
@@ -122,15 +123,30 @@ class AuthService
         ]);
     }
 
-    private function updatePersonStepTwo(PersonProfile $profile, array $validated): void
+    private function updatePersonStepTwo(User $user, array $validated): void
     {
+        $profile = $user->personProfile;
+
         $profile->update([
             'employment_status' => $validated['employment_status'] ?? $profile->employment_status,
+            'employment_type' => $validated['employment_type'] ?? $profile->employment_type,
             'current_job_title' => $validated['current_job_title'] ?? $profile->current_job_title,
+            'company_name' => $validated['company_name'] ?? $profile->company_name,
+            'preferred_work_location' => $validated['preferred_work_location'] ?? $profile->preferred_work_location,
+            'expected_salary_min' => $validated['expected_salary_min'] ?? $profile->expected_salary_min,
+            'expected_salary_max' => $validated['expected_salary_max'] ?? $profile->expected_salary_max,
             'linkedin_url' => $validated['linkedin_url'] ?? $profile->linkedin_url,
             'portfolio_url' => $validated['portfolio_url'] ?? $profile->portfolio_url,
             'onboarding_step' => 2,
         ]);
+
+        if (array_key_exists('skills', $validated)) {
+            $user->skills()->sync($validated['skills'] ?? []);
+        }
+
+        if (array_key_exists('languages', $validated)) {
+            $user->languages()->sync($validated['languages'] ?? []);
+        }
     }
 
     private function updateCompanyStepTwo(CompanyProfile $profile, array $validated): void
@@ -154,12 +170,36 @@ class AuthService
         }
 
         if ($request->hasFile('cv')) {
-            $request->file('cv')->store('documents/cv', 'public');
+            $file = $request->file('cv');
+            $path = $file->store('documents/cv', 'public');
+
+            // Replace any existing primary CV
+            $user->documents()->where('type', 'cv')->where('is_primary', true)->delete();
+
+            Document::create([
+                'user_id' => $user->id,
+                'type' => 'cv',
+                'file_path' => $path,
+                'file_name' => $file->getClientOriginalName(),
+                'mime_type' => $file->getMimeType(),
+                'file_size' => $file->getSize(),
+                'is_primary' => true,
+            ]);
         }
 
         if ($request->hasFile('certificates')) {
             foreach ($request->file('certificates') as $certificate) {
-                $certificate->store('documents/certificates', 'public');
+                $path = $certificate->store('documents/certificates', 'public');
+
+                Document::create([
+                    'user_id' => $user->id,
+                    'type' => 'certificate',
+                    'file_path' => $path,
+                    'file_name' => $certificate->getClientOriginalName(),
+                    'mime_type' => $certificate->getMimeType(),
+                    'file_size' => $certificate->getSize(),
+                    'is_primary' => false,
+                ]);
             }
         }
 
@@ -168,6 +208,10 @@ class AuthService
             'onboarding_step' => 3,
             'is_profile_completed' => true,
         ]);
+
+        if (array_key_exists('interests', $validated)) {
+            $user->interests()->sync($validated['interests'] ?? []);
+        }
     }
 
     private function updateCompanyStepThree(RegisterStepThreeRequest $request, CompanyProfile $profile, array $validated): void
@@ -185,8 +229,28 @@ class AuthService
         $profile->update($attributes);
     }
 
+    public function changePassword(User $user, array $validated): void
+    {
+        if (! Hash::check($validated['old_password'], $user->password)) {
+            throw ValidationException::withMessages([
+                'old_password' => ['The provided old password is incorrect.'],
+            ]);
+        }
+
+        $user->update([
+            'password' => Hash::make($validated['password']),
+        ]);
+    }
+
     private function loadUserProfiles(User $user): User
     {
-        return $user->loadMissing(['personProfile', 'companyProfile']);
+        return $user->loadMissing([
+            'personProfile',
+            'companyProfile',
+            'skills',
+            'languages',
+            'interests',
+            'documents',
+        ]);
     }
 }

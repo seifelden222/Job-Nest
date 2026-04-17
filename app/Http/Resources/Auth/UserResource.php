@@ -2,10 +2,9 @@
 
 namespace App\Http\Resources\Auth;
 
-use App\Http\Resources\Auth\CompanyProfileResource;
-use App\Http\Resources\Auth\PersonProfileResource;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Illuminate\Support\Facades\Storage;
 
 class UserResource extends JsonResource
 {
@@ -17,10 +16,34 @@ class UserResource extends JsonResource
             'email' => $this->email,
             'phone' => $this->phone,
             'account_type' => $this->account_type,
-            'profile_photo' => $this->profile_photo,
+            'profile_photo' => $this->profile_photo
+                ? Storage::url($this->profile_photo)
+                : null,
             'status' => $this->status,
-            'person_profile' => $this->isPerson() ? new PersonProfileResource($this->personProfile) : null,
-            'company_profile' => $this->isCompany() ? new CompanyProfileResource($this->companyProfile) : null,
+            'person_profile' => $this->when(
+                $this->isPerson(),
+                fn () => new PersonProfileResource($this->personProfile),
+            ),
+            'company_profile' => $this->when(
+                $this->isCompany(),
+                fn () => new CompanyProfileResource($this->companyProfile),
+            ),
+            'skills' => $this->when(
+                $this->isPerson(),
+                fn () => $this->skills->map(fn ($s) => ['id' => $s->id, 'name' => $s->name])->values(),
+            ),
+            'languages' => $this->when(
+                $this->isPerson(),
+                fn () => $this->languages->map(fn ($l) => ['id' => $l->id, 'name' => $l->name])->values(),
+            ),
+            'interests' => $this->when(
+                $this->isPerson(),
+                fn () => $this->interests->map(fn ($i) => ['id' => $i->id, 'name' => $i->name])->values(),
+            ),
+            'documents' => $this->when(
+                $this->isPerson(),
+                fn () => DocumentResource::collection($this->documents),
+            ),
         ];
     }
 }
