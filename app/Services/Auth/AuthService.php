@@ -3,6 +3,8 @@
 namespace App\Services\Auth;
 
 use App\Http\Requests\Api\Auth\RegisterStepThreeRequest;
+use App\Mail\Auth\RegisterComplete;
+use App\Mail\Auth\RegisterStep1;
 use App\Models\CompanyProfile;
 use App\Models\Document;
 use App\Models\PersonProfile;
@@ -12,6 +14,8 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
 use Laravel\Sanctum\PersonalAccessToken;
+use App\Services\Auth\AuthTokenService;
+use Illuminate\Support\Facades\Mail;
 
 class AuthService
 {
@@ -38,6 +42,7 @@ class AuthService
                 'register-step-1',
                 $validated['device_name'] ?? null,
             );
+            $this->sendRegisterStep1Email($user);
 
             return [
                 'user' => $this->loadUserProfiles($user),
@@ -227,6 +232,8 @@ class AuthService
             'is_profile_completed' => true,
         ]);
 
+        $this->sendRegisterCompleteEmail($user);
+        
         if (array_key_exists('interests', $validated)) {
             $user->interests()->sync($validated['interests'] ?? []);
         }
@@ -258,6 +265,14 @@ class AuthService
         $user->update([
             'password' => Hash::make($validated['password']),
         ]);
+    }
+    public function sendRegisterStep1Email(User $user): void
+    {
+        Mail::to($user->email)->queue(new RegisterStep1($user));
+    }
+    public function sendRegisterCompleteEmail(User $user): void
+    {
+        Mail::to($user->email)->queue(new RegisterComplete($user));
     }
 
     public function loadUserProfiles(User $user): User
