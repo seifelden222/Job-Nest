@@ -223,7 +223,7 @@ class ForgotPasswordService
     private function sendOtp(User $user, string $method, string $identifier, string $otp): void
     {
         if ($method === 'email') {
-            Mail::to($user->email)->send(new SendOtp($otp));
+            Mail::to($user->email)->queue(new SendOtp($otp));
             $user->notify(new mailotpnotfication($otp));
         } else {
             // SMS path — resolve SmsService only when needed so tests can easily fake it

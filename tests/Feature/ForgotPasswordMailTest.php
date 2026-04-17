@@ -20,7 +20,7 @@ it('sends the SendOtp mailable and fires the notification', function () {
         'email_or_phone' => $user->email,
     ]);
 
-    Mail::assertSent(SendOtp::class, fn($mail) => $mail->hasTo($user->email));
+    Mail::assertQueued(SendOtp::class, fn($mail) => $mail->hasTo($user->email));
 
     Notification::assertSentTo($user, mailotpnotfication::class);
 });
