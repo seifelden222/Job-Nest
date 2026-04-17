@@ -7,6 +7,7 @@ use App\Models\CompanyProfile;
 use App\Models\Document;
 use App\Models\PersonProfile;
 use App\Models\User;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
@@ -14,9 +15,13 @@ use Laravel\Sanctum\PersonalAccessToken;
 
 class AuthService
 {
-    public function registerStepOne(array $validated): array
+    public function __construct(
+        private AuthTokenService $authTokenService,
+    ) {}
+
+    public function registerStepOne(array $validated, Request $request): array
     {
-        return DB::transaction(function () use ($validated): array {
+        return DB::transaction(function () use ($validated, $request): array {
             $user = User::create([
                 'name' => $validated['name'],
                 'email' => $validated['email'],
@@ -27,10 +32,16 @@ class AuthService
             ]);
 
             $this->createProfileForUser($user, $validated);
+            $tokenData = $this->authTokenService->issueToken(
+                $user,
+                $request,
+                'register-step-1',
+                $validated['device_name'] ?? null,
+            );
 
             return [
                 'user' => $this->loadUserProfiles($user),
-                'token' => $user->createToken('auth_token')->plainTextToken,
+                ...$tokenData,
             ];
         });
     }
@@ -65,7 +76,7 @@ class AuthService
         });
     }
 
-    public function login(array $validated): array
+    public function login(array $validated, Request $request): array
     {
         $user = User::query()
             ->where('email', $validated['email'])
@@ -77,9 +88,16 @@ class AuthService
             ]);
         }
 
+        $tokenData = $this->authTokenService->issueToken(
+            $user,
+            $request,
+            'login',
+            $validated['device_name'] ?? null,
+        );
+
         return [
             'user' => $this->loadUserProfiles($user),
-            'token' => $user->createToken('auth_token')->plainTextToken,
+            ...$tokenData,
         ];
     }
 
@@ -97,7 +115,7 @@ class AuthService
         }
     }
 
-    private function createProfileForUser(User $user, array $validated): void
+    public function createProfileForUser(User $user, array $validated = []): void
     {
         if ($user->isPerson()) {
             PersonProfile::create([
@@ -242,7 +260,7 @@ class AuthService
         ]);
     }
 
-    private function loadUserProfiles(User $user): User
+    public function loadUserProfiles(User $user): User
     {
         return $user->loadMissing([
             'personProfile',

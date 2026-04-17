@@ -25,6 +25,7 @@ class LoginRequest extends FormRequest
         return [
             'email' => ['required', 'email'],
             'password' => ['required', 'string', 'min:8'],
+            'device_name' => ['nullable', 'string', 'max:120'],
         ];
     }
 
@@ -36,6 +37,7 @@ class LoginRequest extends FormRequest
             'password.required' => 'Password is required',
             'password.string' => 'Password must be a string',
             'password.min' => 'Password must be at least 8 characters',
+            'device_name.string' => 'Device name must be a string',
         ];
     }
 }

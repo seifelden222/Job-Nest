@@ -1,203 +1,219 @@
 {
   "info": {
-    "name": "Job Nest — Auth",
-    "_postman_id": "job-nest-auth-v1",
-    "description": "Full Auth module for Job Nest Laravel 12 API (Flutter backend).\n\nSet the `base_url` environment variable to your server URL (e.g. http://localhost:8000).\nAfter login or register step 1 the `token` variable is auto-set.",
+    "name": "Job Nest - Auth",
+    "_postman_id": "job-nest-auth-v2",
+    "description": "JobNest Laravel 13 + Sanctum auth API collection.\n\nSet `base_url`, then use register/login/google-login requests to populate `token` and `current_token_id` automatically.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
     { "key": "base_url", "value": "http://127.0.0.1:8000", "type": "string" },
-    { "key": "token",    "value": "",                      "type": "string" }
+    { "key": "token", "value": "", "type": "string" },
+    { "key": "current_token_id", "value": "", "type": "string" },
+    { "key": "session_id", "value": "", "type": "string" },
+    { "key": "google_id_token", "value": "", "type": "string" },
+    { "key": "otp", "value": "123456", "type": "string" }
   ],
   "item": [
     {
-      "name": "Auth",
+      "name": "Registration",
       "item": [
         {
-          "name": "Register Step 1 — Person",
+          "name": "Register Step 1 - Person",
           "event": [
             {
               "listen": "test",
               "script": {
+                "type": "text/javascript",
                 "exec": [
                   "var json = pm.response.json();",
-                  "if (json.token) { pm.collectionVariables.set('token', json.token); }"
-                ],
-                "type": "text/javascript"
+                  "if (json.token) { pm.collectionVariables.set('token', json.token); }",
+                  "if (json.current_token_id) { pm.collectionVariables.set('current_token_id', json.current_token_id); }",
+                  "if (json.current_token_id) { pm.collectionVariables.set('session_id', json.current_token_id); }"
+                ]
               }
             }
           ],
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Accept",       "value": "application/json" },
+              { "key": "Accept", "value": "application/json" },
               { "key": "Content-Type", "value": "application/json" }
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"account_type\": \"person\",\n  \"name\": \"Ahmed Ali\",\n  \"email\": \"ahmed@example.com\",\n  \"phone\": \"01012345678\",\n  \"password\": \"password123\",\n  \"password_confirmation\": \"password123\",\n  \"university\": \"Cairo University\",\n  \"major\": \"Computer Science\"\n}"
+              "raw": "{\n  \"account_type\": \"person\",\n  \"name\": \"Ali Hassan\",\n  \"email\": \"ali@example.com\",\n  \"phone\": \"01012345678\",\n  \"password\": \"password123\",\n  \"password_confirmation\": \"password123\",\n  \"university\": \"Cairo University\",\n  \"major\": \"Computer Science\",\n  \"device_name\": \"flutter-android\"\n}"
             },
-            "url": {
-              "raw": "{{base_url}}/api/auth/register/step-1",
-              "host": ["{{base_url}}"],
-              "path": ["api", "auth", "register", "step-1"]
-            }
+            "url": "{{base_url}}/api/auth/register/step-1"
           },
           "response": []
         },
         {
-          "name": "Register Step 1 — Company",
+          "name": "Register Step 1 - Company",
           "event": [
             {
               "listen": "test",
               "script": {
+                "type": "text/javascript",
                 "exec": [
                   "var json = pm.response.json();",
-                  "if (json.token) { pm.collectionVariables.set('token', json.token); }"
-                ],
-                "type": "text/javascript"
+                  "if (json.token) { pm.collectionVariables.set('token', json.token); }",
+                  "if (json.current_token_id) { pm.collectionVariables.set('current_token_id', json.current_token_id); }",
+                  "if (json.current_token_id) { pm.collectionVariables.set('session_id', json.current_token_id); }"
+                ]
               }
             }
           ],
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Accept",       "value": "application/json" },
+              { "key": "Accept", "value": "application/json" },
               { "key": "Content-Type", "value": "application/json" }
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"account_type\": \"company\",\n  \"name\": \"Tech Corp HR\",\n  \"email\": \"hr@techcorp.com\",\n  \"phone\": \"01098765432\",\n  \"password\": \"password123\",\n  \"password_confirmation\": \"password123\",\n  \"company_name\": \"Tech Corp\",\n  \"website\": \"https://techcorp.com\",\n  \"company_size\": \"50-100\",\n  \"industry\": \"Technology\",\n  \"location\": \"Cairo, Egypt\"\n}"
+              "raw": "{\n  \"account_type\": \"company\",\n  \"name\": \"Tech Corp HR\",\n  \"email\": \"hr@techcorp.com\",\n  \"phone\": \"01098765432\",\n  \"password\": \"password123\",\n  \"password_confirmation\": \"password123\",\n  \"company_name\": \"Tech Corp\",\n  \"website\": \"https://techcorp.com\",\n  \"company_size\": \"51-200\",\n  \"industry\": \"Technology\",\n  \"location\": \"Cairo\",\n  \"device_name\": \"web-chrome\"\n}"
             },
-            "url": {
-              "raw": "{{base_url}}/api/auth/register/step-1",
-              "host": ["{{base_url}}"],
-              "path": ["api", "auth", "register", "step-1"]
-            }
+            "url": "{{base_url}}/api/auth/register/step-1"
           },
           "response": []
         },
         {
-          "name": "Register Step 2 — Person",
+          "name": "Register Step 2 - Person",
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Accept",        "value": "application/json" },
-              { "key": "Content-Type",  "value": "application/json" },
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" },
               { "key": "Authorization", "value": "Bearer {{token}}" }
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"employment_status\": \"employed\",\n  \"employment_type\": \"full_time\",\n  \"current_job_title\": \"Frontend Developer\",\n  \"company_name\": \"Current Employer Ltd\",\n  \"preferred_work_location\": \"hybrid\",\n  \"expected_salary_min\": 5000,\n  \"expected_salary_max\": 10000,\n  \"linkedin_url\": \"https://linkedin.com/in/ahmed-ali\",\n  \"portfolio_url\": \"https://ahmed.dev\",\n  \"skills\": [1, 2, 3],\n  \"languages\": [1, 2]\n}"
+              "raw": "{\n  \"employment_status\": \"employed\",\n  \"employment_type\": \"full_time\",\n  \"current_job_title\": \"Backend Developer\",\n  \"company_name\": \"Acme\",\n  \"preferred_work_location\": \"remote\",\n  \"expected_salary_min\": 3000,\n  \"expected_salary_max\": 7000,\n  \"linkedin_url\": \"https://linkedin.com/in/ali\",\n  \"portfolio_url\": \"https://ali.dev\",\n  \"skills\": [1, 2],\n  \"languages\": [1]\n}"
             },
-            "url": {
-              "raw": "{{base_url}}/api/auth/register/step-2",
-              "host": ["{{base_url}}"],
-              "path": ["api", "auth", "register", "step-2"]
-            }
+            "url": "{{base_url}}/api/auth/register/step-2"
           },
           "response": []
         },
         {
-          "name": "Register Step 2 — Company",
+          "name": "Register Step 2 - Company",
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Accept",        "value": "application/json" },
-              { "key": "Content-Type",  "value": "application/json" },
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" },
               { "key": "Authorization", "value": "Bearer {{token}}" }
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"website\": \"https://techcorp.com\",\n  \"company_size\": \"201-500\",\n  \"industry\": \"Software\",\n  \"location\": \"Cairo, Egypt\",\n  \"about\": \"We build innovative software solutions.\"\n}"
+              "raw": "{\n  \"website\": \"https://techcorp.com\",\n  \"company_size\": \"201-500\",\n  \"industry\": \"Software\",\n  \"location\": \"Cairo\",\n  \"about\": \"We build hiring software.\"\n}"
             },
-            "url": {
-              "raw": "{{base_url}}/api/auth/register/step-2",
-              "host": ["{{base_url}}"],
-              "path": ["api", "auth", "register", "step-2"]
-            }
+            "url": "{{base_url}}/api/auth/register/step-2"
           },
           "response": []
         },
         {
-          "name": "Register Step 3 — Person",
+          "name": "Register Step 3 - Person",
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Accept",        "value": "application/json" },
+              { "key": "Accept", "value": "application/json" },
               { "key": "Authorization", "value": "Bearer {{token}}" }
             ],
             "body": {
               "mode": "formdata",
               "formdata": [
-                { "key": "about",          "value": "Passionate developer with 3+ years experience.", "type": "text" },
-                { "key": "interests[]",    "value": "1",  "type": "text" },
-                { "key": "interests[]",    "value": "3",  "type": "text" },
-                { "key": "profile_photo",  "type": "file", "src": "" },
-                { "key": "cv",             "type": "file", "src": "" },
+                { "key": "about", "value": "Backend developer with 3 years of experience.", "type": "text" },
+                { "key": "interests[]", "value": "1", "type": "text" },
+                { "key": "profile_photo", "type": "file", "src": "" },
+                { "key": "cv", "type": "file", "src": "" },
                 { "key": "certificates[]", "type": "file", "src": "" }
               ]
             },
-            "url": {
-              "raw": "{{base_url}}/api/auth/register/step-3",
-              "host": ["{{base_url}}"],
-              "path": ["api", "auth", "register", "step-3"]
-            }
+            "url": "{{base_url}}/api/auth/register/step-3"
           },
           "response": []
         },
         {
-          "name": "Register Step 3 — Company",
+          "name": "Register Step 3 - Company",
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Accept",        "value": "application/json" },
+              { "key": "Accept", "value": "application/json" },
               { "key": "Authorization", "value": "Bearer {{token}}" }
             ],
             "body": {
               "mode": "formdata",
               "formdata": [
                 { "key": "about", "value": "We build innovative products.", "type": "text" },
-                { "key": "logo",  "type": "file", "src": "" }
+                { "key": "logo", "type": "file", "src": "" }
               ]
             },
-            "url": {
-              "raw": "{{base_url}}/api/auth/register/step-3",
-              "host": ["{{base_url}}"],
-              "path": ["api", "auth", "register", "step-3"]
-            }
+            "url": "{{base_url}}/api/auth/register/step-3"
           },
           "response": []
-        },
+        }
+      ]
+    },
+    {
+      "name": "Auth",
+      "item": [
         {
           "name": "Login",
           "event": [
             {
               "listen": "test",
               "script": {
+                "type": "text/javascript",
                 "exec": [
                   "var json = pm.response.json();",
-                  "if (json.token) { pm.collectionVariables.set('token', json.token); }"
-                ],
-                "type": "text/javascript"
+                  "if (json.token) { pm.collectionVariables.set('token', json.token); }",
+                  "if (json.current_token_id) { pm.collectionVariables.set('current_token_id', json.current_token_id); }",
+                  "if (json.current_token_id) { pm.collectionVariables.set('session_id', json.current_token_id); }"
+                ]
               }
             }
           ],
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Accept",       "value": "application/json" },
+              { "key": "Accept", "value": "application/json" },
               { "key": "Content-Type", "value": "application/json" }
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"email\": \"ahmed@example.com\",\n  \"password\": \"password123\"\n}"
+              "raw": "{\n  \"email\": \"ali@example.com\",\n  \"password\": \"password123\",\n  \"device_name\": \"iphone-15\"\n}"
             },
-            "url": {
-              "raw": "{{base_url}}/api/auth/login",
-              "host": ["{{base_url}}"],
-              "path": ["api", "auth", "login"]
+            "url": "{{base_url}}/api/auth/login"
+          },
+          "response": []
+        },
+        {
+          "name": "Google Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "var json = pm.response.json();",
+                  "if (json.token) { pm.collectionVariables.set('token', json.token); }",
+                  "if (json.current_token_id) { pm.collectionVariables.set('current_token_id', json.current_token_id); }",
+                  "if (json.current_token_id) { pm.collectionVariables.set('session_id', json.current_token_id); }"
+                ]
+              }
             }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id_token\": \"{{google_id_token}}\",\n  \"account_type\": \"person\",\n  \"device_name\": \"flutter-android\"\n}"
+            },
+            "url": "{{base_url}}/api/auth/google/login"
           },
           "response": []
         },
@@ -206,115 +222,10 @@
           "request": {
             "method": "GET",
             "header": [
-              { "key": "Accept",        "value": "application/json" },
+              { "key": "Accept", "value": "application/json" },
               { "key": "Authorization", "value": "Bearer {{token}}" }
             ],
-            "url": {
-              "raw": "{{base_url}}/api/auth/me",
-              "host": ["{{base_url}}"],
-              "path": ["api", "auth", "me"]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Logout",
-          "request": {
-            "method": "POST",
-            "header": [
-              { "key": "Accept",        "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{token}}" }
-            ],
-            "url": {
-              "raw": "{{base_url}}/api/auth/logout",
-              "host": ["{{base_url}}"],
-              "path": ["api", "auth", "logout"]
-            }
-          },
-          "response": []
-        }
-      ]
-    },
-    {
-      "name": "Password",
-      "item": [
-        {
-          "name": "Forgot Password",
-          "request": {
-            "method": "POST",
-            "header": [
-              { "key": "Accept",       "value": "application/json" },
-              { "key": "Content-Type", "value": "application/json" }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"email_or_phone\": \"ahmed@example.com\",\n  \"method\": \"email\"\n}"
-            },
-            "url": {
-              "raw": "{{base_url}}/api/auth/forgot-password",
-              "host": ["{{base_url}}"],
-              "path": ["api", "auth", "forgot-password"]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Verify Reset OTP",
-          "request": {
-            "method": "POST",
-            "header": [
-              { "key": "Accept",       "value": "application/json" },
-              { "key": "Content-Type", "value": "application/json" }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"email_or_phone\": \"ahmed@example.com\",\n  \"otp\": \"123456\"\n}"
-            },
-            "url": {
-              "raw": "{{base_url}}/api/auth/verify-reset-otp",
-              "host": ["{{base_url}}"],
-              "path": ["api", "auth", "verify-reset-otp"]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Resend Reset OTP",
-          "request": {
-            "method": "POST",
-            "header": [
-              { "key": "Accept",       "value": "application/json" },
-              { "key": "Content-Type", "value": "application/json" }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"email_or_phone\": \"ahmed@example.com\",\n  \"method\": \"email\"\n}"
-            },
-            "url": {
-              "raw": "{{base_url}}/api/auth/resend-reset-otp",
-              "host": ["{{base_url}}"],
-              "path": ["api", "auth", "resend-reset-otp"]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Reset Password",
-          "request": {
-            "method": "POST",
-            "header": [
-              { "key": "Accept",       "value": "application/json" },
-              { "key": "Content-Type", "value": "application/json" }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"email_or_phone\": \"ahmed@example.com\",\n  \"otp\": \"123456\",\n  \"password\": \"newpassword123\",\n  \"password_confirmation\": \"newpassword123\"\n}"
-            },
-            "url": {
-              "raw": "{{base_url}}/api/auth/reset-password",
-              "host": ["{{base_url}}"],
-              "path": ["api", "auth", "reset-password"]
-            }
+            "url": "{{base_url}}/api/auth/me"
           },
           "response": []
         },
@@ -323,19 +234,137 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Accept",        "value": "application/json" },
-              { "key": "Content-Type",  "value": "application/json" },
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" },
               { "key": "Authorization", "value": "Bearer {{token}}" }
             ],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"old_password\": \"password123\",\n  \"password\": \"newpassword456\",\n  \"password_confirmation\": \"newpassword456\"\n}"
             },
-            "url": {
-              "raw": "{{base_url}}/api/auth/change-password",
-              "host": ["{{base_url}}"],
-              "path": ["api", "auth", "change-password"]
-            }
+            "url": "{{base_url}}/api/auth/change-password"
+          },
+          "response": []
+        },
+        {
+          "name": "Logout Current Device",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": "{{base_url}}/api/auth/logout"
+          },
+          "response": []
+        },
+        {
+          "name": "Logout All Devices",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": "{{base_url}}/api/auth/logout-all"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Sessions",
+      "item": [
+        {
+          "name": "List Sessions",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": "{{base_url}}/api/auth/sessions"
+          },
+          "response": []
+        },
+        {
+          "name": "Revoke Session",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": "{{base_url}}/api/auth/sessions/{{session_id}}"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Password Reset",
+      "item": [
+        {
+          "name": "Forgot Password",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email_or_phone\": \"ali@example.com\",\n  \"method\": \"email\"\n}"
+            },
+            "url": "{{base_url}}/api/auth/forgot-password"
+          },
+          "response": []
+        },
+        {
+          "name": "Verify Reset OTP",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email_or_phone\": \"ali@example.com\",\n  \"otp\": \"{{otp}}\"\n}"
+            },
+            "url": "{{base_url}}/api/auth/verify-reset-otp"
+          },
+          "response": []
+        },
+        {
+          "name": "Resend Reset OTP",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email_or_phone\": \"ali@example.com\",\n  \"method\": \"email\"\n}"
+            },
+            "url": "{{base_url}}/api/auth/resend-reset-otp"
+          },
+          "response": []
+        },
+        {
+          "name": "Reset Password",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email_or_phone\": \"ali@example.com\",\n  \"otp\": \"{{otp}}\",\n  \"password\": \"newpassword123\",\n  \"password_confirmation\": \"newpassword123\"\n}"
+            },
+            "url": "{{base_url}}/api/auth/reset-password"
           },
           "response": []
         }
