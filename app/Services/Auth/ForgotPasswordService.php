@@ -7,6 +7,7 @@ use App\Models\OtpCode;
 use App\Models\User;
 use App\Services\SmsService;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Validation\ValidationException;
 
@@ -20,15 +21,14 @@ class ForgotPasswordService
 
     private int $OTP_EXPIRES_IN_MINUTES;
 
-    public function __construct(
-        private SmsService $smsService
-
-    ) {
+    public function __construct()
+    {
         $this->OTP_EXPIRES_IN_MINUTES = (int) config('services.otp.expires_in_minutes', 10);
         $this->OTP_LENGTH = (int) config('services.otp.length', 6);
         $this->OTP_TYPE = config('services.otp.otp_type', 'reset_password');
         $this->USER_TYPE = config('services.otp.user_type', 'user');
     }
+
     public function sendResetOtp(array $validated): void
     {
         $method = $validated['method'];
@@ -73,8 +73,8 @@ class ForgotPasswordService
             ->where('expires_at', '>', now())
             ->when(
                 $method === 'email',
-                fn($query) => $query->where('email', $identifier),
-                fn($query) => $query->where('phone', $identifier)
+                fn ($query) => $query->where('email', $identifier),
+                fn ($query) => $query->where('phone', $identifier)
             )
             ->latest('id')
             ->first();
@@ -135,8 +135,8 @@ class ForgotPasswordService
             ->where('expires_at', '>', now())
             ->when(
                 $method === 'email',
-                fn($query) => $query->where('email', $identifier),
-                fn($query) => $query->where('phone', $identifier)
+                fn ($query) => $query->where('email', $identifier),
+                fn ($query) => $query->where('phone', $identifier)
             )
             ->latest('id')
             ->first();
@@ -149,6 +149,7 @@ class ForgotPasswordService
 
         return $otpCode;
     }
+
     public function resendResetOtp(array $validated): void
     {
         $method = $validated['method'];
@@ -172,8 +173,8 @@ class ForgotPasswordService
             ->whereNull('verified_at')
             ->when(
                 $method === 'email',
-                fn($query) => $query->where('email', $identifier),
-                fn($query) => $query->where('phone', $identifier)
+                fn ($query) => $query->where('email', $identifier),
+                fn ($query) => $query->where('phone', $identifier)
             )
             ->delete();
     }
@@ -186,8 +187,8 @@ class ForgotPasswordService
             ->where('type', $this->OTP_TYPE)
             ->when(
                 $method === 'email',
-                fn($query) => $query->where('email', $identifier),
-                fn($query) => $query->where('phone', $identifier)
+                fn ($query) => $query->where('email', $identifier),
+                fn ($query) => $query->where('phone', $identifier)
             )
             ->delete();
     }
@@ -199,6 +200,7 @@ class ForgotPasswordService
 
         return (string) random_int($min, $max);
     }
+
     private function createOtp(User $user, string $method, string $identifier): string
     {
         $otp = $this->generateOtp();
@@ -220,11 +222,14 @@ class ForgotPasswordService
     private function sendOtp(User $user, string $method, string $identifier, string $otp): void
     {
         if ($method === 'email') {
-            // Send OTP via email (you can use Laravel's Mailables or any email service)
             Mail::to($user->email)->send(new SendOtp($otp));
         } else {
-            // Send OTP via SMS using the SmsService
-            $this->smsService->send($identifier, "Your password reset OTP is: $otp");
+            // SMS path — resolve SmsService only when needed so tests can easily fake it
+            try {
+                app(SmsService::class)->send($identifier, "Your password reset OTP is: {$otp}");
+            } catch (\Throwable $e) {
+                Log::error('SMS OTP send failed', ['phone' => $identifier, 'error' => $e->getMessage()]);
+            }
         }
     }
 }

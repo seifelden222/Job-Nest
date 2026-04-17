@@ -3,7 +3,6 @@
 namespace App\Mail\Auth;
 
 use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Attachment;
 use Illuminate\Mail\Mailables\Content;
@@ -18,6 +17,7 @@ class SendOtp extends Mailable
      * Create a new message instance.
      */
     public string $otp;
+
     public function __construct(string $otp)
     {
         $this->otp = $otp;
@@ -39,7 +39,7 @@ class SendOtp extends Mailable
     public function content(): Content
     {
         return new Content(
-            view: 'viwes.mail.auth.send-otp',
+            view: 'mail.auth.send-otp',
             with: [
                 'otp' => $this->otp,
             ],

@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -51,6 +52,26 @@ class User extends Authenticatable
     {
         return $this->hasMany(OtpCode::class, 'user_id')
             ->where('user_type', 'user');
+    }
+
+    public function documents(): HasMany
+    {
+        return $this->hasMany(Document::class);
+    }
+
+    public function skills(): BelongsToMany
+    {
+        return $this->belongsToMany(Skill::class, 'user_skills')->withTimestamps();
+    }
+
+    public function languages(): BelongsToMany
+    {
+        return $this->belongsToMany(Language::class, 'user_languages')->withTimestamps();
+    }
+
+    public function interests(): BelongsToMany
+    {
+        return $this->belongsToMany(Interest::class, 'user_interests')->withTimestamps();
     }
 
     public function isPerson(): bool
