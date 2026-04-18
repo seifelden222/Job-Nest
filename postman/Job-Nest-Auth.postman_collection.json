@@ -1,15 +1,23 @@
 {
   "info": {
     "name": "Job Nest - Auth",
-    "_postman_id": "job-nest-auth-v2",
-    "description": "JobNest Laravel 13 + Sanctum auth API collection.\n\nSet `base_url`, then use register/login/google-login requests to populate `token` and `current_token_id` automatically.",
+    "_postman_id": "job-nest-auth-v3",
+    "description": "JobNest Laravel 13 + Sanctum auth API collection with refresh tokens and email verification.\n\nSet `base_url`, then use register/login/google-login requests to populate `token`, `refresh_token`, and session fields automatically.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
     { "key": "base_url", "value": "http://127.0.0.1:8000", "type": "string" },
     { "key": "token", "value": "", "type": "string" },
+    { "key": "access_token", "value": "", "type": "string" },
+    { "key": "refresh_token", "value": "", "type": "string" },
+    { "key": "access_token_expires_at", "value": "", "type": "string" },
+    { "key": "refresh_token_expires_at", "value": "", "type": "string" },
     { "key": "current_token_id", "value": "", "type": "string" },
     { "key": "session_id", "value": "", "type": "string" },
+    { "key": "verification_id", "value": "", "type": "string" },
+    { "key": "verification_hash", "value": "", "type": "string" },
+    { "key": "verification_expires", "value": "", "type": "string" },
+    { "key": "verification_signature", "value": "", "type": "string" },
     { "key": "google_id_token", "value": "", "type": "string" },
     { "key": "otp", "value": "123456", "type": "string" }
   ],
@@ -26,7 +34,10 @@
                 "type": "text/javascript",
                 "exec": [
                   "var json = pm.response.json();",
-                  "if (json.token) { pm.collectionVariables.set('token', json.token); }",
+                  "if (json.access_token) { pm.collectionVariables.set('access_token', json.access_token); pm.collectionVariables.set('token', json.access_token); } else if (json.token) { pm.collectionVariables.set('token', json.token); pm.collectionVariables.set('access_token', json.token); }",
+                  "if (json.refresh_token) { pm.collectionVariables.set('refresh_token', json.refresh_token); }",
+                  "if (json.access_token_expires_at) { pm.collectionVariables.set('access_token_expires_at', json.access_token_expires_at); }",
+                  "if (json.refresh_token_expires_at) { pm.collectionVariables.set('refresh_token_expires_at', json.refresh_token_expires_at); }",
                   "if (json.current_token_id) { pm.collectionVariables.set('current_token_id', json.current_token_id); }",
                   "if (json.current_token_id) { pm.collectionVariables.set('session_id', json.current_token_id); }"
                 ]
@@ -56,7 +67,10 @@
                 "type": "text/javascript",
                 "exec": [
                   "var json = pm.response.json();",
-                  "if (json.token) { pm.collectionVariables.set('token', json.token); }",
+                  "if (json.access_token) { pm.collectionVariables.set('access_token', json.access_token); pm.collectionVariables.set('token', json.access_token); } else if (json.token) { pm.collectionVariables.set('token', json.token); pm.collectionVariables.set('access_token', json.token); }",
+                  "if (json.refresh_token) { pm.collectionVariables.set('refresh_token', json.refresh_token); }",
+                  "if (json.access_token_expires_at) { pm.collectionVariables.set('access_token_expires_at', json.access_token_expires_at); }",
+                  "if (json.refresh_token_expires_at) { pm.collectionVariables.set('refresh_token_expires_at', json.refresh_token_expires_at); }",
                   "if (json.current_token_id) { pm.collectionVariables.set('current_token_id', json.current_token_id); }",
                   "if (json.current_token_id) { pm.collectionVariables.set('session_id', json.current_token_id); }"
                 ]
@@ -166,7 +180,10 @@
                 "type": "text/javascript",
                 "exec": [
                   "var json = pm.response.json();",
-                  "if (json.token) { pm.collectionVariables.set('token', json.token); }",
+                  "if (json.access_token) { pm.collectionVariables.set('access_token', json.access_token); pm.collectionVariables.set('token', json.access_token); } else if (json.token) { pm.collectionVariables.set('token', json.token); pm.collectionVariables.set('access_token', json.token); }",
+                  "if (json.refresh_token) { pm.collectionVariables.set('refresh_token', json.refresh_token); }",
+                  "if (json.access_token_expires_at) { pm.collectionVariables.set('access_token_expires_at', json.access_token_expires_at); }",
+                  "if (json.refresh_token_expires_at) { pm.collectionVariables.set('refresh_token_expires_at', json.refresh_token_expires_at); }",
                   "if (json.current_token_id) { pm.collectionVariables.set('current_token_id', json.current_token_id); }",
                   "if (json.current_token_id) { pm.collectionVariables.set('session_id', json.current_token_id); }"
                 ]
@@ -196,7 +213,10 @@
                 "type": "text/javascript",
                 "exec": [
                   "var json = pm.response.json();",
-                  "if (json.token) { pm.collectionVariables.set('token', json.token); }",
+                  "if (json.access_token) { pm.collectionVariables.set('access_token', json.access_token); pm.collectionVariables.set('token', json.access_token); } else if (json.token) { pm.collectionVariables.set('token', json.token); pm.collectionVariables.set('access_token', json.token); }",
+                  "if (json.refresh_token) { pm.collectionVariables.set('refresh_token', json.refresh_token); }",
+                  "if (json.access_token_expires_at) { pm.collectionVariables.set('access_token_expires_at', json.access_token_expires_at); }",
+                  "if (json.refresh_token_expires_at) { pm.collectionVariables.set('refresh_token_expires_at', json.refresh_token_expires_at); }",
                   "if (json.current_token_id) { pm.collectionVariables.set('current_token_id', json.current_token_id); }",
                   "if (json.current_token_id) { pm.collectionVariables.set('session_id', json.current_token_id); }"
                 ]
@@ -214,6 +234,39 @@
               "raw": "{\n  \"id_token\": \"{{google_id_token}}\",\n  \"account_type\": \"person\",\n  \"device_name\": \"flutter-android\"\n}"
             },
             "url": "{{base_url}}/api/auth/google/login"
+          },
+          "response": []
+        },
+        {
+          "name": "Refresh Token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "var json = pm.response.json();",
+                  "if (json.access_token) { pm.collectionVariables.set('access_token', json.access_token); pm.collectionVariables.set('token', json.access_token); } else if (json.token) { pm.collectionVariables.set('token', json.token); pm.collectionVariables.set('access_token', json.token); }",
+                  "if (json.refresh_token) { pm.collectionVariables.set('refresh_token', json.refresh_token); }",
+                  "if (json.access_token_expires_at) { pm.collectionVariables.set('access_token_expires_at', json.access_token_expires_at); }",
+                  "if (json.refresh_token_expires_at) { pm.collectionVariables.set('refresh_token_expires_at', json.refresh_token_expires_at); }",
+                  "if (json.current_token_id) { pm.collectionVariables.set('current_token_id', json.current_token_id); }",
+                  "if (json.current_token_id) { pm.collectionVariables.set('session_id', json.current_token_id); }"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refresh_token\": \"{{refresh_token}}\",\n  \"device_name\": \"iphone-15\"\n}"
+            },
+            "url": "{{base_url}}/api/auth/refresh-token"
           },
           "response": []
         },
@@ -267,6 +320,58 @@
               { "key": "Authorization", "value": "Bearer {{token}}" }
             ],
             "url": "{{base_url}}/api/auth/logout-all"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Email Verification",
+      "item": [
+        {
+          "name": "Verification Status",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": "{{base_url}}/api/auth/email/verification-status"
+          },
+          "response": []
+        },
+        {
+          "name": "Send Verification Email",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": "{{base_url}}/api/auth/email/verification/send"
+          },
+          "response": []
+        },
+        {
+          "name": "Resend Verification Email",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": "{{base_url}}/api/auth/email/verification/resend"
+          },
+          "response": []
+        },
+        {
+          "name": "Verify Email (Signed URL Parameters)",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "url": "{{base_url}}/api/auth/email/verify/{{verification_id}}/{{verification_hash}}?expires={{verification_expires}}&signature={{verification_signature}}"
           },
           "response": []
         }
