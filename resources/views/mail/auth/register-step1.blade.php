@@ -8,7 +8,7 @@
 </head>
 <body>
     <h1>Welcome to Job Nest, {{ $name }}!</h1>
-    <p>Thank you for registering. Please complete your registration by clicking the link below:</p>
-    <a href="{{ route('register.complete', ['token' => $user->verification_token]) }}">Complete Registration</a>
+    <p>Thank you for registering. Please continue your registration from the Job Nest app.</p>
+    <a href="{{ url('/') }}">Open Job Nest</a>
 </body>
 </html>

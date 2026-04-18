@@ -12,10 +12,10 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Validation\ValidationException;
 use Laravel\Sanctum\PersonalAccessToken;
-use App\Services\Auth\AuthTokenService;
-use Illuminate\Support\Facades\Mail;
 
 class AuthService
 {
@@ -25,30 +25,37 @@ class AuthService
 
     public function registerStepOne(array $validated, Request $request): array
     {
-        return DB::transaction(function () use ($validated, $request): array {
-            $user = User::create([
-                'name' => $validated['name'],
-                'email' => $validated['email'],
-                'phone' => $validated['phone'] ?? null,
-                'password' => Hash::make($validated['password']),
-                'account_type' => $validated['account_type'],
-                'status' => 'active',
-            ]);
+        try {
 
-            $this->createProfileForUser($user, $validated);
-            $tokenData = $this->authTokenService->issueToken(
-                $user,
-                $request,
-                'register-step-1',
-                $validated['device_name'] ?? null,
-            );
-            $this->sendRegisterStep1Email($user);
+            return DB::transaction(function () use ($validated, $request): array {
+                $user = User::create([
+                    'name' => $validated['name'],
+                    'email' => $validated['email'],
+                    'phone' => $validated['phone'] ?? null,
+                    'password' => Hash::make($validated['password']),
+                    'account_type' => $validated['account_type'],
+                    'status' => 'active',
+                ]);
 
-            return [
-                'user' => $this->loadUserProfiles($user),
-                ...$tokenData,
-            ];
-        });
+                $this->createProfileForUser($user, $validated);
+                $tokenData = $this->authTokenService->issueToken(
+                    $user,
+                    $request,
+                    'register-step-1',
+                    $validated['device_name'] ?? null,
+                );
+                $this->sendRegisterStep1Email($user);
+                Log::info('Queued RegisterStep1', ['user_id' => $user->id, 'email' => $user->email]);
+
+                return [
+                    'user' => $this->loadUserProfiles($user),
+                    ...$tokenData,
+                ];
+            });
+        } catch (\Exception $e) {
+            Log::error('Error in registerStepOne', ['error' => $e->getMessage()]);
+            throw $e;
+        }
     }
 
     public function registerStepTwo(User $user, array $validated): User
@@ -68,17 +75,26 @@ class AuthService
 
     public function registerStepThree(RegisterStepThreeRequest $request, User $user, array $validated): User
     {
-        return DB::transaction(function () use ($request, $user, $validated): User {
-            if ($user->isPerson()) {
-                $this->updatePersonStepThree($request, $user, $validated);
-            }
+        try {
 
-            if ($user->isCompany()) {
-                $this->updateCompanyStepThree($request, $user->companyProfile, $validated);
-            }
+            return DB::transaction(function () use ($request, $user, $validated): User {
+                if ($user->isPerson()) {
+                    $this->updatePersonStepThree($request, $user, $validated);
+                }
 
-            return $this->loadUserProfiles($user->fresh());
-        });
+                if ($user->isCompany()) {
+                    $this->updateCompanyStepThree($request, $user->companyProfile, $validated);
+                }
+                $this->sendRegisterCompleteEmail($user);
+
+                Log::info('Queued RegisterComplete', ['user_id' => $user->id, 'email' => $user->email]);
+
+                return $this->loadUserProfiles($user->fresh());
+            });
+        } catch (\Exception $e) {
+            Log::error('Error in registerStepThree', ['user_id' => $user->id, 'error' => $e->getMessage()]);
+            throw $e;
+        }
     }
 
     public function login(array $validated, Request $request): array
@@ -232,8 +248,6 @@ class AuthService
             'is_profile_completed' => true,
         ]);
 
-        $this->sendRegisterCompleteEmail($user);
-        
         if (array_key_exists('interests', $validated)) {
             $user->interests()->sync($validated['interests'] ?? []);
         }
@@ -266,10 +280,12 @@ class AuthService
             'password' => Hash::make($validated['password']),
         ]);
     }
+
     public function sendRegisterStep1Email(User $user): void
     {
         Mail::to($user->email)->queue(new RegisterStep1($user));
     }
+
     public function sendRegisterCompleteEmail(User $user): void
     {
         Mail::to($user->email)->queue(new RegisterComplete($user));

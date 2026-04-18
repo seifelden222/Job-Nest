@@ -19,7 +19,9 @@ class RegisterStep1 extends Mailable implements ShouldQueue
      * Create a new message instance.
      */
     public User $user;
+
     public string $name;
+
     public function __construct(User $user)
     {
         $this->user = $user;
@@ -42,7 +44,7 @@ class RegisterStep1 extends Mailable implements ShouldQueue
     public function content(): Content
     {
         return new Content(
-            view: 'emails.auth.register-step1',
+            view: 'mail.auth.register-step1',
             with: [
                 'name' => $this->name,
             ],

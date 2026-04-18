@@ -18,8 +18,10 @@ class RegisterComplete extends Mailable implements ShouldQueue
     /**
      * Create a new message instance.
      */
-     public User $user;
-     public string $name;
+    public User $user;
+
+    public string $name;
+
     public function __construct(User $user)
     {
         $this->user = $user;
@@ -42,7 +44,7 @@ class RegisterComplete extends Mailable implements ShouldQueue
     public function content(): Content
     {
         return new Content(
-            view: 'emails.auth.register-complete',
+            view: 'mail.auth.register-complete',
             with: [
                 'name' => $this->name,
             ],
