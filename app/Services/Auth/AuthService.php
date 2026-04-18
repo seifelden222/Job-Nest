@@ -9,6 +9,7 @@ use App\Models\CompanyProfile;
 use App\Models\Document;
 use App\Models\PersonProfile;
 use App\Models\User;
+use App\Notifications\Auth\VerifyEmailNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -38,6 +39,7 @@ class AuthService
                 ]);
 
                 $this->createProfileForUser($user, $validated);
+                $this->sendEmailVerification($user);
                 $tokenData = $this->authTokenService->issueToken(
                     $user,
                     $request,
@@ -132,8 +134,20 @@ class AuthService
         $accessToken = $user->currentAccessToken();
 
         if ($accessToken instanceof PersonalAccessToken) {
+            $this->authTokenService->revokeRefreshTokensByAccessTokenId((int) $accessToken->getKey());
             $accessToken->delete();
         }
+    }
+
+    public function logoutAll(User $user): array
+    {
+        $revokedAccessTokensCount = $this->authTokenService->revokeAllTokens($user);
+        $revokedRefreshTokensCount = $this->authTokenService->revokeAllRefreshTokens($user);
+
+        return [
+            'revoked_access_tokens_count' => $revokedAccessTokensCount,
+            'revoked_refresh_tokens_count' => $revokedRefreshTokensCount,
+        ];
     }
 
     public function createProfileForUser(User $user, array $validated = []): void
@@ -289,6 +303,13 @@ class AuthService
     public function sendRegisterCompleteEmail(User $user): void
     {
         Mail::to($user->email)->queue(new RegisterComplete($user));
+    }
+
+    public function sendEmailVerification(User $user): void
+    {
+        if (! $user->hasVerifiedEmail()) {
+            $user->notify(new VerifyEmailNotification);
+        }
     }
 
     public function loadUserProfiles(User $user): User

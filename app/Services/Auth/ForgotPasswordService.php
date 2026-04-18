@@ -5,7 +5,6 @@ namespace App\Services\Auth;
 use App\Mail\Auth\SendOtp;
 use App\Models\OtpCode;
 use App\Models\User;
-use App\Notifications\Auth\mailotpnotfication;
 use App\Services\SmsService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -35,6 +34,10 @@ class ForgotPasswordService
         $method = $validated['method'];
         $identifier = trim((string) $validated['email_or_phone']);
         $user = $this->resolveUserByMethod($identifier, $method);
+
+        if (! $user instanceof User) {
+            return;
+        }
 
         $otp = DB::transaction(function () use ($user, $method, $identifier): string {
             $this->invalidateExistingOtps($user, $method, $identifier);
@@ -74,8 +77,8 @@ class ForgotPasswordService
             ->where('expires_at', '>', now())
             ->when(
                 $method === 'email',
-                fn($query) => $query->where('email', $identifier),
-                fn($query) => $query->where('phone', $identifier)
+                fn ($query) => $query->where('email', $identifier),
+                fn ($query) => $query->where('phone', $identifier)
             )
             ->latest('id')
             ->first();
@@ -95,19 +98,11 @@ class ForgotPasswordService
         });
     }
 
-    private function resolveUserByMethod(string $identifier, string $method): User
+    private function resolveUserByMethod(string $identifier, string $method): ?User
     {
-        $user = User::query()
+        return User::query()
             ->where($method === 'email' ? 'email' : 'phone', $identifier)
             ->first();
-
-        if (! $user) {
-            throw ValidationException::withMessages([
-                'email_or_phone' => ['User not found.'],
-            ]);
-        }
-
-        return $user;
     }
 
     private function resolveUserAndMethod(string $identifier): array
@@ -119,7 +114,7 @@ class ForgotPasswordService
 
         if (! $user) {
             throw ValidationException::withMessages([
-                'email_or_phone' => ['User not found.'],
+                'email_or_phone' => ['Invalid credentials.'],
             ]);
         }
 
@@ -136,8 +131,8 @@ class ForgotPasswordService
             ->where('expires_at', '>', now())
             ->when(
                 $method === 'email',
-                fn($query) => $query->where('email', $identifier),
-                fn($query) => $query->where('phone', $identifier)
+                fn ($query) => $query->where('email', $identifier),
+                fn ($query) => $query->where('phone', $identifier)
             )
             ->latest('id')
             ->first();
@@ -157,6 +152,10 @@ class ForgotPasswordService
         $identifier = trim((string) $validated['email_or_phone']);
         $user = $this->resolveUserByMethod($identifier, $method);
 
+        if (! $user instanceof User) {
+            return;
+        }
+
         $otp = DB::transaction(function () use ($user, $method, $identifier): string {
             $this->invalidateExistingOtps($user, $method, $identifier);
 
@@ -174,8 +173,8 @@ class ForgotPasswordService
             ->whereNull('verified_at')
             ->when(
                 $method === 'email',
-                fn($query) => $query->where('email', $identifier),
-                fn($query) => $query->where('phone', $identifier)
+                fn ($query) => $query->where('email', $identifier),
+                fn ($query) => $query->where('phone', $identifier)
             )
             ->delete();
     }
@@ -188,8 +187,8 @@ class ForgotPasswordService
             ->where('type', $this->OTP_TYPE)
             ->when(
                 $method === 'email',
-                fn($query) => $query->where('email', $identifier),
-                fn($query) => $query->where('phone', $identifier)
+                fn ($query) => $query->where('email', $identifier),
+                fn ($query) => $query->where('phone', $identifier)
             )
             ->delete();
     }
@@ -224,7 +223,6 @@ class ForgotPasswordService
     {
         if ($method === 'email') {
             Mail::to($user->email)->queue(new SendOtp($otp));
-            $user->notify(new mailotpnotfication($otp));
         } else {
             // SMS path — resolve SmsService only when needed so tests can easily fake it
             try {
