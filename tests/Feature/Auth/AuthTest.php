@@ -4,15 +4,20 @@ use App\Mail\Auth\SendOtp;
 use App\Models\Interest;
 use App\Models\Language;
 use App\Models\OtpCode;
+use App\Models\RefreshToken;
 use App\Models\Skill;
 use App\Models\User;
+use App\Notifications\Auth\VerifyEmailNotification;
 use App\Services\Auth\AuthTokenService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\URL;
+use Illuminate\Support\Str;
 
 uses(RefreshDatabase::class);
 
@@ -74,6 +79,17 @@ test('register step 1 fails with duplicate email', function () {
     $this->postJson(route('auth.register.step1'), personPayload())
         ->assertUnprocessable()
         ->assertJsonValidationErrors(['email']);
+});
+
+test('registration sends email verification notification', function () {
+    Notification::fake();
+
+    $this->postJson(route('auth.register.step1'), personPayload())
+        ->assertCreated();
+
+    $user = User::query()->where('email', 'ali@example.com')->firstOrFail();
+
+    Notification::assertSentTo($user, VerifyEmailNotification::class);
 });
 
 // ─── Register Step 2 ────────────────────────────────────────────────────────
@@ -168,6 +184,78 @@ test('user can login with correct credentials', function () {
         ->assertJsonPath('token_type', 'Bearer');
 });
 
+test('login returns access and refresh token metadata', function () {
+    $user = User::factory()->create(['password' => Hash::make('password123')]);
+
+    $this->postJson(route('auth.login'), [
+        'email' => $user->email,
+        'password' => 'password123',
+        'device_name' => 'android-emulator',
+    ])
+        ->assertSuccessful()
+        ->assertJsonStructure([
+            'token',
+            'access_token',
+            'refresh_token',
+            'token_type',
+            'expires_at',
+            'access_token_expires_at',
+            'refresh_token_expires_at',
+            'current_token',
+        ])
+        ->assertJsonPath('token_type', 'Bearer');
+});
+
+test('refresh endpoint issues new access and refresh tokens', function () {
+    $user = User::factory()->create(['password' => Hash::make('password123')]);
+
+    $loginResponse = $this->postJson(route('auth.login'), [
+        'email' => $user->email,
+        'password' => 'password123',
+        'device_name' => 'iphone-15',
+    ])->assertSuccessful();
+
+    $oldAccessToken = $loginResponse->json('access_token');
+    $oldRefreshToken = $loginResponse->json('refresh_token');
+
+    $refreshResponse = $this->postJson(route('auth.refresh-token'), [
+        'refresh_token' => $oldRefreshToken,
+        'device_name' => 'iphone-15',
+    ])
+        ->assertSuccessful()
+        ->assertJsonStructure([
+            'access_token',
+            'refresh_token',
+            'access_token_expires_at',
+            'refresh_token_expires_at',
+            'current_token',
+        ]);
+
+    expect($refreshResponse->json('access_token'))->not->toBe($oldAccessToken)
+        ->and($refreshResponse->json('refresh_token'))->not->toBe($oldRefreshToken);
+});
+
+test('old refresh token is rejected after rotation', function () {
+    $user = User::factory()->create(['password' => Hash::make('password123')]);
+
+    $loginResponse = $this->postJson(route('auth.login'), [
+        'email' => $user->email,
+        'password' => 'password123',
+    ])->assertSuccessful();
+
+    $oldRefreshToken = $loginResponse->json('refresh_token');
+
+    $this->postJson(route('auth.refresh-token'), [
+        'refresh_token' => $oldRefreshToken,
+    ])->assertSuccessful();
+
+    $this->postJson(route('auth.refresh-token'), [
+        'refresh_token' => $oldRefreshToken,
+    ])
+        ->assertUnprocessable()
+        ->assertJsonValidationErrors(['refresh_token']);
+});
+
 test('login fails with wrong password', function () {
     $user = User::factory()->create(['password' => Hash::make('correct')]);
 
@@ -190,10 +278,91 @@ test('authenticated user can fetch their profile', function () {
         ->assertJsonPath('user.id', $user->id);
 });
 
+test('me response includes email verification fields', function () {
+    $user = User::factory()->unverified()->create();
+
+    $this->withToken($user->createToken('test')->plainTextToken)
+        ->getJson(route('auth.me'))
+        ->assertSuccessful()
+        ->assertJsonPath('user.email_verified', false)
+        ->assertJsonPath('user.email_verified_at', null);
+});
+
+test('authenticated user can request and resend email verification', function () {
+    Notification::fake();
+
+    $user = User::factory()->unverified()->create();
+    $accessToken = $user->createToken('mobile')->plainTextToken;
+
+    $this->withToken($accessToken)
+        ->postJson(route('auth.verification.send'))
+        ->assertSuccessful();
+
+    $this->withToken($accessToken)
+        ->postJson(route('auth.verification.resend'))
+        ->assertSuccessful();
+
+    Notification::assertSentToTimes($user, VerifyEmailNotification::class, 2);
+});
+
+test('email verification succeeds with a valid signed link', function () {
+    $user = User::factory()->unverified()->create();
+
+    $signedUrl = URL::temporarySignedRoute(
+        'auth.verification.verify',
+        now()->addMinutes(60),
+        [
+            'id' => $user->id,
+            'hash' => sha1($user->getEmailForVerification()),
+        ],
+    );
+
+    $this->getJson($signedUrl)
+        ->assertSuccessful()
+        ->assertJsonPath('email_verified', true);
+
+    expect($user->fresh()->hasVerifiedEmail())->toBeTrue();
+});
+
+test('email verification fails with an invalid or expired signature', function () {
+    $user = User::factory()->unverified()->create();
+
+    $expiredUrl = URL::temporarySignedRoute(
+        'auth.verification.verify',
+        now()->subMinute(),
+        [
+            'id' => $user->id,
+            'hash' => sha1($user->getEmailForVerification()),
+        ],
+    );
+
+    $this->getJson($expiredUrl)
+        ->assertUnprocessable();
+});
+
+test('verification status endpoint returns current verification state', function () {
+    $user = User::factory()->unverified()->create();
+    $accessToken = $user->createToken('android')->plainTextToken;
+
+    $this->withToken($accessToken)
+        ->getJson(route('auth.verification.status'))
+        ->assertSuccessful()
+        ->assertJsonPath('email_verified', false);
+});
+
 test('user can logout and token is deleted', function () {
     $user = User::factory()->create();
     $currentToken = $user->createToken('current-device');
     $user->createToken('other-device');
+
+    $refreshToken = RefreshToken::query()->create([
+        'user_id' => $user->id,
+        'access_token_id' => $currentToken->accessToken->getKey(),
+        'family_id' => (string) Str::uuid(),
+        'name' => 'current-device',
+        'token_hash' => hash('sha256', 'refresh-current-token'),
+        'expires_at' => now()->addDays(30),
+    ]);
 
     $this->withToken($currentToken->plainTextToken)
         ->postJson(route('auth.logout'))
@@ -202,6 +371,7 @@ test('user can logout and token is deleted', function () {
     $this->assertDatabaseMissing('personal_access_tokens', [
         'id' => $currentToken->accessToken->getKey(),
     ]);
+    expect(RefreshToken::query()->whereKey($refreshToken->id)->value('revoked_at'))->not->toBeNull();
     $this->assertDatabaseCount('personal_access_tokens', 1);
 });
 
@@ -211,12 +381,27 @@ test('user can logout from all devices', function () {
     $user->createToken('tablet');
     $user->createToken('laptop');
 
+    $firstRefresh = $this->postJson(route('auth.login'), [
+        'email' => $user->email,
+        'password' => 'password',
+        'device_name' => 'phone',
+    ])->assertSuccessful()->json('refresh_token');
+
+    $secondRefresh = $this->postJson(route('auth.login'), [
+        'email' => $user->email,
+        'password' => 'password',
+        'device_name' => 'tablet',
+    ])->assertSuccessful()->json('refresh_token');
+
+    expect($firstRefresh)->not->toBeNull()->and($secondRefresh)->not->toBeNull();
+
     $this->withToken($currentToken->plainTextToken)
         ->postJson(route('auth.logout-all'))
         ->assertSuccessful()
-        ->assertJsonPath('revoked_tokens_count', 3);
+        ->assertJsonPath('revoked_tokens_count', 5);
 
     $this->assertDatabaseCount('personal_access_tokens', 0);
+    expect(RefreshToken::query()->whereNull('revoked_at')->count())->toBe(0);
 });
 
 test('authenticated user can list active sessions', function () {
@@ -287,7 +472,7 @@ test('forgot password sends OTP by email', function () {
     ])
         ->assertSuccessful();
 
-    Mail::assertSent(SendOtp::class);
+    Mail::assertQueued(SendOtp::class);
     $this->assertDatabaseHas('otp_codes', ['user_id' => $user->id, 'email' => 'user@example.com']);
 });
 
@@ -364,7 +549,7 @@ test('resend OTP invalidates old OTP and creates a new one', function () {
     $this->assertDatabaseMissing('otp_codes', ['code' => '111111']);
     $this->assertDatabaseCount('otp_codes', 1);
 
-    Mail::assertSent(SendOtp::class);
+    Mail::assertQueued(SendOtp::class);
 });
 
 // ─── Reset Password ──────────────────────────────────────────────────────────
@@ -486,6 +671,37 @@ test('google login links an existing user by email', function () {
         ->assertJsonPath('user.id', $user->id);
 
     expect($user->fresh()->google_id)->toBe('google-user-456');
+});
+
+test('google login auto-verifies trusted verified email', function () {
+    config()->set('services.google.client_id', 'google-client-id');
+    Http::preventStrayRequests();
+
+    Http::fake([
+        'https://oauth2.googleapis.com/tokeninfo*' => Http::response([
+            'iss' => 'https://accounts.google.com',
+            'aud' => 'google-client-id',
+            'sub' => 'google-user-789',
+            'email' => 'verified-google@example.com',
+            'name' => 'Verified Google User',
+            'email_verified' => true,
+            'exp' => now()->addHour()->timestamp,
+        ]),
+    ]);
+
+    $this->postJson(route('auth.google.login'), [
+        'id_token' => 'verified-google-token',
+    ])->assertSuccessful();
+
+    expect(User::query()->where('email', 'verified-google@example.com')->firstOrFail()->hasVerifiedEmail())->toBeTrue();
+});
+
+test('unverified users are blocked from verified only routes', function () {
+    $user = User::factory()->unverified()->create();
+
+    $this->withToken($user->createToken('test')->plainTextToken)
+        ->getJson(route('auth.sessions.index'))
+        ->assertForbidden();
 });
 
 test('google login fails when the token is invalid', function () {

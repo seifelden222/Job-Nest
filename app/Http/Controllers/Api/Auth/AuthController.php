@@ -7,6 +7,7 @@ use App\Http\Requests\Api\Auth\ChangePasswordRequest;
 use App\Http\Requests\Api\Auth\ForgotPasswordRequest;
 use App\Http\Requests\Api\Auth\GoogleLoginRequest;
 use App\Http\Requests\Api\Auth\LoginRequest;
+use App\Http\Requests\Api\Auth\RefreshTokenRequest;
 use App\Http\Requests\Api\Auth\RegisterStepOneRequest;
 use App\Http\Requests\Api\Auth\RegisterStepThreeRequest;
 use App\Http\Requests\Api\Auth\RegisterStepTwoRequest;
@@ -20,8 +21,11 @@ use App\Services\Auth\AuthService;
 use App\Services\Auth\AuthTokenService;
 use App\Services\Auth\ForgotPasswordService;
 use App\Services\Auth\GoogleAuthService;
+use Illuminate\Auth\Events\Verified;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\URL;
+use Laravel\Sanctum\PersonalAccessToken;
 
 class AuthController extends Controller
 {
@@ -121,6 +125,96 @@ class AuthController extends Controller
         );
     }
 
+    public function refreshToken(RefreshTokenRequest $request): JsonResponse
+    {
+        $tokenData = $this->authTokenService->refreshToken(
+            plainRefreshToken: $request->validated('refresh_token'),
+            request: $request,
+            requestedDeviceName: $request->validated('device_name'),
+        );
+
+        $accessToken = PersonalAccessToken::findToken($tokenData['token']);
+
+        if (! $accessToken instanceof PersonalAccessToken || ! $accessToken->tokenable instanceof User) {
+            return response()->json([
+                'message' => 'Failed to refresh token.',
+            ], 500);
+        }
+
+        return $this->authResponse(
+            message: 'Token refreshed successfully.',
+            user: $this->authService->me($accessToken->tokenable),
+            tokenData: $tokenData,
+        );
+    }
+
+    public function sendEmailVerification(Request $request): JsonResponse
+    {
+        $user = $request->user();
+
+        if ($user->hasVerifiedEmail()) {
+            return response()->json([
+                'message' => 'Email already verified.',
+            ]);
+        }
+
+        $this->authService->sendEmailVerification($user);
+
+        return response()->json([
+            'message' => 'Verification email sent successfully.',
+        ]);
+    }
+
+    public function resendEmailVerification(Request $request): JsonResponse
+    {
+        return $this->sendEmailVerification($request);
+    }
+
+    public function verifyEmail(Request $request, int $id, string $hash): JsonResponse
+    {
+        if (! URL::hasValidSignature($request)) {
+            return response()->json([
+                'message' => 'The verification link is invalid or has expired.',
+            ], 422);
+        }
+
+        $user = User::query()->find($id);
+
+        if (! $user instanceof User) {
+            return response()->json([
+                'message' => 'The verification link is invalid.',
+            ], 422);
+        }
+
+        if (! hash_equals((string) $hash, sha1($user->getEmailForVerification()))) {
+            return response()->json([
+                'message' => 'The verification link is invalid.',
+            ], 422);
+        }
+
+        if (! $user->hasVerifiedEmail()) {
+            $user->markEmailAsVerified();
+            event(new Verified($user));
+        }
+
+        return response()->json([
+            'message' => 'Email verified successfully.',
+            'email_verified' => true,
+            'email_verified_at' => $user->fresh()->email_verified_at?->toIso8601String(),
+        ]);
+    }
+
+    public function verificationStatus(Request $request): JsonResponse
+    {
+        $user = $request->user();
+
+        return response()->json([
+            'message' => 'Verification status fetched successfully.',
+            'email_verified' => $user->hasVerifiedEmail(),
+            'email_verified_at' => $user->email_verified_at?->toIso8601String(),
+        ]);
+    }
+
     public function logout(Request $request): JsonResponse
     {
         $this->authService->logout($request->user());
@@ -132,11 +226,12 @@ class AuthController extends Controller
 
     public function logoutAll(Request $request): JsonResponse
     {
-        $revokedTokensCount = $this->authTokenService->revokeAllTokens($request->user());
+        $revocationData = $this->authService->logoutAll($request->user());
 
         return response()->json([
             'message' => 'Logged out from all devices successfully.',
-            'revoked_tokens_count' => $revokedTokensCount,
+            'revoked_tokens_count' => $revocationData['revoked_access_tokens_count'],
+            'revoked_refresh_tokens_count' => $revocationData['revoked_refresh_tokens_count'],
         ]);
     }
 
@@ -229,7 +324,12 @@ class AuthController extends Controller
 
         if ($tokenData !== null) {
             $payload['token'] = $tokenData['token'];
+            $payload['access_token'] = $tokenData['access_token'] ?? $tokenData['token'];
+            $payload['refresh_token'] = $tokenData['refresh_token'] ?? null;
             $payload['token_type'] = $tokenData['token_type'];
+            $payload['expires_at'] = $tokenData['expires_at'] ?? null;
+            $payload['access_token_expires_at'] = $tokenData['access_token_expires_at'] ?? null;
+            $payload['refresh_token_expires_at'] = $tokenData['refresh_token_expires_at'] ?? null;
             $payload['current_token_id'] = $tokenData['current_token']['id'];
             $payload['current_token'] = $tokenData['current_token'];
         }

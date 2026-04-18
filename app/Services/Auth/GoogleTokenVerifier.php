@@ -14,7 +14,8 @@ class GoogleTokenVerifier
      *     google_id:string,
      *     email:string,
      *     name:string,
-     *     picture:?string
+     *     picture:?string,
+     *     email_verified:bool
      * }
      */
     public function verify(string $idToken): array
@@ -47,6 +48,7 @@ class GoogleTokenVerifier
         $email = Str::lower(trim((string) ($payload['email'] ?? '')));
         $name = trim((string) ($payload['name'] ?? ''));
         $picture = $payload['picture'] ?? null;
+        $emailVerified = filter_var($payload['email_verified'] ?? false, FILTER_VALIDATE_BOOLEAN);
         $expiresAt = (int) ($payload['exp'] ?? 0);
 
         if ($subject === '' || ! filter_var($email, FILTER_VALIDATE_EMAIL)) {
@@ -72,6 +74,7 @@ class GoogleTokenVerifier
             'email' => $email,
             'name' => $name !== '' ? $name : Str::before($email, '@'),
             'picture' => is_string($picture) ? $picture : null,
+            'email_verified' => $emailVerified,
         ];
     }
 

@@ -55,6 +55,14 @@ class GoogleAuthService
                 ])->save();
             }
 
+            if (($googleUser['email_verified'] ?? false) && ! $user->hasVerifiedEmail()) {
+                $user->markEmailAsVerified();
+            }
+
+            if (! $user->hasVerifiedEmail()) {
+                $this->authService->sendEmailVerification($user);
+            }
+
             $tokenData = $this->authTokenService->issueToken(
                 $user,
                 $request,
@@ -71,7 +79,7 @@ class GoogleAuthService
     }
 
     /**
-     * @param  array{google_id:string,email:string,name:string,picture:?string}  $googleUser
+     * @param  array{google_id:string,email:string,name:string,picture:?string,email_verified:bool}  $googleUser
      */
     private function createUserFromGooglePayload(array $googleUser, array $validated): User
     {

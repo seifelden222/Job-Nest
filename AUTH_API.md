@@ -19,7 +19,12 @@ Successful auth responses that issue a token return:
 {
   "message": "Logged in successfully.",
   "token": "1|plain-text-token",
+  "access_token": "1|plain-text-token",
+  "refresh_token": "opaque-refresh-token",
   "token_type": "Bearer",
+  "expires_at": "2026-04-18T19:55:00+00:00",
+  "access_token_expires_at": "2026-04-18T19:55:00+00:00",
+  "refresh_token_expires_at": "2026-05-18T19:40:00+00:00",
   "current_token_id": "opaque-session-id",
   "current_token": {
     "id": "opaque-session-id",
@@ -54,11 +59,16 @@ Validation failures return HTTP `422`:
 | POST | `/api/auth/register/step-3` | Yes | Finish onboarding and upload files |
 | POST | `/api/auth/login` | No | Email/password login |
 | POST | `/api/auth/google/login` | No | Google ID-token login |
+| POST | `/api/auth/refresh-token` | No | Rotate refresh token and issue a new token pair |
 | POST | `/api/auth/forgot-password` | No | Send reset OTP |
 | POST | `/api/auth/verify-reset-otp` | No | Verify reset OTP |
 | POST | `/api/auth/resend-reset-otp` | No | Resend reset OTP |
 | POST | `/api/auth/reset-password` | No | Reset password with verified OTP |
+| GET | `/api/auth/email/verify/{id}/{hash}` | No | Verify email from signed link |
 | GET | `/api/auth/me` | Yes | Fetch authenticated user |
+| POST | `/api/auth/email/verification/send` | Yes | Send verification email |
+| POST | `/api/auth/email/verification/resend` | Yes | Resend verification email |
+| GET | `/api/auth/email/verification-status` | Yes | Check email verification status |
 | POST | `/api/auth/change-password` | Yes | Change password |
 | POST | `/api/auth/logout` | Yes | Logout current device |
 | POST | `/api/auth/logout-all` | Yes | Logout all devices |
@@ -213,7 +223,8 @@ Payload:
 
 Response notes:
 
-- Returns token, `token_type`, `current_token_id`, `current_token`, and `user`
+- Returns token pair (`access_token`, `refresh_token`) with expiration metadata
+- Keeps backward compatibility via `token` alias for `access_token`
 - Token names are contextual, for example `login:iphone-15`
 
 Validation highlights:
@@ -369,7 +380,10 @@ Response:
 ```json
 {
   "message": "Authenticated user fetched successfully.",
-  "user": {}
+  "user": {
+    "email_verified": true,
+    "email_verified_at": "2026-04-18T19:40:00+00:00"
+  }
 }
 ```
 
@@ -427,7 +441,8 @@ Response:
 ```json
 {
   "message": "Logged out from all devices successfully.",
-  "revoked_tokens_count": 3
+  "revoked_tokens_count": 3,
+  "revoked_refresh_tokens_count": 3
 }
 ```
 
@@ -475,3 +490,92 @@ Response:
 Validation highlights:
 
 - Unknown or malformed `sessionId` returns `422` on `session_id`
+
+## Email Verification Flow
+
+### POST `/api/auth/email/verification/send`
+
+Auth required: `Yes`
+
+Behavior:
+
+- Sends verification email when account is unverified
+- Returns success if already verified (idempotent)
+
+### POST `/api/auth/email/verification/resend`
+
+Auth required: `Yes`
+
+Behavior:
+
+- Same behavior as send endpoint
+- Rate limited to reduce abuse
+
+### GET `/api/auth/email/verify/{id}/{hash}`
+
+Auth required: `No`
+
+Behavior:
+
+- Verifies email through a temporary signed URL
+- Invalid/expired signatures return `422`
+- Re-verification is safe and idempotent
+
+Success response:
+
+```json
+{
+  "message": "Email verified successfully.",
+  "email_verified": true,
+  "email_verified_at": "2026-04-18T19:40:00+00:00"
+}
+```
+
+### GET `/api/auth/email/verification-status`
+
+Auth required: `Yes`
+
+Response:
+
+```json
+{
+  "message": "Verification status fetched successfully.",
+  "email_verified": false,
+  "email_verified_at": null
+}
+```
+
+## Refresh Token Flow
+
+### POST `/api/auth/refresh-token`
+
+Auth required: `No`
+
+Payload:
+
+```json
+{
+  "refresh_token": "opaque-refresh-token",
+  "device_name": "iphone-15"
+}
+```
+
+Behavior:
+
+- Validates refresh token hash against stored DB hash
+- Rotates refresh token on every successful refresh
+- Revokes prior access token tied to the refreshed session
+- Rejects replayed (already rotated) refresh tokens
+
+Success response:
+
+```json
+{
+  "message": "Token refreshed successfully.",
+  "access_token": "2|new-access-token",
+  "refresh_token": "new-opaque-refresh-token",
+  "token_type": "Bearer",
+  "access_token_expires_at": "2026-04-18T20:00:00+00:00",
+  "refresh_token_expires_at": "2026-05-18T19:45:00+00:00"
+}
+```
