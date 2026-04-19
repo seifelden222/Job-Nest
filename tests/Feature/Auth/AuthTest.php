@@ -64,13 +64,35 @@ test('person can register step 1', function () {
     $this->assertDatabaseHas('person_profiles', ['university' => 'Cairo University']);
 });
 
-test('company can register step 1', function () {
-    $this->postJson(route('auth.register.step1'), companyPayload())
+test('company can register through company endpoint', function () {
+    Storage::fake('public');
+
+    $this->postJson(route('auth.register.company'), companyPayload([
+        'about' => 'We build hiring tools.',
+        'logo' => UploadedFile::fake()->image('logo.png'),
+    ]))
         ->assertCreated()
+        ->assertJsonPath('message', 'Registration completed successfully.')
+        ->assertJsonPath('current_step', 3)
         ->assertJsonStructure(['message', 'token', 'user' => ['id', 'email', 'account_type', 'company_profile']]);
 
     $this->assertDatabaseHas('users', ['email' => 'hr@techcorp.com', 'account_type' => 'company']);
-    $this->assertDatabaseHas('company_profiles', ['company_name' => 'Tech Corp Ltd']);
+    $this->assertDatabaseHas('company_profiles', [
+        'company_name' => 'Tech Corp Ltd',
+        'about' => 'We build hiring tools.',
+        'onboarding_step' => 3,
+        'is_profile_completed' => true,
+    ]);
+
+    $storedLogo = User::query()->where('email', 'hr@techcorp.com')->firstOrFail()->companyProfile->logo;
+
+    expect(Storage::disk('public')->exists($storedLogo))->toBeTrue();
+});
+
+test('company cannot register through step 1', function () {
+    $this->postJson(route('auth.register.step1'), companyPayload())
+        ->assertUnprocessable()
+        ->assertJsonValidationErrors(['account_type']);
 });
 
 test('register step 1 fails with duplicate email', function () {
@@ -119,12 +141,13 @@ test('person can complete register step 2 with skills and languages', function (
     $this->assertDatabaseHas('user_languages', ['user_id' => $user->id, 'language_id' => $language->id]);
 });
 
-test('company can complete register step 2', function () {
+test('company cannot complete register step 2', function () {
     $user = User::factory()->company()->create();
     $user->companyProfile()->create([
         'user_id' => $user->id,
         'company_name' => 'Tech Corp Ltd',
-        'onboarding_step' => 1,
+        'onboarding_step' => 3,
+        'is_profile_completed' => true,
     ]);
 
     $this->withToken($user->createToken('test')->plainTextToken)
@@ -135,13 +158,33 @@ test('company can complete register step 2', function () {
             'location' => 'Giza',
             'about' => 'Scaling a hiring platform.',
         ])
-        ->assertSuccessful();
+        ->assertUnprocessable()
+        ->assertJsonValidationErrors(['account_type']);
 
     $this->assertDatabaseHas('company_profiles', [
         'user_id' => $user->id,
-        'website' => 'https://updated-techcorp.com',
-        'onboarding_step' => 2,
+        'company_name' => 'Tech Corp Ltd',
+        'onboarding_step' => 3,
+        'is_profile_completed' => true,
     ]);
+});
+
+test('company cannot complete register step 3', function () {
+    $user = User::factory()->company()->create();
+    $user->companyProfile()->create([
+        'user_id' => $user->id,
+        'company_name' => 'Tech Corp Ltd',
+        'onboarding_step' => 3,
+        'is_profile_completed' => true,
+    ]);
+
+    $this->withToken($user->createToken('test')->plainTextToken)
+        ->postJson(route('auth.register.step3'), [
+            'about' => 'Should not be updated.',
+            'logo' => UploadedFile::fake()->image('updated-logo.png'),
+        ])
+        ->assertUnprocessable()
+        ->assertJsonValidationErrors(['account_type']);
 });
 
 // ─── Register Step 3 ────────────────────────────────────────────────────────

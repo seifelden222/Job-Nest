@@ -5,7 +5,7 @@ namespace App\Http\Requests\Api\Auth;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
-class RegisterStepOneRequest extends FormRequest
+class RegisterCompanyRequest extends FormRequest
 {
     public function authorize(): bool
     {
@@ -15,14 +15,19 @@ class RegisterStepOneRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'account_type' => ['required', Rule::in(['person'])],
+            'account_type' => ['required', Rule::in(['company'])],
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'max:255', 'unique:users,email'],
             'phone' => ['nullable', 'string', 'max:20', 'unique:users,phone'],
             'password' => ['required', 'string', 'min:8', 'confirmed'],
             'device_name' => ['nullable', 'string', 'max:120'],
-            'university' => ['required', 'string', 'max:255'],
-            'major' => ['required', 'string', 'max:255'],
+            'company_name' => ['required', 'string', 'max:255'],
+            'website' => ['nullable', 'url', 'max:255'],
+            'company_size' => ['nullable', 'string', 'max:100'],
+            'industry' => ['nullable', 'string', 'max:255'],
+            'location' => ['nullable', 'string', 'max:255'],
+            'about' => ['nullable', 'string', 'max:2000'],
+            'logo' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
         ];
     }
 
@@ -30,12 +35,11 @@ class RegisterStepOneRequest extends FormRequest
     {
         return [
             'account_type.required' => 'Account type is required.',
-            'account_type.in' => 'Account type must be person for this endpoint.',
+            'account_type.in' => 'Account type must be company for this endpoint.',
             'email.unique' => 'This email is already registered.',
             'phone.unique' => 'This phone number is already registered.',
             'password.confirmed' => 'Password confirmation does not match.',
-            'university.required' => 'University is required for person accounts.',
-            'major.required' => 'Major is required for person accounts.',
+            'company_name.required' => 'Company name is required for company accounts.',
         ];
     }
 }

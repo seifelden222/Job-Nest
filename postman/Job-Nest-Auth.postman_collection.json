@@ -2,7 +2,7 @@
   "info": {
     "name": "Job Nest - Auth",
     "_postman_id": "job-nest-auth-v3",
-    "description": "JobNest Laravel 13 + Sanctum auth API collection with refresh tokens and email verification.\n\nSet `base_url`, then use register/login/google-login requests to populate `token`, `refresh_token`, and session fields automatically.",
+    "description": "JobNest Laravel 13 + Sanctum auth API collection with refresh tokens and email verification.\n\nSet `base_url`, then use person register step-1 or register/company, plus login/google-login requests to populate `token`, `refresh_token`, and session fields automatically.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
@@ -59,7 +59,7 @@
           "response": []
         },
         {
-          "name": "Register Step 1 - Company",
+          "name": "Register Company",
           "event": [
             {
               "listen": "test",
@@ -80,14 +80,28 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Accept", "value": "application/json" },
-              { "key": "Content-Type", "value": "application/json" }
+              { "key": "Accept", "value": "application/json" }
             ],
             "body": {
-              "mode": "raw",
-              "raw": "{\n  \"account_type\": \"company\",\n  \"name\": \"Tech Corp HR\",\n  \"email\": \"hr@techcorp.com\",\n  \"phone\": \"01098765432\",\n  \"password\": \"password123\",\n  \"password_confirmation\": \"password123\",\n  \"company_name\": \"Tech Corp\",\n  \"website\": \"https://techcorp.com\",\n  \"company_size\": \"51-200\",\n  \"industry\": \"Technology\",\n  \"location\": \"Cairo\",\n  \"device_name\": \"web-chrome\"\n}"
+              "mode": "formdata",
+              "formdata": [
+                { "key": "account_type", "value": "company", "type": "text" },
+                { "key": "name", "value": "Tech Corp HR", "type": "text" },
+                { "key": "email", "value": "hr@techcorp.com", "type": "text" },
+                { "key": "phone", "value": "01098765432", "type": "text" },
+                { "key": "password", "value": "password123", "type": "text" },
+                { "key": "password_confirmation", "value": "password123", "type": "text" },
+                { "key": "company_name", "value": "Tech Corp", "type": "text" },
+                { "key": "website", "value": "https://techcorp.com", "type": "text" },
+                { "key": "company_size", "value": "51-200", "type": "text" },
+                { "key": "industry", "value": "Technology", "type": "text" },
+                { "key": "location", "value": "Cairo", "type": "text" },
+                { "key": "about", "value": "We build hiring products.", "type": "text" },
+                { "key": "device_name", "value": "web-chrome", "type": "text" },
+                { "key": "logo", "type": "file", "src": "" }
+              ]
             },
-            "url": "{{base_url}}/api/auth/register/step-1"
+            "url": "{{base_url}}/api/auth/register/company"
           },
           "response": []
         },
@@ -109,23 +123,6 @@
           "response": []
         },
         {
-          "name": "Register Step 2 - Company",
-          "request": {
-            "method": "POST",
-            "header": [
-              { "key": "Accept", "value": "application/json" },
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{token}}" }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"website\": \"https://techcorp.com\",\n  \"company_size\": \"201-500\",\n  \"industry\": \"Software\",\n  \"location\": \"Cairo\",\n  \"about\": \"We build hiring software.\"\n}"
-            },
-            "url": "{{base_url}}/api/auth/register/step-2"
-          },
-          "response": []
-        },
-        {
           "name": "Register Step 3 - Person",
           "request": {
             "method": "POST",
@@ -141,25 +138,6 @@
                 { "key": "profile_photo", "type": "file", "src": "" },
                 { "key": "cv", "type": "file", "src": "" },
                 { "key": "certificates[]", "type": "file", "src": "" }
-              ]
-            },
-            "url": "{{base_url}}/api/auth/register/step-3"
-          },
-          "response": []
-        },
-        {
-          "name": "Register Step 3 - Company",
-          "request": {
-            "method": "POST",
-            "header": [
-              { "key": "Accept", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{token}}" }
-            ],
-            "body": {
-              "mode": "formdata",
-              "formdata": [
-                { "key": "about", "value": "We build innovative products.", "type": "text" },
-                { "key": "logo", "type": "file", "src": "" }
               ]
             },
             "url": "{{base_url}}/api/auth/register/step-3"

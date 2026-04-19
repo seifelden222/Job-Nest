@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Route;
 
 Route::prefix('auth')->name('auth.')->group(function () {
     Route::post('register/step-1', [AuthController::class, 'registerStepOne'])->name('register.step1');
+    Route::post('register/company', [AuthController::class, 'registerCompany'])->name('register.company');
 
     Route::post('login', [AuthController::class, 'login'])->middleware('throttle:login')->name('login');
     Route::post('google/login', [AuthController::class, 'googleLogin'])->name('google.login');

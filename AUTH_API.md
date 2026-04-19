@@ -4,7 +4,8 @@
 
 - Base prefix: `/api/auth`
 - Auth mechanism: Sanctum bearer tokens
-- Registration is still step-based: `step-1`, `step-2`, `step-3`
+- Person registration is step-based: `step-1`, `step-2`, `step-3`
+- Company registration is single-step: `register/company`
 - OTP is used only for forgot/reset password
 - `logout` revokes the current token only
 - `logout-all` revokes every active token for the authenticated user
@@ -54,9 +55,10 @@ Validation failures return HTTP `422`:
 
 | Method | Route | Auth | Purpose |
 | --- | --- | --- | --- |
-| POST | `/api/auth/register/step-1` | No | Create account and issue token |
-| POST | `/api/auth/register/step-2` | Yes | Continue person/company onboarding |
-| POST | `/api/auth/register/step-3` | Yes | Finish onboarding and upload files |
+| POST | `/api/auth/register/step-1` | No | Start person onboarding and issue token |
+| POST | `/api/auth/register/company` | No | Complete company onboarding in one request |
+| POST | `/api/auth/register/step-2` | Yes | Continue person onboarding |
+| POST | `/api/auth/register/step-3` | Yes | Finish person onboarding and upload files |
 | POST | `/api/auth/login` | No | Email/password login |
 | POST | `/api/auth/google/login` | No | Google ID-token login |
 | POST | `/api/auth/refresh-token` | No | Rotate refresh token and issue a new token pair |
@@ -97,7 +99,25 @@ Person payload:
 }
 ```
 
-Company payload:
+Response notes:
+
+- Returns `201`
+- Returns a Sanctum token
+- Returns `current_step: 1`
+- `device_name` is optional
+
+Validation highlights:
+
+- `account_type` must be `person`
+- `email` and `phone` must be unique
+- `password` must be confirmed
+- `university` and `major` are required for person accounts
+
+### POST `/api/auth/register/company`
+
+Auth required: `No`
+
+Company payload (JSON):
 
 ```json
 {
@@ -111,24 +131,33 @@ Company payload:
   "website": "https://techcorp.com",
   "company_size": "51-200",
   "industry": "Technology",
-  "location": "Cairo"
+  "location": "Cairo",
+  "about": "We build hiring products.",
+  "device_name": "web-chrome"
 }
 ```
+
+Company payload with logo (multipart form-data):
+
+- `account_type`: `company`
+- `name`, `email`, `phone`, `password`, `password_confirmation`
+- `company_name`, `website`, `company_size`, `industry`, `location`, `about`
+- `logo` (optional image)
 
 Response notes:
 
 - Returns `201`
 - Returns a Sanctum token
-- Returns `current_step: 1`
-- Existing registration behavior remains unchanged; `device_name` is optional
+- Returns `current_step: 3`
+- Company profile is created as completed (`is_profile_completed = true`)
 
 Validation highlights:
 
-- `account_type` must be `person` or `company`
+- `account_type` must be `company`
 - `email` and `phone` must be unique
 - `password` must be confirmed
-- `university` and `major` are required for person accounts
-- `company_name` is required for company accounts
+- `company_name` is required
+- `logo` is optional image, max `2 MB`
 
 ### POST `/api/auth/register/step-2`
 
@@ -152,23 +181,12 @@ Person payload:
 }
 ```
 
-Company payload:
-
-```json
-{
-  "website": "https://techcorp.com",
-  "company_size": "201-500",
-  "industry": "Software",
-  "location": "Cairo",
-  "about": "We build hiring products."
-}
-```
-
 Response notes:
 
 - Returns `200`
 - Returns updated `user`
 - Returns `current_step: 2`
+- Company accounts are rejected on this endpoint with `422`
 
 Validation highlights:
 
@@ -188,21 +206,17 @@ Person payload: multipart form-data
 - `about`: string
 - `interests[]`: interest IDs
 
-Company payload: multipart form-data
-
-- `logo`: image
-- `about`: string
-
 Response notes:
 
 - Returns `200`
 - Returns updated `user`
 - Returns `current_step: 3`
+- Company accounts are rejected on this endpoint with `422`
 
 Validation highlights:
 
 - `cv` max size `5 MB`
-- `profile_photo` and `logo` max size `2 MB`
+- `profile_photo` max size `2 MB`
 - `interests.*` must exist
 
 ## Login Flow

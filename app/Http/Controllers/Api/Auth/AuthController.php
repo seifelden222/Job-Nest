@@ -8,6 +8,7 @@ use App\Http\Requests\Api\Auth\ForgotPasswordRequest;
 use App\Http\Requests\Api\Auth\GoogleLoginRequest;
 use App\Http\Requests\Api\Auth\LoginRequest;
 use App\Http\Requests\Api\Auth\RefreshTokenRequest;
+use App\Http\Requests\Api\Auth\RegisterCompanyRequest;
 use App\Http\Requests\Api\Auth\RegisterStepOneRequest;
 use App\Http\Requests\Api\Auth\RegisterStepThreeRequest;
 use App\Http\Requests\Api\Auth\RegisterStepTwoRequest;
@@ -25,6 +26,7 @@ use Illuminate\Auth\Events\Verified;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\URL;
+use Illuminate\Validation\ValidationException;
 use Laravel\Sanctum\PersonalAccessToken;
 
 class AuthController extends Controller
@@ -48,9 +50,39 @@ class AuthController extends Controller
                 tokenData: $result,
                 currentStep: 1,
             );
+        } catch (ValidationException $e) {
+            return response()->json([
+                'message' => 'Registration step 1 failed.',
+                'errors' => $e->errors(),
+            ], 422);
         } catch (\Throwable $e) {
             return response()->json([
                 'message' => 'Registration step 1 failed.',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    public function registerCompany(RegisterCompanyRequest $request): JsonResponse
+    {
+        try {
+            $result = $this->authService->registerCompany($request->validated(), $request);
+
+            return $this->authResponse(
+                message: 'Registration completed successfully.',
+                user: $result['user'],
+                status: 201,
+                tokenData: $result,
+                currentStep: 3,
+            );
+        } catch (ValidationException $e) {
+            return response()->json([
+                'message' => 'Company registration failed.',
+                'errors' => $e->errors(),
+            ], 422);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'message' => 'Company registration failed.',
                 'error' => $e->getMessage(),
             ], 500);
         }
@@ -66,6 +98,11 @@ class AuthController extends Controller
                 user: $user,
                 currentStep: 2,
             );
+        } catch (ValidationException $e) {
+            return response()->json([
+                'message' => 'Registration step 2 failed.',
+                'errors' => $e->errors(),
+            ], 422);
         } catch (\Throwable $e) {
             return response()->json([
                 'message' => 'Registration step 2 failed.',
@@ -84,6 +121,11 @@ class AuthController extends Controller
                 user: $user,
                 currentStep: 3,
             );
+        } catch (ValidationException $e) {
+            return response()->json([
+                'message' => 'Registration step 3 failed.',
+                'errors' => $e->errors(),
+            ], 422);
         } catch (\Throwable $e) {
             return response()->json([
                 'message' => 'Registration step 3 failed.',

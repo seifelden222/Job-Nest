@@ -26,6 +26,12 @@ class AuthService
 
     public function registerStepOne(array $validated, Request $request): array
     {
+        if (($validated['account_type'] ?? null) !== 'person') {
+            throw ValidationException::withMessages([
+                'account_type' => ['Company accounts must use /api/auth/register/company.'],
+            ]);
+        }
+
         try {
 
             return DB::transaction(function () use ($validated, $request): array {
@@ -60,15 +66,59 @@ class AuthService
         }
     }
 
+    public function registerCompany(array $validated, Request $request): array
+    {
+        if (($validated['account_type'] ?? null) !== 'company') {
+            throw ValidationException::withMessages([
+                'account_type' => ['Company registration requires account_type to be company.'],
+            ]);
+        }
+
+        try {
+
+            return DB::transaction(function () use ($validated, $request): array {
+                $user = User::create([
+                    'name' => $validated['name'],
+                    'email' => $validated['email'],
+                    'phone' => $validated['phone'] ?? null,
+                    'password' => Hash::make($validated['password']),
+                    'account_type' => 'company',
+                    'status' => 'active',
+                ]);
+
+                $this->createCompanyProfileForUser($user, $validated, $request);
+                $this->sendEmailVerification($user);
+                $tokenData = $this->authTokenService->issueToken(
+                    $user,
+                    $request,
+                    'register-company',
+                    $validated['device_name'] ?? null,
+                );
+                $this->sendRegisterCompleteEmail($user);
+                Log::info('Queued RegisterComplete', ['user_id' => $user->id, 'email' => $user->email]);
+
+                return [
+                    'user' => $this->loadUserProfiles($user),
+                    ...$tokenData,
+                ];
+            });
+        } catch (\Exception $e) {
+            Log::error('Error in registerCompany', ['error' => $e->getMessage()]);
+            throw $e;
+        }
+    }
+
     public function registerStepTwo(User $user, array $validated): User
     {
+        if ($user->isCompany()) {
+            throw ValidationException::withMessages([
+                'account_type' => ['Company accounts must use /api/auth/register/company.'],
+            ]);
+        }
+
         return DB::transaction(function () use ($user, $validated): User {
             if ($user->isPerson()) {
                 $this->updatePersonStepTwo($user, $validated);
-            }
-
-            if ($user->isCompany()) {
-                $this->updateCompanyStepTwo($user->companyProfile, $validated);
             }
 
             return $this->loadUserProfiles($user->fresh());
@@ -77,15 +127,17 @@ class AuthService
 
     public function registerStepThree(RegisterStepThreeRequest $request, User $user, array $validated): User
     {
+        if ($user->isCompany()) {
+            throw ValidationException::withMessages([
+                'account_type' => ['Company accounts must use /api/auth/register/company.'],
+            ]);
+        }
+
         try {
 
             return DB::transaction(function () use ($request, $user, $validated): User {
                 if ($user->isPerson()) {
                     $this->updatePersonStepThree($request, $user, $validated);
-                }
-
-                if ($user->isCompany()) {
-                    $this->updateCompanyStepThree($request, $user->companyProfile, $validated);
                 }
                 $this->sendRegisterCompleteEmail($user);
 
@@ -152,28 +204,34 @@ class AuthService
 
     public function createProfileForUser(User $user, array $validated = []): void
     {
-        if ($user->isPerson()) {
-            PersonProfile::create([
-                'user_id' => $user->id,
-                'university' => $validated['university'] ?? null,
-                'major' => $validated['major'] ?? null,
-                'onboarding_step' => 1,
-                'is_profile_completed' => false,
-            ]);
+        PersonProfile::create([
+            'user_id' => $user->id,
+            'university' => $validated['university'] ?? null,
+            'major' => $validated['major'] ?? null,
+            'onboarding_step' => 1,
+            'is_profile_completed' => false,
+        ]);
+    }
 
-            return;
-        }
-
-        CompanyProfile::create([
+    private function createCompanyProfileForUser(User $user, array $validated, Request $request): void
+    {
+        $attributes = [
             'user_id' => $user->id,
             'company_name' => $validated['company_name'],
             'website' => $validated['website'] ?? null,
             'company_size' => $validated['company_size'] ?? null,
             'industry' => $validated['industry'] ?? null,
             'location' => $validated['location'] ?? null,
-            'onboarding_step' => 1,
-            'is_profile_completed' => false,
-        ]);
+            'about' => $validated['about'] ?? null,
+            'onboarding_step' => 3,
+            'is_profile_completed' => true,
+        ];
+
+        if ($request->hasFile('logo')) {
+            $attributes['logo'] = $request->file('logo')->store('company-logos', 'public');
+        }
+
+        CompanyProfile::create($attributes);
     }
 
     private function updatePersonStepTwo(User $user, array $validated): void
