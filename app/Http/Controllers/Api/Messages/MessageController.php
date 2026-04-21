@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Api;
+namespace App\Http\Controllers\Api\Messages;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Messages\StoreMessageRequest;

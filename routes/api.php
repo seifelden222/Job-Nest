@@ -1,22 +1,22 @@
 <?php
 
-use App\Http\Controllers\Api\ApplicationController;
+use App\Http\Controllers\Api\Applications\ApplicationController;
 use App\Http\Controllers\Api\Auth\AuthController;
-use App\Http\Controllers\Api\CategoryController;
-use App\Http\Controllers\Api\ConversationController;
-use App\Http\Controllers\Api\CourseController;
-use App\Http\Controllers\Api\CourseEnrollmentController;
-use App\Http\Controllers\Api\CourseReviewController;
+use App\Http\Controllers\Api\Categories\CategoryController;
+use App\Http\Controllers\Api\Conversations\ConversationController;
+use App\Http\Controllers\Api\Courses\CourseController;
+use App\Http\Controllers\Api\Courses\CourseEnrollmentController;
+use App\Http\Controllers\Api\Courses\CourseReviewController;
 use App\Http\Controllers\Api\InterestController;
-use App\Http\Controllers\Api\JobController;
+use App\Http\Controllers\Api\Jobs\JobController;
 use App\Http\Controllers\Api\LanguageController;
-use App\Http\Controllers\Api\MessageController;
+use App\Http\Controllers\Api\Messages\MessageController;
 use App\Http\Controllers\Api\ProfileController;
-use App\Http\Controllers\Api\ServiceConversationController;
-use App\Http\Controllers\Api\ServiceProposalController;
-use App\Http\Controllers\Api\ServiceRequestController;
+use App\Http\Controllers\Api\Services\ServiceConversationController;
+use App\Http\Controllers\Api\Services\ServiceProposalController;
+use App\Http\Controllers\Api\Services\ServiceRequestController;
 use App\Http\Controllers\Api\SkillController;
-use App\Http\Controllers\Api\TrainingProviderProfileController;
+use App\Http\Controllers\Api\TrainingProviders\TrainingProviderProfileController;
 use App\Http\Controllers\Api\UserDocumentController;
 use App\Http\Controllers\Api\UserInterestController;
 use App\Http\Controllers\Api\UserLanguageController;

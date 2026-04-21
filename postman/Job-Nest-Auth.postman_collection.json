@@ -1,129 +1,291 @@
 {
   "info": {
-    "name": "Job Nest - Auth",
-    "_postman_id": "job-nest-auth-v3",
-    "description": "JobNest Laravel 13 + Sanctum auth API collection with refresh tokens and email verification.\n\nSet `base_url`, then use person register step-1 or register/company, plus login/google-login requests to populate `token`, `refresh_token`, and session fields automatically.",
+    "name": "Job Nest API",
+    "_postman_id": "job-nest-api-updated",
+    "description": "Updated JobNest API collection including auth, profile, master data, jobs, applications, courses, service requests, proposals, and service chat.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
-    { "key": "base_url", "value": "http://127.0.0.1:8000", "type": "string" },
-    { "key": "token", "value": "", "type": "string" },
-    { "key": "access_token", "value": "", "type": "string" },
-    { "key": "refresh_token", "value": "", "type": "string" },
-    { "key": "access_token_expires_at", "value": "", "type": "string" },
-    { "key": "refresh_token_expires_at", "value": "", "type": "string" },
-    { "key": "current_token_id", "value": "", "type": "string" },
-    { "key": "session_id", "value": "", "type": "string" },
-    { "key": "verification_id", "value": "", "type": "string" },
-    { "key": "verification_hash", "value": "", "type": "string" },
-    { "key": "verification_expires", "value": "", "type": "string" },
-    { "key": "verification_signature", "value": "", "type": "string" },
-    { "key": "google_id_token", "value": "", "type": "string" },
-    { "key": "otp", "value": "123456", "type": "string" },
-    { "key": "job_id", "value": "", "type": "string" },
-    { "key": "application_id", "value": "", "type": "string" },
-    { "key": "conversation_id", "value": "", "type": "string" },
-    { "key": "participant_id", "value": "", "type": "string" },
-    { "key": "message_id", "value": "", "type": "string" }
+    {
+      "key": "base_url",
+      "value": "http://127.0.0.1:8000",
+      "type": "string"
+    },
+    {
+      "key": "access_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "refresh_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "job_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "application_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "conversation_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "document_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "skill_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "language_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "interest_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "session_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "user_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "otp",
+      "value": "123456",
+      "type": "string"
+    },
+    {
+      "key": "verification_url",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "category_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "course_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "course_enrollment_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "course_review_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "service_request_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "service_proposal_id",
+      "value": "",
+      "type": "string"
+    }
   ],
   "item": [
     {
-      "name": "Registration",
+      "name": "Auth",
       "item": [
         {
           "name": "Register Step 1 - Person",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "var json = pm.response.json();",
-                  "if (json.access_token) { pm.collectionVariables.set('access_token', json.access_token); pm.collectionVariables.set('token', json.access_token); } else if (json.token) { pm.collectionVariables.set('token', json.token); pm.collectionVariables.set('access_token', json.token); }",
-                  "if (json.refresh_token) { pm.collectionVariables.set('refresh_token', json.refresh_token); }",
-                  "if (json.access_token_expires_at) { pm.collectionVariables.set('access_token_expires_at', json.access_token_expires_at); }",
-                  "if (json.refresh_token_expires_at) { pm.collectionVariables.set('refresh_token_expires_at', json.refresh_token_expires_at); }",
-                  "if (json.current_token_id) { pm.collectionVariables.set('current_token_id', json.current_token_id); }",
-                  "if (json.current_token_id) { pm.collectionVariables.set('session_id', json.current_token_id); }"
-                ]
-              }
-            }
-          ],
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Accept", "value": "application/json" },
-              { "key": "Content-Type", "value": "application/json" }
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
             ],
+            "url": "{{base_url}}/api/auth/register/step-1",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"account_type\": \"person\",\n  \"name\": \"Ali Hassan\",\n  \"email\": \"ali@example.com\",\n  \"phone\": \"01012345678\",\n  \"password\": \"password123\",\n  \"password_confirmation\": \"password123\",\n  \"university\": \"Cairo University\",\n  \"major\": \"Computer Science\",\n  \"device_name\": \"flutter-android\"\n}"
             },
-            "url": "{{base_url}}/api/auth/register/step-1"
+            "description": "Creates a person account and stores access/refresh tokens."
           },
-          "response": []
-        },
-        {
-          "name": "Register Company",
+          "response": [],
           "event": [
             {
               "listen": "test",
               "script": {
                 "type": "text/javascript",
                 "exec": [
+                  "pm.test(\"status is success\", function () { pm.expect(pm.response.code).to.be.oneOf([200, 201]); });",
                   "var json = pm.response.json();",
-                  "if (json.access_token) { pm.collectionVariables.set('access_token', json.access_token); pm.collectionVariables.set('token', json.access_token); } else if (json.token) { pm.collectionVariables.set('token', json.token); pm.collectionVariables.set('access_token', json.token); }",
-                  "if (json.refresh_token) { pm.collectionVariables.set('refresh_token', json.refresh_token); }",
-                  "if (json.access_token_expires_at) { pm.collectionVariables.set('access_token_expires_at', json.access_token_expires_at); }",
-                  "if (json.refresh_token_expires_at) { pm.collectionVariables.set('refresh_token_expires_at', json.refresh_token_expires_at); }",
-                  "if (json.current_token_id) { pm.collectionVariables.set('current_token_id', json.current_token_id); }",
-                  "if (json.current_token_id) { pm.collectionVariables.set('session_id', json.current_token_id); }"
+                  "if (json.access_token) { pm.collectionVariables.set(\"access_token\", json.access_token); pm.collectionVariables.set(\"token\", json.access_token); }",
+                  "if (json.token) { pm.collectionVariables.set(\"access_token\", json.token); pm.collectionVariables.set(\"token\", json.token); }",
+                  "if (json.refresh_token) { pm.collectionVariables.set(\"refresh_token\", json.refresh_token); }",
+                  "if (json.current_token_id) { pm.collectionVariables.set(\"session_id\", json.current_token_id); }",
+                  "if (json.user && json.user.id) { pm.collectionVariables.set(\"user_id\", json.user.id); }"
                 ]
               }
             }
-          ],
+          ]
+        },
+        {
+          "name": "Register Company",
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Accept", "value": "application/json" }
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
             ],
+            "url": "{{base_url}}/api/auth/register/company",
             "body": {
               "mode": "formdata",
               "formdata": [
-                { "key": "account_type", "value": "company", "type": "text" },
-                { "key": "name", "value": "Tech Corp HR", "type": "text" },
-                { "key": "email", "value": "hr@techcorp.com", "type": "text" },
-                { "key": "phone", "value": "01098765432", "type": "text" },
-                { "key": "password", "value": "password123", "type": "text" },
-                { "key": "password_confirmation", "value": "password123", "type": "text" },
-                { "key": "company_name", "value": "Tech Corp", "type": "text" },
-                { "key": "website", "value": "https://techcorp.com", "type": "text" },
-                { "key": "company_size", "value": "51-200", "type": "text" },
-                { "key": "industry", "value": "Technology", "type": "text" },
-                { "key": "location", "value": "Cairo", "type": "text" },
-                { "key": "about", "value": "We build hiring products.", "type": "text" },
-                { "key": "device_name", "value": "web-chrome", "type": "text" },
-                { "key": "logo", "type": "file", "src": "" }
+                {
+                  "key": "account_type",
+                  "value": "company",
+                  "type": "text"
+                },
+                {
+                  "key": "name",
+                  "value": "Tech Corp HR",
+                  "type": "text"
+                },
+                {
+                  "key": "email",
+                  "value": "hr@techcorp.com",
+                  "type": "text"
+                },
+                {
+                  "key": "phone",
+                  "value": "01098765432",
+                  "type": "text"
+                },
+                {
+                  "key": "password",
+                  "value": "password123",
+                  "type": "text"
+                },
+                {
+                  "key": "password_confirmation",
+                  "value": "password123",
+                  "type": "text"
+                },
+                {
+                  "key": "company_name",
+                  "value": "Tech Corp",
+                  "type": "text"
+                },
+                {
+                  "key": "website",
+                  "value": "https://techcorp.com",
+                  "type": "text"
+                },
+                {
+                  "key": "company_size",
+                  "value": "51-200",
+                  "type": "text"
+                },
+                {
+                  "key": "industry",
+                  "value": "Technology",
+                  "type": "text"
+                },
+                {
+                  "key": "location",
+                  "value": "Cairo",
+                  "type": "text"
+                },
+                {
+                  "key": "about",
+                  "value": "We build hiring products.",
+                  "type": "text"
+                },
+                {
+                  "key": "device_name",
+                  "value": "web-chrome",
+                  "type": "text"
+                },
+                {
+                  "key": "logo",
+                  "type": "file",
+                  "src": ""
+                }
               ]
             },
-            "url": "{{base_url}}/api/auth/register/company"
+            "description": "Multipart company registration request."
           },
-          "response": []
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is success\", function () { pm.expect(pm.response.code).to.be.oneOf([200, 201]); });",
+                  "var json = pm.response.json();",
+                  "if (json.access_token) { pm.collectionVariables.set(\"access_token\", json.access_token); pm.collectionVariables.set(\"token\", json.access_token); }",
+                  "if (json.token) { pm.collectionVariables.set(\"access_token\", json.token); pm.collectionVariables.set(\"token\", json.token); }",
+                  "if (json.refresh_token) { pm.collectionVariables.set(\"refresh_token\", json.refresh_token); }",
+                  "if (json.current_token_id) { pm.collectionVariables.set(\"session_id\", json.current_token_id); }",
+                  "if (json.user && json.user.id) { pm.collectionVariables.set(\"user_id\", json.user.id); }"
+                ]
+              }
+            }
+          ]
         },
         {
           "name": "Register Step 2 - Person",
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Accept", "value": "application/json" },
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{token}}" }
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
             ],
+            "url": "{{base_url}}/api/auth/register/step-2",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"employment_status\": \"employed\",\n  \"employment_type\": \"full_time\",\n  \"current_job_title\": \"Backend Developer\",\n  \"company_name\": \"Acme\",\n  \"preferred_work_location\": \"remote\",\n  \"expected_salary_min\": 3000,\n  \"expected_salary_max\": 7000,\n  \"linkedin_url\": \"https://linkedin.com/in/ali\",\n  \"portfolio_url\": \"https://ali.dev\",\n  \"skills\": [1, 2],\n  \"languages\": [1]\n}"
-            },
-            "url": "{{base_url}}/api/auth/register/step-2"
+              "raw": "{\n  \"employment_status\": \"employed\",\n  \"employment_type\": \"full_time\",\n  \"current_job_title\": \"Backend Developer\",\n  \"company_name\": \"Acme\",\n  \"preferred_work_location\": \"remote\",\n  \"expected_salary_min\": 3000,\n  \"expected_salary_max\": 7000,\n  \"linkedin_url\": \"https://linkedin.com/in/ali\",\n  \"portfolio_url\": \"https://ali.dev\",\n  \"skills\": [\n    1,\n    2\n  ],\n  \"languages\": [\n    1\n  ]\n}"
+            }
           },
           "response": []
         },
@@ -132,124 +294,234 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Accept", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{token}}" }
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
             ],
+            "url": "{{base_url}}/api/auth/register/step-3",
             "body": {
               "mode": "formdata",
               "formdata": [
-                { "key": "about", "value": "Backend developer with 3 years of experience.", "type": "text" },
-                { "key": "interests[]", "value": "1", "type": "text" },
-                { "key": "profile_photo", "type": "file", "src": "" },
-                { "key": "cv", "type": "file", "src": "" },
-                { "key": "certificates[]", "type": "file", "src": "" }
+                {
+                  "key": "about",
+                  "value": "Backend developer with 3 years of experience.",
+                  "type": "text"
+                },
+                {
+                  "key": "interests[]",
+                  "value": "1",
+                  "type": "text"
+                },
+                {
+                  "key": "profile_photo",
+                  "type": "file",
+                  "src": ""
+                },
+                {
+                  "key": "cv",
+                  "type": "file",
+                  "src": ""
+                },
+                {
+                  "key": "certificates[]",
+                  "type": "file",
+                  "src": ""
+                }
               ]
-            },
-            "url": "{{base_url}}/api/auth/register/step-3"
-          },
-          "response": []
-        }
-      ]
-    },
-    {
-      "name": "Auth",
-      "item": [
-        {
-          "name": "Login",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "var json = pm.response.json();",
-                  "if (json.access_token) { pm.collectionVariables.set('access_token', json.access_token); pm.collectionVariables.set('token', json.access_token); } else if (json.token) { pm.collectionVariables.set('token', json.token); pm.collectionVariables.set('access_token', json.token); }",
-                  "if (json.refresh_token) { pm.collectionVariables.set('refresh_token', json.refresh_token); }",
-                  "if (json.access_token_expires_at) { pm.collectionVariables.set('access_token_expires_at', json.access_token_expires_at); }",
-                  "if (json.refresh_token_expires_at) { pm.collectionVariables.set('refresh_token_expires_at', json.refresh_token_expires_at); }",
-                  "if (json.current_token_id) { pm.collectionVariables.set('current_token_id', json.current_token_id); }",
-                  "if (json.current_token_id) { pm.collectionVariables.set('session_id', json.current_token_id); }"
-                ]
-              }
             }
-          ],
-          "request": {
-            "method": "POST",
-            "header": [
-              { "key": "Accept", "value": "application/json" },
-              { "key": "Content-Type", "value": "application/json" }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"email\": \"ali@example.com\",\n  \"password\": \"password123\",\n  \"device_name\": \"iphone-15\"\n}"
-            },
-            "url": "{{base_url}}/api/auth/login"
           },
           "response": []
         },
         {
-          "name": "Google Login",
+          "name": "Login",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/api/auth/login",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"ali@example.com\",\n  \"password\": \"password123\",\n  \"device_name\": \"iphone-15\"\n}"
+            }
+          },
+          "response": [],
           "event": [
             {
               "listen": "test",
               "script": {
                 "type": "text/javascript",
                 "exec": [
+                  "pm.test(\"status is success\", function () { pm.expect(pm.response.code).to.be.oneOf([200, 201]); });",
                   "var json = pm.response.json();",
-                  "if (json.access_token) { pm.collectionVariables.set('access_token', json.access_token); pm.collectionVariables.set('token', json.access_token); } else if (json.token) { pm.collectionVariables.set('token', json.token); pm.collectionVariables.set('access_token', json.token); }",
-                  "if (json.refresh_token) { pm.collectionVariables.set('refresh_token', json.refresh_token); }",
-                  "if (json.access_token_expires_at) { pm.collectionVariables.set('access_token_expires_at', json.access_token_expires_at); }",
-                  "if (json.refresh_token_expires_at) { pm.collectionVariables.set('refresh_token_expires_at', json.refresh_token_expires_at); }",
-                  "if (json.current_token_id) { pm.collectionVariables.set('current_token_id', json.current_token_id); }",
-                  "if (json.current_token_id) { pm.collectionVariables.set('session_id', json.current_token_id); }"
+                  "if (json.access_token) { pm.collectionVariables.set(\"access_token\", json.access_token); pm.collectionVariables.set(\"token\", json.access_token); }",
+                  "if (json.token) { pm.collectionVariables.set(\"access_token\", json.token); pm.collectionVariables.set(\"token\", json.token); }",
+                  "if (json.refresh_token) { pm.collectionVariables.set(\"refresh_token\", json.refresh_token); }",
+                  "if (json.current_token_id) { pm.collectionVariables.set(\"session_id\", json.current_token_id); }",
+                  "if (json.user && json.user.id) { pm.collectionVariables.set(\"user_id\", json.user.id); }"
                 ]
               }
             }
-          ],
+          ]
+        },
+        {
+          "name": "Google Login",
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Accept", "value": "application/json" },
-              { "key": "Content-Type", "value": "application/json" }
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
             ],
+            "url": "{{base_url}}/api/auth/google/login",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"id_token\": \"{{google_id_token}}\",\n  \"account_type\": \"person\",\n  \"device_name\": \"flutter-android\"\n}"
-            },
-            "url": "{{base_url}}/api/auth/google/login"
+              "raw": "{\n  \"id_token\": \"{{google_id_token}}\",\n  \"device_name\": \"flutter-android\"\n}"
+            }
           },
           "response": []
         },
         {
           "name": "Refresh Token",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/api/auth/refresh-token",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refresh_token\": \"{{refresh_token}}\",\n  \"device_name\": \"iphone-15\"\n}"
+            }
+          },
+          "response": [],
           "event": [
             {
               "listen": "test",
               "script": {
                 "type": "text/javascript",
                 "exec": [
+                  "pm.test(\"status is success\", function () { pm.expect(pm.response.code).to.be.oneOf([200, 201]); });",
                   "var json = pm.response.json();",
-                  "if (json.access_token) { pm.collectionVariables.set('access_token', json.access_token); pm.collectionVariables.set('token', json.access_token); } else if (json.token) { pm.collectionVariables.set('token', json.token); pm.collectionVariables.set('access_token', json.token); }",
-                  "if (json.refresh_token) { pm.collectionVariables.set('refresh_token', json.refresh_token); }",
-                  "if (json.access_token_expires_at) { pm.collectionVariables.set('access_token_expires_at', json.access_token_expires_at); }",
-                  "if (json.refresh_token_expires_at) { pm.collectionVariables.set('refresh_token_expires_at', json.refresh_token_expires_at); }",
-                  "if (json.current_token_id) { pm.collectionVariables.set('current_token_id', json.current_token_id); }",
-                  "if (json.current_token_id) { pm.collectionVariables.set('session_id', json.current_token_id); }"
+                  "if (json.access_token) { pm.collectionVariables.set(\"access_token\", json.access_token); pm.collectionVariables.set(\"token\", json.access_token); }",
+                  "if (json.token) { pm.collectionVariables.set(\"access_token\", json.token); pm.collectionVariables.set(\"token\", json.token); }",
+                  "if (json.refresh_token) { pm.collectionVariables.set(\"refresh_token\", json.refresh_token); }",
+                  "if (json.current_token_id) { pm.collectionVariables.set(\"session_id\", json.current_token_id); }",
+                  "if (json.user && json.user.id) { pm.collectionVariables.set(\"user_id\", json.user.id); }"
                 ]
               }
             }
-          ],
+          ]
+        },
+        {
+          "name": "Forgot Password",
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Accept", "value": "application/json" },
-              { "key": "Content-Type", "value": "application/json" }
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
             ],
+            "url": "{{base_url}}/api/auth/forgot-password",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"refresh_token\": \"{{refresh_token}}\",\n  \"device_name\": \"iphone-15\"\n}"
-            },
-            "url": "{{base_url}}/api/auth/refresh-token"
+              "raw": "{\n  \"method\": \"email\",\n  \"email_or_phone\": \"ali@example.com\"\n}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Verify Reset OTP",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/api/auth/verify-reset-otp",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email_or_phone\": \"ali@example.com\",\n  \"otp\": \"{{otp}}\"\n}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Resend Reset OTP",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/api/auth/resend-reset-otp",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"method\": \"email\",\n  \"email_or_phone\": \"ali@example.com\"\n}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Reset Password",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/api/auth/reset-password",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email_or_phone\": \"ali@example.com\",\n  \"otp\": \"{{otp}}\",\n  \"password\": \"newpassword1\",\n  \"password_confirmation\": \"newpassword1\"\n}"
+            }
           },
           "response": []
         },
@@ -258,66 +530,32 @@
           "request": {
             "method": "GET",
             "header": [
-              { "key": "Accept", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{token}}" }
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
             ],
             "url": "{{base_url}}/api/auth/me"
           },
           "response": []
         },
         {
-          "name": "Change Password",
-          "request": {
-            "method": "POST",
-            "header": [
-              { "key": "Accept", "value": "application/json" },
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{token}}" }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"old_password\": \"password123\",\n  \"password\": \"newpassword456\",\n  \"password_confirmation\": \"newpassword456\"\n}"
-            },
-            "url": "{{base_url}}/api/auth/change-password"
-          },
-          "response": []
-        },
-        {
-          "name": "Logout Current Device",
-          "request": {
-            "method": "POST",
-            "header": [
-              { "key": "Accept", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{token}}" }
-            ],
-            "url": "{{base_url}}/api/auth/logout"
-          },
-          "response": []
-        },
-        {
-          "name": "Logout All Devices",
-          "request": {
-            "method": "POST",
-            "header": [
-              { "key": "Accept", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{token}}" }
-            ],
-            "url": "{{base_url}}/api/auth/logout-all"
-          },
-          "response": []
-        }
-      ]
-    },
-    {
-      "name": "Email Verification",
-      "item": [
-        {
           "name": "Verification Status",
           "request": {
             "method": "GET",
             "header": [
-              { "key": "Accept", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{token}}" }
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
             ],
             "url": "{{base_url}}/api/auth/email/verification-status"
           },
@@ -328,8 +566,14 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Accept", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{token}}" }
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
             ],
             "url": "{{base_url}}/api/auth/email/verification/send"
           },
@@ -340,408 +584,122 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Accept", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{token}}" }
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
             ],
             "url": "{{base_url}}/api/auth/email/verification/resend"
           },
           "response": []
         },
         {
-          "name": "Verify Email (Signed URL Parameters)",
+          "name": "Verify Email Link Placeholder",
           "request": {
             "method": "GET",
             "header": [
-              { "key": "Accept", "value": "application/json" }
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
             ],
-            "url": "{{base_url}}/api/auth/email/verify/{{verification_id}}/{{verification_hash}}?expires={{verification_expires}}&signature={{verification_signature}}"
+            "url": "{{base_url}}/api/auth/email/verify/{{user_id}}/{{verification_hash}}?expires={{verification_expires}}&signature={{verification_signature}}",
+            "description": "Populate verification variables from a real signed URL before running this request."
           },
           "response": []
-        }
-      ]
-    },
-    {
-      "name": "Sessions",
-      "item": [
+        },
         {
-          "name": "List Sessions",
+          "name": "Sessions Index",
           "request": {
             "method": "GET",
             "header": [
-              { "key": "Accept", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{token}}" }
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
             ],
             "url": "{{base_url}}/api/auth/sessions"
           },
-          "response": []
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is expected\", function () { pm.expect(pm.response.code).to.be.oneOf([200]); });",
+                  "var json = pm.response.json();",
+                  "var value = json.current_token_id;",
+                  "if (value) { pm.collectionVariables.set('session_id', value); }"
+                ]
+              }
+            }
+          ]
         },
         {
           "name": "Revoke Session",
           "request": {
             "method": "DELETE",
             "header": [
-              { "key": "Accept", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{token}}" }
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
             ],
             "url": "{{base_url}}/api/auth/sessions/{{session_id}}"
           },
           "response": []
-        }
-      ]
-    },
-    {
-      "name": "Password Reset",
-      "item": [
+        },
         {
-          "name": "Forgot Password",
+          "name": "Logout",
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Accept", "value": "application/json" },
-              { "key": "Content-Type", "value": "application/json" }
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
             ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"email_or_phone\": \"ali@example.com\",\n  \"method\": \"email\"\n}"
-            },
-            "url": "{{base_url}}/api/auth/forgot-password"
+            "url": "{{base_url}}/api/auth/logout"
           },
           "response": []
         },
         {
-          "name": "Verify Reset OTP",
+          "name": "Logout All",
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Accept", "value": "application/json" },
-              { "key": "Content-Type", "value": "application/json" }
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
             ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"email_or_phone\": \"ali@example.com\",\n  \"otp\": \"{{otp}}\"\n}"
-            },
-            "url": "{{base_url}}/api/auth/verify-reset-otp"
-          },
-          "response": []
-        },
-        {
-          "name": "Resend Reset OTP",
-          "request": {
-            "method": "POST",
-            "header": [
-              { "key": "Accept", "value": "application/json" },
-              { "key": "Content-Type", "value": "application/json" }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"email_or_phone\": \"ali@example.com\",\n  \"method\": \"email\"\n}"
-            },
-            "url": "{{base_url}}/api/auth/resend-reset-otp"
-          },
-          "response": []
-        },
-        {
-          "name": "Reset Password",
-          "request": {
-            "method": "POST",
-            "header": [
-              { "key": "Accept", "value": "application/json" },
-              { "key": "Content-Type", "value": "application/json" }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"email_or_phone\": \"ali@example.com\",\n  \"otp\": \"{{otp}}\",\n  \"password\": \"newpassword123\",\n  \"password_confirmation\": \"newpassword123\"\n}"
-            },
-            "url": "{{base_url}}/api/auth/reset-password"
-          },
-          "response": []
-        }
-      ]
-    }
-    ,
-    {
-      "name": "Profile",
-      "item": [
-        {
-          "name": "User Skills - List",
-          "request": {
-            "method": "GET",
-            "header": [
-              { "key": "Accept", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{token}}" }
-            ],
-            "url": "{{base_url}}/api/auth/user-skills"
-          },
-          "response": []
-        },
-        {
-          "name": "User Skills - Add",
-          "request": {
-            "method": "POST",
-            "header": [
-              { "key": "Accept", "value": "application/json" },
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{token}}" }
-            ],
-            "body": { "mode": "raw", "raw": "{\n  \"skill_id\": 1\n}" },
-            "url": "{{base_url}}/api/auth/user-skills"
-          },
-          "response": []
-        },
-        {
-          "name": "User Skills - Remove",
-          "request": {
-            "method": "DELETE",
-            "header": [
-              { "key": "Accept", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{token}}" }
-            ],
-            "url": "{{base_url}}/api/auth/user-skills/{{id}}"
-          },
-          "response": []
-        },
-        {
-          "name": "User Interests - List",
-          "request": {
-            "method": "GET",
-            "header": [
-              { "key": "Accept", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{token}}" }
-            ],
-            "url": "{{base_url}}/api/auth/user-interests"
-          },
-          "response": []
-        },
-        {
-          "name": "User Interests - Add",
-          "request": {
-            "method": "POST",
-            "header": [
-              { "key": "Accept", "value": "application/json" },
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{token}}" }
-            ],
-            "body": { "mode": "raw", "raw": "{\n  \"interest_id\": 1\n}" },
-            "url": "{{base_url}}/api/auth/user-interests"
-          },
-          "response": []
-        },
-        {
-          "name": "User Interests - Remove",
-          "request": {
-            "method": "DELETE",
-            "header": [
-              { "key": "Accept", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{token}}" }
-            ],
-            "url": "{{base_url}}/api/auth/user-interests/{{id}}"
-          },
-          "response": []
-        },
-        {
-          "name": "User Languages - List",
-          "request": {
-            "method": "GET",
-            "header": [
-              { "key": "Accept", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{token}}" }
-            ],
-            "url": "{{base_url}}/api/auth/user-languages"
-          },
-          "response": []
-        },
-        {
-          "name": "User Languages - Add",
-          "request": {
-            "method": "POST",
-            "header": [
-              { "key": "Accept", "value": "application/json" },
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{token}}" }
-            ],
-            "body": { "mode": "raw", "raw": "{\n  \"language_id\": 1\n}" },
-            "url": "{{base_url}}/api/auth/user-languages"
-          },
-          "response": []
-        },
-        {
-          "name": "User Languages - Remove",
-          "request": {
-            "method": "DELETE",
-            "header": [
-              { "key": "Accept", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{token}}" }
-            ],
-            "url": "{{base_url}}/api/auth/user-languages/{{id}}"
+            "url": "{{base_url}}/api/auth/logout-all"
           },
           "response": []
         }
       ]
     },
-    {
-      "name": "Catalogs",
-      "item": [
-        {
-          "name": "Skills - List",
-          "request": {
-            "method": "GET",
-            "header": [
-              { "key": "Accept", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{token}}" }
-            ],
-            "url": "{{base_url}}/api/auth/skills"
-          },
-          "response": []
-        },
-        {
-          "name": "Skills - Create",
-          "request": {
-            "method": "POST",
-            "header": [
-              { "key": "Accept", "value": "application/json" },
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{token}}" }
-            ],
-            "body": { "mode": "raw", "raw": "{\n  \"name\": \"New Skill\"\n}" },
-            "url": "{{base_url}}/api/auth/skills"
-          },
-          "response": []
-        },
-        {
-          "name": "Skills - Show",
-          "request": {
-            "method": "GET",
-            "header": [
-              { "key": "Accept", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{token}}" }
-            ],
-            "url": "{{base_url}}/api/auth/skills/{{id}}"
-          },
-          "response": []
-        },
-        {
-          "name": "Skills - Update",
-          "request": {
-            "method": "PUT",
-            "header": [
-              { "key": "Accept", "value": "application/json" },
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{token}}" }
-            ],
-            "body": { "mode": "raw", "raw": "{\n  \"name\": \"Updated Skill\"\n}" },
-            "url": "{{base_url}}/api/auth/skills/{{id}}"
-          },
-          "response": []
-        },
-        {
-          "name": "Skills - Delete",
-          "request": {
-            "method": "DELETE",
-            "header": [
-              { "key": "Accept", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{token}}" }
-            ],
-            "url": "{{base_url}}/api/auth/skills/{{id}}"
-          },
-          "response": []
-        },
-        {
-          "name": "Interests - List",
-          "request": {
-            "method": "GET",
-            "header": [
-              { "key": "Accept", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{token}}" }
-            ],
-            "url": "{{base_url}}/api/auth/interests"
-          },
-          "response": []
-        },
-        {
-          "name": "Languages - List",
-          "request": {
-            "method": "GET",
-            "header": [
-              { "key": "Accept", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{token}}" }
-            ],
-            "url": "{{base_url}}/api/auth/languages"
-          },
-          "response": []
-        }
-      ]
-    }
-    ,
-    {
-      "name": "User Documents",
-      "item": [
-        {
-          "name": "List Documents",
-          "request": {
-            "method": "GET",
-            "header": [
-              { "key": "Accept", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{token}}" }
-            ],
-            "url": "{{base_url}}/api/auth/user-documents"
-          },
-          "response": []
-        },
-        {
-          "name": "Upload Document (CV)",
-          "request": {
-            "method": "POST",
-            "header": [
-              { "key": "Accept", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{token}}" }
-            ],
-            "body": {
-              "mode": "formdata",
-              "formdata": [
-                { "key": "type", "value": "cv", "type": "text" },
-                { "key": "title", "value": "My CV", "type": "text" },
-                { "key": "file", "type": "file", "src": "" }
-              ]
-            },
-            "url": "{{base_url}}/api/auth/user-documents"
-          },
-          "response": []
-        },
-        {
-          "name": "Upload Document (Certificate)",
-          "request": {
-            "method": "POST",
-            "header": [
-              { "key": "Accept", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{token}}" }
-            ],
-            "body": {
-              "mode": "formdata",
-              "formdata": [
-                { "key": "type", "value": "certificate", "type": "text" },
-                { "key": "title", "value": "Course Cert", "type": "text" },
-                { "key": "file", "type": "file", "src": "" }
-              ]
-            },
-            "url": "{{base_url}}/api/auth/user-documents"
-          },
-          "response": []
-        },
-        {
-          "name": "Delete Document",
-          "request": {
-            "method": "DELETE",
-            "header": [
-              { "key": "Accept", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{token}}" }
-            ],
-            "url": "{{base_url}}/api/auth/user-documents/{{id}}"
-          },
-          "response": []
-        }
-      ]
-    }
-    ,
     {
       "name": "Profile",
       "item": [
@@ -750,44 +708,775 @@
           "request": {
             "method": "GET",
             "header": [
-              { "key": "Accept", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{token}}" }
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
             ],
             "url": "{{base_url}}/api/auth/profile"
           },
           "response": []
         },
         {
-          "name": "Update Profile (Person example)",
+          "name": "Update Person Profile",
           "request": {
             "method": "PUT",
             "header": [
-              { "key": "Accept", "value": "application/json" },
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{token}}" }
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
             ],
+            "url": "{{base_url}}/api/auth/profile",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"Ali Hassan\",\n  \"phone\": \"01000000000\",\n  \"about\": \"Updated bio\",\n  \"current_job_title\": \"Senior Backend\"\n}"
-            },
-            "url": "{{base_url}}/api/auth/profile"
+              "raw": "{\n  \"name\": \"Ali Hassan Updated\",\n  \"phone\": \"01011112222\",\n  \"university\": \"Alexandria University\",\n  \"major\": \"Software Engineering\",\n  \"current_job_title\": \"API Developer\",\n  \"linkedin_url\": \"https://linkedin.com/in/ali-updated\",\n  \"preferred_work_location\": \"remote\",\n  \"expected_salary_min\": 5000,\n  \"expected_salary_max\": 9000\n}"
+            }
           },
           "response": []
         },
         {
-          "name": "Update Profile (Company example)",
+          "name": "Update Company Profile",
           "request": {
             "method": "PUT",
             "header": [
-              { "key": "Accept", "value": "application/json" },
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{token}}" }
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
             ],
+            "url": "{{base_url}}/api/auth/profile",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"Tech Corp HR\",\n  \"company_name\": \"Tech Corp\",\n  \"website\": \"https://techcorp.com\",\n  \"about\": \"We build hiring products.\"\n}"
-            },
-            "url": "{{base_url}}/api/auth/profile"
+              "raw": "{\n  \"name\": \"Recruitment Lead\",\n  \"phone\": \"01022223333\",\n  \"company_name\": \"JobNest Labs\",\n  \"website\": \"https://jobnest.test\",\n  \"company_size\": \"201-500\",\n  \"industry\": \"HR Tech\",\n  \"location\": \"Cairo\",\n  \"about\": \"We build hiring products.\"\n}"
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "User Documents",
+      "item": [
+        {
+          "name": "List User Documents",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": "{{base_url}}/api/auth/user-documents"
+          },
+          "response": []
+        },
+        {
+          "name": "Upload CV",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": "{{base_url}}/api/auth/user-documents",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "type",
+                  "value": "cv",
+                  "type": "text"
+                },
+                {
+                  "key": "title",
+                  "value": "Primary CV",
+                  "type": "text"
+                },
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": ""
+                }
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is expected\", function () { pm.expect(pm.response.code).to.be.oneOf([201]); });",
+                  "var json = pm.response.json();",
+                  "var value = json.data && json.data.id;",
+                  "if (value) { pm.collectionVariables.set('document_id', value); }"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Upload Certificate",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": "{{base_url}}/api/auth/user-documents",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "type",
+                  "value": "certificate",
+                  "type": "text"
+                },
+                {
+                  "key": "title",
+                  "value": "AWS Certificate",
+                  "type": "text"
+                },
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": ""
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete User Document",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": "{{base_url}}/api/auth/user-documents/{{document_id}}"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "User Skills",
+      "item": [
+        {
+          "name": "List User Skills",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": "{{base_url}}/api/auth/user-skills"
+          },
+          "response": []
+        },
+        {
+          "name": "Store User Skills",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/api/auth/user-skills",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"skills\": [\n    \"{{skill_id}}\"\n  ]\n}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete User Skill",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": "{{base_url}}/api/auth/user-skills/{{skill_id}}"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "User Languages",
+      "item": [
+        {
+          "name": "List User Languages",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": "{{base_url}}/api/auth/user-languages"
+          },
+          "response": []
+        },
+        {
+          "name": "Store User Language",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/api/auth/user-languages",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"language_id\": \"{{language_id}}\"\n}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete User Language",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": "{{base_url}}/api/auth/user-languages/{{language_id}}"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "User Interests",
+      "item": [
+        {
+          "name": "List User Interests",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": "{{base_url}}/api/auth/user-interests"
+          },
+          "response": []
+        },
+        {
+          "name": "Store User Interests",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/api/auth/user-interests",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"interests\": [\n    \"{{interest_id}}\"\n  ]\n}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete User Interest",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": "{{base_url}}/api/auth/user-interests/{{interest_id}}"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Skills",
+      "item": [
+        {
+          "name": "List Skills",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": "{{base_url}}/api/auth/skills"
+          },
+          "response": []
+        },
+        {
+          "name": "Create Skill",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/api/auth/skills",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Laravel\"\n}"
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is expected\", function () { pm.expect(pm.response.code).to.be.oneOf([201]); });",
+                  "var json = pm.response.json();",
+                  "var value = json.data && json.data.id;",
+                  "if (value) { pm.collectionVariables.set('skill_id', value); }"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Show Skill",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": "{{base_url}}/api/auth/skills/{{skill_id}}"
+          },
+          "response": []
+        },
+        {
+          "name": "Update Skill",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/api/auth/skills/{{skill_id}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Advanced Laravel\"\n}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Skill",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": "{{base_url}}/api/auth/skills/{{skill_id}}"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Languages",
+      "item": [
+        {
+          "name": "List Languages",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": "{{base_url}}/api/auth/languages"
+          },
+          "response": []
+        },
+        {
+          "name": "Create Language",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/api/auth/languages",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"English\"\n}"
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is expected\", function () { pm.expect(pm.response.code).to.be.oneOf([201]); });",
+                  "var json = pm.response.json();",
+                  "var value = json.data && json.data.id;",
+                  "if (value) { pm.collectionVariables.set('language_id', value); }"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Show Language",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": "{{base_url}}/api/auth/languages/{{language_id}}"
+          },
+          "response": []
+        },
+        {
+          "name": "Update Language",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/api/auth/languages/{{language_id}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"English C1\"\n}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Language",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": "{{base_url}}/api/auth/languages/{{language_id}}"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Interests",
+      "item": [
+        {
+          "name": "List Interests",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": "{{base_url}}/api/auth/interests"
+          },
+          "response": []
+        },
+        {
+          "name": "Create Interest",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/api/auth/interests",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"AI\"\n}"
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is expected\", function () { pm.expect(pm.response.code).to.be.oneOf([201]); });",
+                  "var json = pm.response.json();",
+                  "var value = json.data && json.data.id;",
+                  "if (value) { pm.collectionVariables.set('interest_id', value); }"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Show Interest",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": "{{base_url}}/api/auth/interests/{{interest_id}}"
+          },
+          "response": []
+        },
+        {
+          "name": "Update Interest",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/api/auth/interests/{{interest_id}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Applied AI\"\n}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Interest",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": "{{base_url}}/api/auth/interests/{{interest_id}}"
           },
           "response": []
         }
@@ -797,53 +1486,70 @@
       "name": "Jobs",
       "item": [
         {
-          "name": "List Active Jobs",
+          "name": "List Jobs",
           "request": {
             "method": "GET",
             "header": [
-              { "key": "Accept", "value": "application/json" }
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
             ],
-            "url": "{{base_url}}/api/jobs?q=backend&location=cairo&employment_type=full_time"
+            "url": "{{base_url}}/api/jobs?per_page=15&q=Backend&location=Cairo&employment_type=full_time&skill_id={{skill_id}}"
           },
           "response": []
         },
         {
-          "name": "Get Job",
+          "name": "Create Job",
           "request": {
-            "method": "GET",
+            "method": "POST",
             "header": [
-              { "key": "Accept", "value": "application/json" }
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
             ],
-            "url": "{{base_url}}/api/jobs/{{job_id}}"
+            "url": "{{base_url}}/api/jobs",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Backend Engineer\",\n  \"description\": \"Build and maintain APIs.\",\n  \"location\": \"Cairo\",\n  \"employment_type\": \"full_time\",\n  \"salary_min\": 8000,\n  \"salary_max\": 12000,\n  \"currency\": \"EGP\",\n  \"experience_level\": \"mid\",\n  \"requirements\": \"Laravel and MySQL.\",\n  \"responsibilities\": \"Own the API lifecycle.\",\n  \"deadline\": \"2026-05-30\",\n  \"status\": \"active\",\n  \"skill_ids\": [\n    \"{{skill_id}}\"\n  ]\n}"
+            }
           },
-          "response": []
-        },
-        {
-          "name": "Create Job (Company)",
+          "response": [],
           "event": [
             {
               "listen": "test",
               "script": {
                 "type": "text/javascript",
                 "exec": [
+                  "pm.test(\"status is expected\", function () { pm.expect(pm.response.code).to.be.oneOf([201]); });",
                   "var json = pm.response.json();",
-                  "if (json.data && json.data.id) { pm.collectionVariables.set('job_id', json.data.id); }"
+                  "var value = json.data && json.data.id;",
+                  "if (value) { pm.collectionVariables.set('job_id', value); }"
                 ]
               }
             }
-          ],
+          ]
+        },
+        {
+          "name": "Show Job",
           "request": {
-            "method": "POST",
+            "method": "GET",
             "header": [
-              { "key": "Accept", "value": "application/json" },
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{token}}" }
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
             ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"title\": \"Backend Laravel Engineer\",\n  \"description\": \"Build and maintain APIs.\",\n  \"location\": \"Cairo\",\n  \"employment_type\": \"full_time\",\n  \"salary_min\": 3000,\n  \"salary_max\": 7000,\n  \"currency\": \"USD\",\n  \"experience_level\": \"mid\",\n  \"requirements\": \"Laravel, MySQL\",\n  \"responsibilities\": \"Develop REST APIs\",\n  \"status\": \"active\",\n  \"skill_ids\": [1,2]\n}"
-            },
-            "url": "{{base_url}}/api/jobs"
+            "url": "{{base_url}}/api/jobs/{{job_id}}"
           },
           "response": []
         },
@@ -852,15 +1558,24 @@
           "request": {
             "method": "PUT",
             "header": [
-              { "key": "Accept", "value": "application/json" },
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{token}}" }
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
             ],
+            "url": "{{base_url}}/api/jobs/{{job_id}}",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"title\": \"Senior Backend Laravel Engineer\",\n  \"status\": \"active\",\n  \"is_active\": true,\n  \"skill_ids\": [1]\n}"
-            },
-            "url": "{{base_url}}/api/jobs/{{job_id}}"
+              "raw": "{\n  \"title\": \"Senior Backend Engineer\",\n  \"status\": \"active\",\n  \"skill_ids\": [\n    \"{{skill_id}}\"\n  ]\n}"
+            }
           },
           "response": []
         },
@@ -869,8 +1584,14 @@
           "request": {
             "method": "DELETE",
             "header": [
-              { "key": "Accept", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{token}}" }
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
             ],
             "url": "{{base_url}}/api/jobs/{{job_id}}"
           },
@@ -882,82 +1603,120 @@
       "name": "Applications",
       "item": [
         {
-          "name": "List Job Applications (Company)",
+          "name": "Apply To Job",
           "request": {
-            "method": "GET",
+            "method": "POST",
             "header": [
-              { "key": "Accept", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{token}}" }
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
             ],
-            "url": "{{base_url}}/api/jobs/{{job_id}}/applications"
+            "url": "{{base_url}}/api/jobs/{{job_id}}/applications",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"cv_document_id\": \"{{document_id}}\",\n  \"cover_letter\": \"I am a strong fit for this role.\"\n}"
+            }
           },
-          "response": []
-        },
-        {
-          "name": "Apply To Job (Person)",
+          "response": [],
           "event": [
             {
               "listen": "test",
               "script": {
                 "type": "text/javascript",
                 "exec": [
+                  "pm.test(\"status is expected\", function () { pm.expect(pm.response.code).to.be.oneOf([201]); });",
                   "var json = pm.response.json();",
-                  "if (json.data && json.data.id) { pm.collectionVariables.set('application_id', json.data.id); }"
+                  "var value = json.data && json.data.id;",
+                  "if (value) { pm.collectionVariables.set('application_id', value); }"
                 ]
               }
             }
-          ],
+          ]
+        },
+        {
+          "name": "List Applications For Job",
           "request": {
-            "method": "POST",
+            "method": "GET",
             "header": [
-              { "key": "Accept", "value": "application/json" },
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{token}}" }
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
             ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"cover_letter\": \"I am interested in this role.\",\n  \"cv_document_id\": null\n}"
-            },
             "url": "{{base_url}}/api/jobs/{{job_id}}/applications"
           },
           "response": []
         },
         {
-          "name": "Get Application",
+          "name": "Show Application",
           "request": {
             "method": "GET",
             "header": [
-              { "key": "Accept", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{token}}" }
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
             ],
             "url": "{{base_url}}/api/applications/{{application_id}}"
           },
           "response": []
         },
         {
-          "name": "Update Application Status (Company)",
+          "name": "Update Application Status",
           "request": {
             "method": "PUT",
             "header": [
-              { "key": "Accept", "value": "application/json" },
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{token}}" }
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
             ],
+            "url": "{{base_url}}/api/applications/{{application_id}}",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"status\": \"under_review\",\n  \"notes\": \"Strong profile\"\n}"
-            },
-            "url": "{{base_url}}/api/applications/{{application_id}}"
+              "raw": "{\n  \"status\": \"under_review\",\n  \"notes\": \"Looks promising.\"\n}"
+            }
           },
           "response": []
         },
         {
-          "name": "Withdraw Application (Applicant)",
+          "name": "Withdraw Application",
           "request": {
             "method": "DELETE",
             "header": [
-              { "key": "Accept", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{token}}" }
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
             ],
             "url": "{{base_url}}/api/applications/{{application_id}}"
           },
@@ -973,8 +1732,14 @@
           "request": {
             "method": "GET",
             "header": [
-              { "key": "Accept", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{token}}" }
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
             ],
             "url": "{{base_url}}/api/conversations"
           },
@@ -982,119 +1747,1225 @@
         },
         {
           "name": "Create Direct Conversation",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/api/conversations",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"type\": \"direct\",\n  \"participant_id\": \"{{user_id}}\"\n}"
+            }
+          },
+          "response": [],
           "event": [
             {
               "listen": "test",
               "script": {
                 "type": "text/javascript",
                 "exec": [
+                  "pm.test(\"status is expected\", function () { pm.expect(pm.response.code).to.be.oneOf([200,201]); });",
                   "var json = pm.response.json();",
-                  "if (json.data && json.data.id) { pm.collectionVariables.set('conversation_id', json.data.id); }"
+                  "var value = json.data && json.data.id;",
+                  "if (value) { pm.collectionVariables.set('conversation_id', value); }"
                 ]
               }
             }
-          ],
-          "request": {
-            "method": "POST",
-            "header": [
-              { "key": "Accept", "value": "application/json" },
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{token}}" }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"type\": \"direct\",\n  \"participant_id\": {{participant_id}}\n}"
-            },
-            "url": "{{base_url}}/api/conversations"
-          },
-          "response": []
+          ]
         },
         {
           "name": "Create Application Conversation",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/api/conversations",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"type\": \"application\",\n  \"application_id\": \"{{application_id}}\"\n}"
+            }
+          },
+          "response": [],
           "event": [
             {
               "listen": "test",
               "script": {
                 "type": "text/javascript",
                 "exec": [
+                  "pm.test(\"status is expected\", function () { pm.expect(pm.response.code).to.be.oneOf([200,201]); });",
                   "var json = pm.response.json();",
-                  "if (json.data && json.data.id) { pm.collectionVariables.set('conversation_id', json.data.id); }"
+                  "var value = json.data && json.data.id;",
+                  "if (value) { pm.collectionVariables.set('conversation_id', value); }"
                 ]
               }
             }
-          ],
-          "request": {
-            "method": "POST",
-            "header": [
-              { "key": "Accept", "value": "application/json" },
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{token}}" }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"type\": \"application\",\n  \"application_id\": {{application_id}}\n}"
-            },
-            "url": "{{base_url}}/api/conversations"
-          },
-          "response": []
+          ]
         },
         {
-          "name": "Get Conversation",
+          "name": "Show Conversation",
           "request": {
             "method": "GET",
             "header": [
-              { "key": "Accept", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{token}}" }
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
             ],
             "url": "{{base_url}}/api/conversations/{{conversation_id}}"
           },
           "response": []
-        },
+        }
+      ]
+    },
+    {
+      "name": "Messages",
+      "item": [
         {
-          "name": "List Conversation Messages",
+          "name": "List Messages",
           "request": {
             "method": "GET",
             "header": [
-              { "key": "Accept", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{token}}" }
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
             ],
             "url": "{{base_url}}/api/conversations/{{conversation_id}}/messages"
           },
           "response": []
         },
         {
-          "name": "Send Message (Text)",
+          "name": "Send Text Message",
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Accept", "value": "application/json" },
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{token}}" }
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
             ],
+            "url": "{{base_url}}/api/conversations/{{conversation_id}}/messages",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"body\": \"Hello from Postman\"\n}"
-            },
-            "url": "{{base_url}}/api/conversations/{{conversation_id}}/messages"
+              "raw": "{\n  \"body\": \"Hello from JobNest.\",\n  \"message_type\": \"text\"\n}"
+            }
           },
           "response": []
         },
         {
-          "name": "Send Message (File)",
+          "name": "Send File Message",
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Accept", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{token}}" }
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
             ],
+            "url": "{{base_url}}/api/conversations/{{conversation_id}}/messages",
             "body": {
               "mode": "formdata",
               "formdata": [
-                { "key": "file", "type": "file", "src": "" },
-                { "key": "body", "value": "See attachment", "type": "text" }
+                {
+                  "key": "message_type",
+                  "value": "file",
+                  "type": "text"
+                },
+                {
+                  "key": "body",
+                  "value": "See attachment.",
+                  "type": "text"
+                },
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": ""
+                }
               ]
-            },
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Categories",
+      "item": [
+        {
+          "name": "List Categories",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/api/categories?type=course"
+          },
+          "response": []
+        },
+        {
+          "name": "Show Category",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/api/categories/{{category_id}}"
+          },
+          "response": []
+        },
+        {
+          "name": "Create Category",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/api/auth/categories",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Programming\",\n  \"type\": \"course\",\n  \"description\": \"Programming courses\",\n  \"is_active\": true\n}"
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is expected', function () { pm.expect(pm.response.code).to.be.oneOf([200,201]); });",
+                  "var json = pm.response.json();",
+                  "var value = json.data && json.data.id;",
+                  "if (value) { pm.collectionVariables.set('category_id', value); }"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Update Category",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/api/auth/categories/{{category_id}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Programming Updated\",\n  \"description\": \"Updated category description\"\n}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Category",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": "{{base_url}}/api/auth/categories/{{category_id}}"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Training Provider Profiles",
+      "item": [
+        {
+          "name": "Get Training Provider Profile",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": "{{base_url}}/api/auth/training-provider-profile"
+          },
+          "response": []
+        },
+        {
+          "name": "Create Or Update Training Provider Profile",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": "{{base_url}}/api/auth/training-provider-profile",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "provider_name",
+                  "value": "JobNest Academy",
+                  "type": "text"
+                },
+                {
+                  "key": "website",
+                  "value": "https://academy.jobnest.test",
+                  "type": "text"
+                },
+                {
+                  "key": "industry",
+                  "value": "Education",
+                  "type": "text"
+                },
+                {
+                  "key": "location",
+                  "value": "Cairo",
+                  "type": "text"
+                },
+                {
+                  "key": "about",
+                  "value": "We publish practical career courses.",
+                  "type": "text"
+                },
+                {
+                  "key": "is_profile_completed",
+                  "value": "true",
+                  "type": "text"
+                },
+                {
+                  "key": "logo",
+                  "type": "file",
+                  "src": ""
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Training Provider Profile",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": "{{base_url}}/api/auth/training-provider-profile",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "provider_name",
+                  "value": "JobNest Academy Updated",
+                  "type": "text"
+                },
+                {
+                  "key": "website",
+                  "value": "https://academy.jobnest.test",
+                  "type": "text"
+                },
+                {
+                  "key": "industry",
+                  "value": "EdTech",
+                  "type": "text"
+                },
+                {
+                  "key": "location",
+                  "value": "Alexandria",
+                  "type": "text"
+                },
+                {
+                  "key": "about",
+                  "value": "Updated provider profile.",
+                  "type": "text"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Courses",
+      "item": [
+        {
+          "name": "List Courses",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/api/courses?q=backend&category_id={{category_id}}&skill_id={{skill_id}}"
+          },
+          "response": []
+        },
+        {
+          "name": "My Courses",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": "{{base_url}}/api/auth/my-courses"
+          },
+          "response": []
+        },
+        {
+          "name": "Create Course",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": "{{base_url}}/api/courses",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "category_id",
+                  "value": "{{category_id}}",
+                  "type": "text"
+                },
+                {
+                  "key": "title",
+                  "value": "Backend Laravel Bootcamp",
+                  "type": "text"
+                },
+                {
+                  "key": "short_description",
+                  "value": "Practical backend course.",
+                  "type": "text"
+                },
+                {
+                  "key": "description",
+                  "value": "Deep dive into Laravel APIs.",
+                  "type": "text"
+                },
+                {
+                  "key": "course_overview",
+                  "value": "Modules, projects, and mentorship.",
+                  "type": "text"
+                },
+                {
+                  "key": "what_you_learn",
+                  "value": "Laravel, Sanctum, testing, queues.",
+                  "type": "text"
+                },
+                {
+                  "key": "level",
+                  "value": "intermediate",
+                  "type": "text"
+                },
+                {
+                  "key": "delivery_mode",
+                  "value": "online",
+                  "type": "text"
+                },
+                {
+                  "key": "language",
+                  "value": "en",
+                  "type": "text"
+                },
+                {
+                  "key": "price",
+                  "value": "499",
+                  "type": "text"
+                },
+                {
+                  "key": "currency",
+                  "value": "EGP",
+                  "type": "text"
+                },
+                {
+                  "key": "duration_hours",
+                  "value": "24",
+                  "type": "text"
+                },
+                {
+                  "key": "seats_count",
+                  "value": "40",
+                  "type": "text"
+                },
+                {
+                  "key": "start_date",
+                  "value": "2026-05-15",
+                  "type": "text"
+                },
+                {
+                  "key": "end_date",
+                  "value": "2026-06-15",
+                  "type": "text"
+                },
+                {
+                  "key": "status",
+                  "value": "published",
+                  "type": "text"
+                },
+                {
+                  "key": "skill_ids[]",
+                  "value": "{{skill_id}}",
+                  "type": "text"
+                },
+                {
+                  "key": "thumbnail",
+                  "type": "file",
+                  "src": ""
+                }
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is expected', function () { pm.expect(pm.response.code).to.be.oneOf([200,201]); });",
+                  "var json = pm.response.json();",
+                  "var value = json.data && json.data.id;",
+                  "if (value) { pm.collectionVariables.set('course_id', value); }"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Show Course",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/api/courses/{{course_id}}"
+          },
+          "response": []
+        },
+        {
+          "name": "Update Course",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": "{{base_url}}/api/courses/{{course_id}}",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "title",
+                  "value": "Backend Laravel Bootcamp Updated",
+                  "type": "text"
+                },
+                {
+                  "key": "status",
+                  "value": "published",
+                  "type": "text"
+                },
+                {
+                  "key": "skill_ids[]",
+                  "value": "{{skill_id}}",
+                  "type": "text"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Course",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": "{{base_url}}/api/courses/{{course_id}}"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Course Enrollments",
+      "item": [
+        {
+          "name": "Enroll In Course",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/api/courses/{{course_id}}/enrollments",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"payment_method\": \"card\"\n}"
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is expected', function () { pm.expect(pm.response.code).to.be.oneOf([200,201]); });",
+                  "var json = pm.response.json();",
+                  "var value = json.data && json.data.id;",
+                  "if (value) { pm.collectionVariables.set('course_enrollment_id', value); }"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "List My Course Enrollments",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": "{{base_url}}/api/course-enrollments"
+          },
+          "response": []
+        },
+        {
+          "name": "List Provider Course Enrollments",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": "{{base_url}}/api/courses/{{course_id}}/enrollments"
+          },
+          "response": []
+        },
+        {
+          "name": "Update Course Enrollment",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/api/course-enrollments/{{course_enrollment_id}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"completed\",\n  \"payment_status\": \"paid\",\n  \"payment_method\": \"card\",\n  \"amount_paid\": 499\n}"
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Course Reviews",
+      "item": [
+        {
+          "name": "List Course Reviews",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/api/courses/{{course_id}}/reviews"
+          },
+          "response": []
+        },
+        {
+          "name": "Create Course Review",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/api/courses/{{course_id}}/reviews",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"rating\": 5,\n  \"comment\": \"Excellent practical course.\"\n}"
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is expected', function () { pm.expect(pm.response.code).to.be.oneOf([200,201]); });",
+                  "var json = pm.response.json();",
+                  "var value = json.data && json.data.id;",
+                  "if (value) { pm.collectionVariables.set('course_review_id', value); }"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Update Course Review",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/api/course-reviews/{{course_review_id}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"rating\": 4,\n  \"comment\": \"Updated review comment.\"\n}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Course Review",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": "{{base_url}}/api/course-reviews/{{course_review_id}}"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Service Requests",
+      "item": [
+        {
+          "name": "List Service Requests",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/api/service-requests?q=landing&category_id={{category_id}}&skill_id={{skill_id}}"
+          },
+          "response": []
+        },
+        {
+          "name": "My Service Requests",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": "{{base_url}}/api/auth/my-service-requests"
+          },
+          "response": []
+        },
+        {
+          "name": "Create Service Request",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/api/service-requests",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"category_id\": \"{{category_id}}\",\n  \"title\": \"Build a landing page\",\n  \"description\": \"Need a responsive landing page for a product launch.\",\n  \"budget_min\": 1500,\n  \"budget_max\": 3000,\n  \"currency\": \"EGP\",\n  \"location\": \"Cairo\",\n  \"delivery_mode\": \"online\",\n  \"deadline\": \"2026-05-20\",\n  \"skill_ids\": [\n    \"{{skill_id}}\"\n  ]\n}"
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is expected', function () { pm.expect(pm.response.code).to.be.oneOf([200,201]); });",
+                  "var json = pm.response.json();",
+                  "var value = json.data && json.data.id;",
+                  "if (value) { pm.collectionVariables.set('service_request_id', value); }"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Show Service Request",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/api/service-requests/{{service_request_id}}"
+          },
+          "response": []
+        },
+        {
+          "name": "Update Service Request",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/api/service-requests/{{service_request_id}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Build a product landing page\",\n  \"status\": \"open\",\n  \"skill_ids\": [\n    \"{{skill_id}}\"\n  ]\n}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Service Request",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": "{{base_url}}/api/service-requests/{{service_request_id}}"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Service Proposals",
+      "item": [
+        {
+          "name": "Create Service Proposal",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/api/service-requests/{{service_request_id}}/proposals",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message\": \"I can deliver this in one week.\",\n  \"proposed_budget\": 2500,\n  \"delivery_days\": 7\n}"
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is expected', function () { pm.expect(pm.response.code).to.be.oneOf([200,201]); });",
+                  "var json = pm.response.json();",
+                  "var value = json.data && json.data.id;",
+                  "if (value) { pm.collectionVariables.set('service_proposal_id', value); }"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "List Service Request Proposals",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": "{{base_url}}/api/service-requests/{{service_request_id}}/proposals"
+          },
+          "response": []
+        },
+        {
+          "name": "Show Service Proposal",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": "{{base_url}}/api/service-proposals/{{service_proposal_id}}"
+          },
+          "response": []
+        },
+        {
+          "name": "Accept Or Reject Service Proposal",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/api/service-proposals/{{service_proposal_id}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"accepted\"\n}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Withdraw Service Proposal",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/api/service-proposals/{{service_proposal_id}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"withdrawn\"\n}"
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Service Conversations",
+      "item": [
+        {
+          "name": "Create Or Open Service Conversation",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": "{{base_url}}/api/service-proposals/{{service_proposal_id}}/conversation"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is expected', function () { pm.expect(pm.response.code).to.be.oneOf([200,201]); });",
+                  "var json = pm.response.json();",
+                  "var value = json.data && json.data.id;",
+                  "if (value) { pm.collectionVariables.set('conversation_id', value); }"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "List Service Conversation Messages",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
             "url": "{{base_url}}/api/conversations/{{conversation_id}}/messages"
+          },
+          "response": []
+        },
+        {
+          "name": "Send Service Conversation Message",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/api/conversations/{{conversation_id}}/messages",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"body\": \"Let us discuss the project scope.\",\n  \"message_type\": \"text\"\n}"
+            }
           },
           "response": []
         }
