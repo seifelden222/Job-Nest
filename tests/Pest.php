@@ -1,5 +1,8 @@
 <?php
 
+use App\Models\CompanyProfile;
+use App\Models\PersonProfile;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -47,4 +50,26 @@ expect()->extend('toBeOne', function () {
 function something()
 {
     // ..
+}
+
+function createPersonUser(array $userAttributes = [], array $profileAttributes = []): User
+{
+    $user = User::factory()->person()->create($userAttributes);
+
+    PersonProfile::factory()->create(array_merge([
+        'user_id' => $user->id,
+    ], $profileAttributes));
+
+    return $user->fresh();
+}
+
+function createCompanyUser(array $userAttributes = [], array $profileAttributes = []): User
+{
+    $user = User::factory()->company()->create($userAttributes);
+
+    CompanyProfile::factory()->create(array_merge([
+        'user_id' => $user->id,
+    ], $profileAttributes));
+
+    return $user->fresh();
 }

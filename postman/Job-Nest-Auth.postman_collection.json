@@ -19,7 +19,12 @@
     { "key": "verification_expires", "value": "", "type": "string" },
     { "key": "verification_signature", "value": "", "type": "string" },
     { "key": "google_id_token", "value": "", "type": "string" },
-    { "key": "otp", "value": "123456", "type": "string" }
+    { "key": "otp", "value": "123456", "type": "string" },
+    { "key": "job_id", "value": "", "type": "string" },
+    { "key": "application_id", "value": "", "type": "string" },
+    { "key": "conversation_id", "value": "", "type": "string" },
+    { "key": "participant_id", "value": "", "type": "string" },
+    { "key": "message_id", "value": "", "type": "string" }
   ],
   "item": [
     {
@@ -783,6 +788,313 @@
               "raw": "{\n  \"name\": \"Tech Corp HR\",\n  \"company_name\": \"Tech Corp\",\n  \"website\": \"https://techcorp.com\",\n  \"about\": \"We build hiring products.\"\n}"
             },
             "url": "{{base_url}}/api/auth/profile"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Jobs",
+      "item": [
+        {
+          "name": "List Active Jobs",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "url": "{{base_url}}/api/jobs?q=backend&location=cairo&employment_type=full_time"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Job",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "url": "{{base_url}}/api/jobs/{{job_id}}"
+          },
+          "response": []
+        },
+        {
+          "name": "Create Job (Company)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "var json = pm.response.json();",
+                  "if (json.data && json.data.id) { pm.collectionVariables.set('job_id', json.data.id); }"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Backend Laravel Engineer\",\n  \"description\": \"Build and maintain APIs.\",\n  \"location\": \"Cairo\",\n  \"employment_type\": \"full_time\",\n  \"salary_min\": 3000,\n  \"salary_max\": 7000,\n  \"currency\": \"USD\",\n  \"experience_level\": \"mid\",\n  \"requirements\": \"Laravel, MySQL\",\n  \"responsibilities\": \"Develop REST APIs\",\n  \"status\": \"active\",\n  \"skill_ids\": [1,2]\n}"
+            },
+            "url": "{{base_url}}/api/jobs"
+          },
+          "response": []
+        },
+        {
+          "name": "Update Job",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Senior Backend Laravel Engineer\",\n  \"status\": \"active\",\n  \"is_active\": true,\n  \"skill_ids\": [1]\n}"
+            },
+            "url": "{{base_url}}/api/jobs/{{job_id}}"
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Job",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": "{{base_url}}/api/jobs/{{job_id}}"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Applications",
+      "item": [
+        {
+          "name": "List Job Applications (Company)",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": "{{base_url}}/api/jobs/{{job_id}}/applications"
+          },
+          "response": []
+        },
+        {
+          "name": "Apply To Job (Person)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "var json = pm.response.json();",
+                  "if (json.data && json.data.id) { pm.collectionVariables.set('application_id', json.data.id); }"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"cover_letter\": \"I am interested in this role.\",\n  \"cv_document_id\": null\n}"
+            },
+            "url": "{{base_url}}/api/jobs/{{job_id}}/applications"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Application",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": "{{base_url}}/api/applications/{{application_id}}"
+          },
+          "response": []
+        },
+        {
+          "name": "Update Application Status (Company)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"under_review\",\n  \"notes\": \"Strong profile\"\n}"
+            },
+            "url": "{{base_url}}/api/applications/{{application_id}}"
+          },
+          "response": []
+        },
+        {
+          "name": "Withdraw Application (Applicant)",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": "{{base_url}}/api/applications/{{application_id}}"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Conversations",
+      "item": [
+        {
+          "name": "List Conversations",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": "{{base_url}}/api/conversations"
+          },
+          "response": []
+        },
+        {
+          "name": "Create Direct Conversation",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "var json = pm.response.json();",
+                  "if (json.data && json.data.id) { pm.collectionVariables.set('conversation_id', json.data.id); }"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"type\": \"direct\",\n  \"participant_id\": {{participant_id}}\n}"
+            },
+            "url": "{{base_url}}/api/conversations"
+          },
+          "response": []
+        },
+        {
+          "name": "Create Application Conversation",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "var json = pm.response.json();",
+                  "if (json.data && json.data.id) { pm.collectionVariables.set('conversation_id', json.data.id); }"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"type\": \"application\",\n  \"application_id\": {{application_id}}\n}"
+            },
+            "url": "{{base_url}}/api/conversations"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Conversation",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": "{{base_url}}/api/conversations/{{conversation_id}}"
+          },
+          "response": []
+        },
+        {
+          "name": "List Conversation Messages",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": "{{base_url}}/api/conversations/{{conversation_id}}/messages"
+          },
+          "response": []
+        },
+        {
+          "name": "Send Message (Text)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"body\": \"Hello from Postman\"\n}"
+            },
+            "url": "{{base_url}}/api/conversations/{{conversation_id}}/messages"
+          },
+          "response": []
+        },
+        {
+          "name": "Send Message (File)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "file", "type": "file", "src": "" },
+                { "key": "body", "value": "See attachment", "type": "text" }
+              ]
+            },
+            "url": "{{base_url}}/api/conversations/{{conversation_id}}/messages"
           },
           "response": []
         }

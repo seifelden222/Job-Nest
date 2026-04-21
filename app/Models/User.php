@@ -51,6 +51,11 @@ class User extends Authenticatable implements MustVerifyEmailContract
         return $this->hasOne(CompanyProfile::class);
     }
 
+    public function trainingProviderProfile(): HasOne
+    {
+        return $this->hasOne(TrainingProviderProfile::class);
+    }
+
     public function otpCodes(): HasMany
     {
         return $this->hasMany(OtpCode::class, 'user_id')
@@ -65,6 +70,48 @@ class User extends Authenticatable implements MustVerifyEmailContract
     public function refreshTokens(): HasMany
     {
         return $this->hasMany(RefreshToken::class);
+    }
+
+    public function jobs(): HasMany
+    {
+        return $this->hasMany(Job::class, 'company_id');
+    }
+
+    public function applications(): HasMany
+    {
+        return $this->hasMany(Application::class);
+    }
+
+    public function conversations(): BelongsToMany
+    {
+        return $this->belongsToMany(Conversation::class, 'conversation_participants')
+            ->withPivot(['joined_at', 'last_read_at', 'is_muted'])
+            ->withTimestamps();
+    }
+
+    public function messages(): HasMany
+    {
+        return $this->hasMany(Message::class, 'sender_id');
+    }
+
+    public function courseEnrollments(): HasMany
+    {
+        return $this->hasMany(CourseEnrollment::class);
+    }
+
+    public function courseReviews(): HasMany
+    {
+        return $this->hasMany(CourseReview::class);
+    }
+
+    public function serviceRequests(): HasMany
+    {
+        return $this->hasMany(ServiceRequest::class);
+    }
+
+    public function serviceProposals(): HasMany
+    {
+        return $this->hasMany(ServiceProposal::class);
     }
 
     public function skills(): BelongsToMany
