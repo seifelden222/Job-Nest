@@ -1,6 +1,14 @@
 <?php
 
 use App\Http\Controllers\Api\Auth\AuthController;
+use App\Http\Controllers\Api\InterestController;
+use App\Http\Controllers\Api\LanguageController;
+use App\Http\Controllers\Api\SkillController;
+use App\Http\Controllers\Api\UserInterestController;
+use App\Http\Controllers\Api\UserLanguageController;
+use App\Http\Controllers\Api\UserSkillsController;
+use App\Http\Controllers\Api\UserDocumentController;
+use App\Http\Controllers\Api\ProfileController;
 use Illuminate\Support\Facades\Route;
 
 // Auth routes (clean, named)
@@ -26,12 +34,26 @@ Route::prefix('auth')->name('auth.')->group(function () {
         Route::get('email/verification-status', [AuthController::class, 'verificationStatus'])->name('verification.status');
 
         Route::get('me', [AuthController::class, 'me'])->name('me');
+        // User profile management routes
+        Route::apiResource('user-skills', UserSkillsController::class)->only(['index', 'store', 'destroy']);
+        Route::apiResource('user-interests', UserInterestController::class)->only(['index', 'store', 'destroy']);
+        Route::apiResource('user-languages', UserLanguageController::class)->only(['index', 'store', 'destroy']);
+        Route::apiResource('user-documents', UserDocumentController::class)->only(['index', 'store', 'destroy']);
 
+        // Admin routes for managing skills, interests, and languages
+        Route::apiResource('skills', SkillController::class);
+        Route::apiResource('interests', InterestController::class);
+        Route::apiResource('languages', LanguageController::class);
+
+        // Protected routes that require email verification
         Route::middleware('verified.email')->group(function () {
             Route::post('change-password', [AuthController::class, 'changePassword'])->name('change-password');
             Route::get('sessions', [AuthController::class, 'sessions'])->name('sessions.index');
             Route::delete('sessions/{sessionId}', [AuthController::class, 'revokeSession'])->name('sessions.revoke');
         });
+
+        Route::get('profile', [ProfileController::class, 'show'])->name('profile.show');
+        Route::put('profile', [ProfileController::class, 'update'])->name('profile.update');
 
         Route::post('logout', [AuthController::class, 'logout'])->name('logout');
         Route::post('logout-all', [AuthController::class, 'logoutAll'])->name('logout-all');

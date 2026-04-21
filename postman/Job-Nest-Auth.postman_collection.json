@@ -453,5 +453,340 @@
         }
       ]
     }
+    ,
+    {
+      "name": "Profile",
+      "item": [
+        {
+          "name": "User Skills - List",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": "{{base_url}}/api/auth/user-skills"
+          },
+          "response": []
+        },
+        {
+          "name": "User Skills - Add",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"skill_id\": 1\n}" },
+            "url": "{{base_url}}/api/auth/user-skills"
+          },
+          "response": []
+        },
+        {
+          "name": "User Skills - Remove",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": "{{base_url}}/api/auth/user-skills/{{id}}"
+          },
+          "response": []
+        },
+        {
+          "name": "User Interests - List",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": "{{base_url}}/api/auth/user-interests"
+          },
+          "response": []
+        },
+        {
+          "name": "User Interests - Add",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"interest_id\": 1\n}" },
+            "url": "{{base_url}}/api/auth/user-interests"
+          },
+          "response": []
+        },
+        {
+          "name": "User Interests - Remove",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": "{{base_url}}/api/auth/user-interests/{{id}}"
+          },
+          "response": []
+        },
+        {
+          "name": "User Languages - List",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": "{{base_url}}/api/auth/user-languages"
+          },
+          "response": []
+        },
+        {
+          "name": "User Languages - Add",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"language_id\": 1\n}" },
+            "url": "{{base_url}}/api/auth/user-languages"
+          },
+          "response": []
+        },
+        {
+          "name": "User Languages - Remove",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": "{{base_url}}/api/auth/user-languages/{{id}}"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Catalogs",
+      "item": [
+        {
+          "name": "Skills - List",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": "{{base_url}}/api/auth/skills"
+          },
+          "response": []
+        },
+        {
+          "name": "Skills - Create",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"name\": \"New Skill\"\n}" },
+            "url": "{{base_url}}/api/auth/skills"
+          },
+          "response": []
+        },
+        {
+          "name": "Skills - Show",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": "{{base_url}}/api/auth/skills/{{id}}"
+          },
+          "response": []
+        },
+        {
+          "name": "Skills - Update",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"name\": \"Updated Skill\"\n}" },
+            "url": "{{base_url}}/api/auth/skills/{{id}}"
+          },
+          "response": []
+        },
+        {
+          "name": "Skills - Delete",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": "{{base_url}}/api/auth/skills/{{id}}"
+          },
+          "response": []
+        },
+        {
+          "name": "Interests - List",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": "{{base_url}}/api/auth/interests"
+          },
+          "response": []
+        },
+        {
+          "name": "Languages - List",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": "{{base_url}}/api/auth/languages"
+          },
+          "response": []
+        }
+      ]
+    }
+    ,
+    {
+      "name": "User Documents",
+      "item": [
+        {
+          "name": "List Documents",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": "{{base_url}}/api/auth/user-documents"
+          },
+          "response": []
+        },
+        {
+          "name": "Upload Document (CV)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "type", "value": "cv", "type": "text" },
+                { "key": "title", "value": "My CV", "type": "text" },
+                { "key": "file", "type": "file", "src": "" }
+              ]
+            },
+            "url": "{{base_url}}/api/auth/user-documents"
+          },
+          "response": []
+        },
+        {
+          "name": "Upload Document (Certificate)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "type", "value": "certificate", "type": "text" },
+                { "key": "title", "value": "Course Cert", "type": "text" },
+                { "key": "file", "type": "file", "src": "" }
+              ]
+            },
+            "url": "{{base_url}}/api/auth/user-documents"
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Document",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": "{{base_url}}/api/auth/user-documents/{{id}}"
+          },
+          "response": []
+        }
+      ]
+    }
+    ,
+    {
+      "name": "Profile",
+      "item": [
+        {
+          "name": "Get Profile",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": "{{base_url}}/api/auth/profile"
+          },
+          "response": []
+        },
+        {
+          "name": "Update Profile (Person example)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Ali Hassan\",\n  \"phone\": \"01000000000\",\n  \"about\": \"Updated bio\",\n  \"current_job_title\": \"Senior Backend\"\n}"
+            },
+            "url": "{{base_url}}/api/auth/profile"
+          },
+          "response": []
+        },
+        {
+          "name": "Update Profile (Company example)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Tech Corp HR\",\n  \"company_name\": \"Tech Corp\",\n  \"website\": \"https://techcorp.com\",\n  \"about\": \"We build hiring products.\"\n}"
+            },
+            "url": "{{base_url}}/api/auth/profile"
+          },
+          "response": []
+        }
+      ]
+    }
   ]
 }
