@@ -5,6 +5,7 @@ namespace App\Services\Auth;
 use App\Mail\Auth\SendOtp;
 use App\Models\OtpCode;
 use App\Models\User;
+use App\Notifications\Auth\mailotpnotfication;
 use App\Services\SmsService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -223,6 +224,7 @@ class ForgotPasswordService
     {
         if ($method === 'email') {
             Mail::to($user->email)->queue(new SendOtp($otp));
+            $user->notify(new mailotpnotfication($otp));
         } else {
             // SMS path — resolve SmsService only when needed so tests can easily fake it
             try {

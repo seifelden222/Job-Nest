@@ -7,25 +7,28 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-class Document extends Model
+class TrainingProviderProfile extends Model
 {
     use HasFactory;
 
     protected $fillable = [
         'user_id',
-        'type',
-        'title',
-        'file_path',
-        'file_name',
-        'mime_type',
-        'file_size',
-        'is_primary',
+        'provider_name',
+        'website',
+        'industry',
+        'location',
+        'about',
+        'logo',
+        'is_verified',
+        'onboarding_step',
+        'is_profile_completed',
     ];
 
     protected function casts(): array
     {
         return [
-            'is_primary' => 'boolean',
+            'is_verified' => 'boolean',
+            'is_profile_completed' => 'boolean',
         ];
     }
 
@@ -34,8 +37,8 @@ class Document extends Model
         return $this->belongsTo(User::class);
     }
 
-    public function applications(): HasMany
+    public function courses(): HasMany
     {
-        return $this->hasMany(Application::class, 'cv_document_id');
+        return $this->hasMany(Course::class, 'training_provider_id');
     }
 }

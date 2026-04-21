@@ -12,6 +12,7 @@ class DatabaseSeeder extends Seeder
             SkillSeeder::class,
             LanguageSeeder::class,
             InterestSeeder::class,
+            CategorySeeder::class,
         ]);
     }
 }
