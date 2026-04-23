@@ -12,9 +12,14 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('courses', function (Blueprint $table) {
-            $table->foreignId('user_id')->after('id')->constrained('users')->cascadeOnDelete();
-            $table->dropForeign(['training_provider_id']);
-            $table->dropColumn('training_provider_id');
+            if (!Schema::hasColumn('courses', 'user_id')) {
+                $table->foreignId('user_id')->after('id')->constrained('users')->cascadeOnDelete();
+            }
+
+            if (Schema::hasColumn('courses', 'training_provider_id')) {
+                $table->dropForeign(['training_provider_id']);
+                $table->dropColumn('training_provider_id');
+            }
         });
     }
 
@@ -24,9 +29,14 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('courses', function (Blueprint $table) {
-            $table->dropForeign(['user_id']);
-            $table->dropColumn('user_id');
-            $table->foreignId('training_provider_id')->constrained('training_provider_profiles')->cascadeOnDelete();
+            if (Schema::hasColumn('courses', 'user_id')) {
+                $table->dropForeign(['user_id']);
+                $table->dropColumn('user_id');
+            }
+
+            if (!Schema::hasColumn('courses', 'training_provider_id')) {
+                $table->foreignId('training_provider_id')->constrained('training_provider_profiles')->cascadeOnDelete();
+            }
         });
     }
 };
