@@ -13,18 +13,8 @@ class UpdateApplicationRequest extends FormRequest
         /** @var Application|null $application */
         $application = $this->route('application');
 
-        if (! $application instanceof Application) {
-            return false;
-        }
-
-        $user = $this->user();
-
-        $isOwnerCompany = $user?->isCompany() === true
-            && (int) $application->job->company_id === (int) $user->id;
-
-        $isApplicant = (int) $application->user_id === (int) $user?->id;
-
-        return $isOwnerCompany || $isApplicant;
+        return $application instanceof Application
+            && $this->user()?->can('update', $application) === true;
     }
 
     public function rules(): array

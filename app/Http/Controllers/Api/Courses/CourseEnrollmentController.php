@@ -14,6 +14,8 @@ class CourseEnrollmentController extends Controller
 {
     public function index(Request $request): JsonResponse
     {
+        $this->authorize('viewAny', CourseEnrollment::class);
+
         $enrollments = CourseEnrollment::query()
             ->with(['course.owner:id,name', 'course.category:id,name,slug,type'])
             ->where('user_id', $request->user()->id)
@@ -67,11 +69,7 @@ class CourseEnrollmentController extends Controller
 
     public function providerIndex(Request $request, Course $course): JsonResponse
     {
-        if ((int) $request->user()->id !== (int) $course->user_id) {
-            return response()->json([
-                'message' => 'Unauthorized.',
-            ], 403);
-        }
+        $this->authorize('viewEnrollments', $course);
 
         $enrollments = $course->enrollments()
             ->with('user:id,name,email,phone')
@@ -86,6 +84,8 @@ class CourseEnrollmentController extends Controller
 
     public function update(UpdateCourseEnrollmentRequest $request, CourseEnrollment $courseEnrollment): JsonResponse
     {
+        $this->authorize('update', $courseEnrollment);
+
         $payload = $request->validated();
 
         if (($payload['status'] ?? null) === 'enrolled' && $courseEnrollment->enrolled_at === null) {

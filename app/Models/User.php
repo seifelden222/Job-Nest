@@ -139,8 +139,21 @@ class User extends Authenticatable implements MustVerifyEmailContract
         return $this->account_type === 'person';
     }
 
+    public function isActive(): bool
+    {
+        return $this->status === 'active';
+    }
+
     public function isCompany(): bool
     {
         return $this->account_type === 'company';
+    }
+
+    public function isAdmin(): bool
+    {
+        return Admin::query()
+            ->where('email', $this->email)
+            ->where('status', 'active')
+            ->exists();
     }
 }

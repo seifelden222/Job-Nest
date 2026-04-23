@@ -2,6 +2,8 @@
 
 namespace App\Http\Requests\Api\Applications;
 
+use App\Models\Application;
+use App\Models\Job;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -9,7 +11,11 @@ class StoreApplicationRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()?->isPerson() === true;
+        /** @var Job|null $job */
+        $job = $this->route('job');
+
+        return $job instanceof Job
+            && $this->user()?->can('create', [Application::class, $job]) === true;
     }
 
     public function rules(): array

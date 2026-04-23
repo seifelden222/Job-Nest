@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Api\Jobs;
 
+use App\Models\Job;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -9,7 +10,7 @@ class StoreJobRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()?->isCompany() === true;
+        return $this->user()?->can('create', Job::class) === true;
     }
 
     public function rules(): array

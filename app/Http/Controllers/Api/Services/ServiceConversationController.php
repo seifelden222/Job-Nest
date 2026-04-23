@@ -12,17 +12,10 @@ class ServiceConversationController extends Controller
 {
     public function store(ServiceProposal $serviceProposal): JsonResponse
     {
+        $this->authorize('view', $serviceProposal);
+
         $user = request()->user();
         $serviceRequest = $serviceProposal->serviceRequest;
-
-        $allowed = (int) $serviceProposal->user_id === (int) $user->id
-            || (int) $serviceRequest->user_id === (int) $user->id;
-
-        if (! $allowed) {
-            return response()->json([
-                'message' => 'Unauthorized.',
-            ], 403);
-        }
 
         $existing = Conversation::query()
             ->where('type', 'service')

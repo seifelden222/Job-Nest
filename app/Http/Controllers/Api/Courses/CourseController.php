@@ -69,6 +69,8 @@ class CourseController extends Controller
 
     public function store(StoreCourseRequest $request): JsonResponse
     {
+        $this->authorize('create', Course::class);
+
         $payload = $request->validated();
         $skillIds = $payload['skill_ids'] ?? [];
         unset($payload['skill_ids']);
@@ -119,6 +121,8 @@ class CourseController extends Controller
 
     public function update(UpdateCourseRequest $request, Course $course): JsonResponse
     {
+        $this->authorize('update', $course);
+
         $payload = $request->validated();
         $skillIds = $payload['skill_ids'] ?? null;
         unset($payload['skill_ids']);
@@ -153,6 +157,8 @@ class CourseController extends Controller
 
     public function destroy(UpdateCourseRequest $request, Course $course): JsonResponse
     {
+        $this->authorize('delete', $course);
+
         if ($course->thumbnail && Storage::disk('public')->exists($course->thumbnail)) {
             Storage::disk('public')->delete($course->thumbnail);
         }

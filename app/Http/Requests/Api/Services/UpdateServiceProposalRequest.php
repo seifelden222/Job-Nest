@@ -13,14 +13,8 @@ class UpdateServiceProposalRequest extends FormRequest
         /** @var ServiceProposal|null $serviceProposal */
         $serviceProposal = $this->route('serviceProposal');
 
-        if (! $serviceProposal instanceof ServiceProposal || $this->user() === null) {
-            return false;
-        }
-
-        $isOwner = (int) $serviceProposal->serviceRequest->user_id === (int) $this->user()->id;
-        $isProposer = (int) $serviceProposal->user_id === (int) $this->user()->id;
-
-        return $isOwner || $isProposer;
+        return $serviceProposal instanceof ServiceProposal
+            && $this->user()?->can('update', $serviceProposal) === true;
     }
 
     public function rules(): array
