@@ -115,6 +115,16 @@
       "key": "notification_id",
       "value": "",
       "type": "string"
+    },
+    {
+      "key": "saved_type",
+      "value": "job",
+      "type": "string"
+    },
+    {
+      "key": "saved_target_id",
+      "value": "",
+      "type": "string"
     }
   ],
   "item": [
@@ -2842,6 +2852,105 @@
               "mode": "raw",
               "raw": "{\n  \"body\": \"Let us discuss the project scope.\",\n  \"message_type\": \"text\"\n}"
             }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Saved Items",
+      "item": [
+        {
+          "name": "List Saved Items",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": "{{base_url}}/api/auth/saved-items?type={{saved_type}}"
+          },
+          "response": []
+        },
+        {
+          "name": "Save Item",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/api/auth/saved-items",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"type\": \"{{saved_type}}\",\n  \"target_id\": \"{{saved_target_id}}\"\n}"
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is expected', function () { pm.expect(pm.response.code).to.be.oneOf([200,201]); });",
+                  "var json = pm.response.json();",
+                  "var value = json.saved_item && json.saved_item.target_id;",
+                  "if (value) { pm.collectionVariables.set('saved_target_id', value); }"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Remove Saved Item",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": "{{base_url}}/api/auth/saved-items/{{saved_type}}/{{saved_target_id}}"
+          },
+          "response": []
+        },
+        {
+          "name": "Check Saved Item",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": "{{base_url}}/api/auth/saved-items/check?type={{saved_type}}&target_id={{saved_target_id}}"
           },
           "response": []
         }
