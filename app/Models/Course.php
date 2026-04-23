@@ -14,7 +14,7 @@ class Course extends Model
     use HasFactory;
 
     protected $fillable = [
-        'training_provider_id',
+        'user_id',
         'category_id',
         'title',
         'slug',
@@ -51,9 +51,9 @@ class Course extends Model
         return $query->where('status', 'published')->where('is_active', true);
     }
 
-    public function trainingProvider(): BelongsTo
+    public function owner(): BelongsTo
     {
-        return $this->belongsTo(TrainingProviderProfile::class, 'training_provider_id');
+        return $this->belongsTo(User::class, 'user_id');
     }
 
     public function category(): BelongsTo

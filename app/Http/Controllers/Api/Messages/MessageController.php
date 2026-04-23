@@ -6,9 +6,11 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Messages\StoreMessageRequest;
 use App\Models\Conversation;
 use App\Models\Message;
+use App\Notifications\Messages\NewMessageReceivedNotification;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Notification;
 
 class MessageController extends Controller
 {
@@ -87,6 +89,14 @@ class MessageController extends Controller
 
             return $message;
         });
+
+        $recipients = $conversation->participants()
+            ->where('users.id', '!=', $user->id)
+            ->get();
+
+        if ($recipients->isNotEmpty()) {
+            Notification::send($recipients, new NewMessageReceivedNotification($message, $user));
+        }
 
         return response()->json([
             'message' => 'Message sent successfully.',
