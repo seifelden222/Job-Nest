@@ -14,7 +14,7 @@ class UpdateCourseEnrollmentRequest extends FormRequest
         $courseEnrollment = $this->route('courseEnrollment');
 
         return $courseEnrollment instanceof CourseEnrollment
-            && $this->user()?->trainingProviderProfile?->id === $courseEnrollment->course->training_provider_id;
+            && (int) $this->user()?->id === (int) $courseEnrollment->course->user_id;
     }
 
     public function rules(): array

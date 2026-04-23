@@ -51,11 +51,6 @@ class User extends Authenticatable implements MustVerifyEmailContract
         return $this->hasOne(CompanyProfile::class);
     }
 
-    public function trainingProviderProfile(): HasOne
-    {
-        return $this->hasOne(TrainingProviderProfile::class);
-    }
-
     public function otpCodes(): HasMany
     {
         return $this->hasMany(OtpCode::class, 'user_id')
@@ -97,6 +92,11 @@ class User extends Authenticatable implements MustVerifyEmailContract
     public function courseEnrollments(): HasMany
     {
         return $this->hasMany(CourseEnrollment::class);
+    }
+
+    public function courses(): HasMany
+    {
+        return $this->hasMany(Course::class);
     }
 
     public function courseReviews(): HasMany

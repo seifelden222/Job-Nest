@@ -6,8 +6,11 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Jobs\StoreJobRequest;
 use App\Http\Requests\Api\Jobs\UpdateJobRequest;
 use App\Models\Job;
+use App\Models\User;
+use App\Notifications\Jobs\NewJobPostedNotification;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 
 class JobController extends Controller
 {
@@ -67,6 +70,7 @@ class JobController extends Controller
         }
 
         $job->load(['company:id,name', 'category:id,name,slug,type', 'skills:id,name']);
+        $this->notifyUsersAboutNewJob($job);
 
         return response()->json([
             'message' => 'Job created successfully.',
@@ -125,5 +129,38 @@ class JobController extends Controller
         return response()->json([
             'message' => 'Job deleted successfully.',
         ]);
+    }
+
+    private function notifyUsersAboutNewJob(Job $job): void
+    {
+        if ($job->status !== 'active' || ! $job->is_active) {
+            return;
+        }
+
+        $recipients = $this->resolveRecipientsForNewJob($job);
+
+        if ($recipients->isEmpty()) {
+            return;
+        }
+
+        $notification = new NewJobPostedNotification($job);
+        $recipients->each->notify($notification);
+    }
+
+    private function resolveRecipientsForNewJob(Job $job): Collection
+    {
+        $requiredSkillIds = $job->skills()->pluck('skills.id');
+
+        if ($requiredSkillIds->isEmpty()) {
+            return collect();
+        }
+
+        return User::query()
+            ->where('account_type', 'person')
+            ->whereKeyNot($job->company_id)
+            ->whereHas('skills', function ($query) use ($requiredSkillIds) {
+                $query->whereIn('skills.id', $requiredSkillIds->all());
+            })
+            ->get();
     }
 }

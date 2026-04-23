@@ -1,18 +1,19 @@
 # Course And Service Modules Summary
 
-## What Was Added
+## Final Architecture
 
-- Shared `categories` module for job, course, and service classification.
-- `training_provider_profiles` as a singleton provider profile tied to existing users.
-- `courses` with category support, publishing workflow, provider ownership, skill tagging, enrollments, and optional reviews.
-- `service_requests` as a separate marketplace module, independent from jobs.
-- `service_proposals` for bidding on service requests.
-- Service conversations layered onto the existing `conversations`, `conversation_participants`, and `messages` tables.
+- Jobs are company-only.
+- Courses are owned directly by users through `courses.user_id`.
+- Both person and company users can create courses.
+- Service requests are owned directly by users through `service_requests.user_id`.
+- Both person and company users can create service requests.
+- `training_provider_profiles` has been fully removed from the architecture.
 
-## Database Tables Added
+## Database Tables
+
+### Added / Kept
 
 - `categories`
-- `training_provider_profiles`
 - `courses`
 - `course_skills`
 - `course_enrollments`
@@ -21,15 +22,20 @@
 - `service_request_skills`
 - `service_proposals`
 
-## Database Tables Modified
+### Modified
 
 - `jobs`
   Added `category_id`.
 - `conversations`
-  Added `service_request_id` and `service_proposal_id`.
-  Extended conversation context to support service-related threads.
+  Added `service_request_id` and `service_proposal_id` for service-related context.
+- `courses`
+  Uses `user_id` foreign key to `users` for direct ownership.
 
-## Routes Added
+### Removed
+
+- `training_provider_profiles`
+
+## Routes
 
 ### Public
 
@@ -64,95 +70,35 @@
 
 ### Auth Prefix
 
-- `GET /api/auth/training-provider-profile`
-- `POST /api/auth/training-provider-profile`
-- `PUT /api/auth/training-provider-profile`
 - `GET /api/auth/my-courses`
 - `GET /api/auth/my-service-requests`
 - `POST /api/auth/categories`
 - `PUT /api/auth/categories/{category}`
 - `DELETE /api/auth/categories/{category}`
 
-## Controllers Created
+## Key Behavioral Rules
 
-- `App\Http\Controllers\Api\CategoryController`
-- `App\Http\Controllers\Api\TrainingProviderProfileController`
-- `App\Http\Controllers\Api\CourseController`
-- `App\Http\Controllers\Api\CourseEnrollmentController`
-- `App\Http\Controllers\Api\CourseReviewController`
-- `App\Http\Controllers\Api\ServiceRequestController`
-- `App\Http\Controllers\Api\ServiceProposalController`
-- `App\Http\Controllers\Api\ServiceConversationController`
+1. Jobs
+- Only company users can create, update, or delete jobs.
 
-## Requests Created
+2. Courses
+- Any authenticated user can create a course.
+- Only the owner (`courses.user_id`) can update or delete a course.
+- `my-courses` returns courses where `courses.user_id = auth()->id()`.
 
-- `App\Http\Requests\Api\Categories\StoreCategoryRequest`
-- `App\Http\Requests\Api\Categories\UpdateCategoryRequest`
-- `App\Http\Requests\Api\TrainingProviders\UpsertTrainingProviderProfileRequest`
-- `App\Http\Requests\Api\Courses\StoreCourseRequest`
-- `App\Http\Requests\Api\Courses\UpdateCourseRequest`
-- `App\Http\Requests\Api\Courses\StoreCourseEnrollmentRequest`
-- `App\Http\Requests\Api\Courses\UpdateCourseEnrollmentRequest`
-- `App\Http\Requests\Api\Courses\StoreCourseReviewRequest`
-- `App\Http\Requests\Api\Courses\UpdateCourseReviewRequest`
-- `App\Http\Requests\Api\Services\StoreServiceRequestRequest`
-- `App\Http\Requests\Api\Services\UpdateServiceRequestRequest`
-- `App\Http\Requests\Api\Services\StoreServiceProposalRequest`
-- `App\Http\Requests\Api\Services\UpdateServiceProposalRequest`
+3. Service Requests
+- Any authenticated user can create a service request.
+- Only the owner (`service_requests.user_id`) can update or delete it.
+- `my-service-requests` returns requests where `service_requests.user_id = auth()->id()`.
 
-## Models Created
-
-- `App\Models\Category`
-- `App\Models\TrainingProviderProfile`
-- `App\Models\Course`
-- `App\Models\CourseEnrollment`
-- `App\Models\CourseReview`
-- `App\Models\ServiceRequest`
-- `App\Models\ServiceProposal`
-
-## Existing Files Updated
-
-- `app/Models/User.php`
-- `app/Models/Job.php`
-- `app/Models/Conversation.php`
-- `app/Http/Controllers/Api/ConversationController.php`
-- `app/Http/Controllers/Api/JobController.php`
-- `app/Http/Requests/Api/Jobs/StoreJobRequest.php`
-- `app/Http/Requests/Api/Jobs/UpdateJobRequest.php`
-- `routes/api.php`
-- `app/Services/Auth/ForgotPasswordService.php`
-- `database/seeders/DatabaseSeeder.php`
+4. Enrollments and Reviews
+- Enrollment and review flows remain intact.
+- Course-owner checks use `courses.user_id`.
 
 ## Postman Updates
 
-- Added folders and requests for:
-  - Categories
-  - Training Provider Profiles
-  - Courses
-  - Course Enrollments
-  - Course Reviews
-  - Service Requests
-  - Service Proposals
-  - Service Conversations
-- Added collection variables for:
-  - `category_id`
-  - `course_id`
-  - `course_enrollment_id`
-  - `course_review_id`
-  - `service_request_id`
-  - `service_proposal_id`
-
-## Assumptions
-
-- Any authenticated user may create a training provider profile and then manage courses through that provider profile.
-- Category CRUD remains authenticated and follows the current project’s master-data pattern rather than introducing a separate admin guard.
-- Service proposal chat is anchored to a proposal and reuses the existing conversation system instead of creating separate service chat tables.
-- Existing jobs remain company-owned only; the new service request module handles broader task/service posting for both person and company accounts.
-- Course reviews are included because they fit cleanly into the current API style and schema.
-
-## Follow-Up Recommendations
-
-- Add dedicated Pest coverage for all new course and service endpoints.
-- Add policies or role-based authorization if the project later introduces true admin-only category management.
-- Add payment integration and a separate payments table when paid course checkout becomes a real flow.
-- Add notification events for course enrollment, proposal acceptance, and service conversation creation.
+- Removed all training provider profile requests/endpoints.
+- Kept and validated:
+  - `GET /api/auth/my-courses`
+  - `GET /api/auth/my-service-requests`
+- Kept course and service request flows aligned with direct user ownership.

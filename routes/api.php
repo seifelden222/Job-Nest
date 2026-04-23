@@ -11,12 +11,12 @@ use App\Http\Controllers\Api\InterestController;
 use App\Http\Controllers\Api\Jobs\JobController;
 use App\Http\Controllers\Api\LanguageController;
 use App\Http\Controllers\Api\Messages\MessageController;
+use App\Http\Controllers\Api\Notifications\NotificationController;
 use App\Http\Controllers\Api\ProfileController;
 use App\Http\Controllers\Api\Services\ServiceConversationController;
 use App\Http\Controllers\Api\Services\ServiceProposalController;
 use App\Http\Controllers\Api\Services\ServiceRequestController;
 use App\Http\Controllers\Api\SkillController;
-use App\Http\Controllers\Api\TrainingProviders\TrainingProviderProfileController;
 use App\Http\Controllers\Api\UserDocumentController;
 use App\Http\Controllers\Api\UserInterestController;
 use App\Http\Controllers\Api\UserLanguageController;
@@ -95,6 +95,12 @@ Route::prefix('auth')->name('auth.')->group(function () {
         Route::get('email/verification-status', [AuthController::class, 'verificationStatus'])->name('verification.status');
 
         Route::get('me', [AuthController::class, 'me'])->name('me');
+        Route::get('notifications', [NotificationController::class, 'index'])->name('notifications.index');
+        Route::get('notifications/unread-count', [NotificationController::class, 'unreadCount'])->name('notifications.unread-count');
+        Route::patch('notifications/mark-all-read', [NotificationController::class, 'markAllAsRead'])->name('notifications.mark-all-read');
+        Route::patch('notifications/{notification}', [NotificationController::class, 'markAsRead'])->name('notifications.mark-read');
+        Route::delete('notifications/{notification}', [NotificationController::class, 'destroy'])->name('notifications.destroy');
+
         // User profile management routes
         Route::apiResource('user-skills', UserSkillsController::class)->only(['index', 'store', 'destroy']);
         Route::apiResource('user-interests', UserInterestController::class)->only(['index', 'store', 'destroy']);
@@ -116,9 +122,6 @@ Route::prefix('auth')->name('auth.')->group(function () {
 
         Route::get('profile', [ProfileController::class, 'show'])->name('profile.show');
         Route::put('profile', [ProfileController::class, 'update'])->name('profile.update');
-        Route::get('training-provider-profile', [TrainingProviderProfileController::class, 'show'])->name('training-provider-profile.show');
-        Route::post('training-provider-profile', [TrainingProviderProfileController::class, 'update'])->name('training-provider-profile.store');
-        Route::put('training-provider-profile', [TrainingProviderProfileController::class, 'update'])->name('training-provider-profile.update');
         Route::get('my-courses', [CourseController::class, 'myCourses'])->name('courses.my');
         Route::get('my-service-requests', [ServiceRequestController::class, 'myRequests'])->name('service-requests.my');
 

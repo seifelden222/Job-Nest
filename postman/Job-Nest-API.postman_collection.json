@@ -110,6 +110,11 @@
       "key": "service_proposal_id",
       "value": "",
       "type": "string"
+    },
+    {
+      "key": "notification_id",
+      "value": "",
+      "type": "string"
     }
   ],
   "item": [
@@ -2050,135 +2055,6 @@
       ]
     },
     {
-      "name": "Training Provider Profiles",
-      "item": [
-        {
-          "name": "Get Training Provider Profile",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Accept",
-                "value": "application/json"
-              },
-              {
-                "key": "Authorization",
-                "value": "Bearer {{access_token}}"
-              }
-            ],
-            "url": "{{base_url}}/api/auth/training-provider-profile"
-          },
-          "response": []
-        },
-        {
-          "name": "Create Or Update Training Provider Profile",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Accept",
-                "value": "application/json"
-              },
-              {
-                "key": "Authorization",
-                "value": "Bearer {{access_token}}"
-              }
-            ],
-            "url": "{{base_url}}/api/auth/training-provider-profile",
-            "body": {
-              "mode": "formdata",
-              "formdata": [
-                {
-                  "key": "provider_name",
-                  "value": "JobNest Academy",
-                  "type": "text"
-                },
-                {
-                  "key": "website",
-                  "value": "https://academy.jobnest.test",
-                  "type": "text"
-                },
-                {
-                  "key": "industry",
-                  "value": "Education",
-                  "type": "text"
-                },
-                {
-                  "key": "location",
-                  "value": "Cairo",
-                  "type": "text"
-                },
-                {
-                  "key": "about",
-                  "value": "We publish practical career courses.",
-                  "type": "text"
-                },
-                {
-                  "key": "is_profile_completed",
-                  "value": "true",
-                  "type": "text"
-                },
-                {
-                  "key": "logo",
-                  "type": "file",
-                  "src": ""
-                }
-              ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Update Training Provider Profile",
-          "request": {
-            "method": "PUT",
-            "header": [
-              {
-                "key": "Accept",
-                "value": "application/json"
-              },
-              {
-                "key": "Authorization",
-                "value": "Bearer {{access_token}}"
-              }
-            ],
-            "url": "{{base_url}}/api/auth/training-provider-profile",
-            "body": {
-              "mode": "formdata",
-              "formdata": [
-                {
-                  "key": "provider_name",
-                  "value": "JobNest Academy Updated",
-                  "type": "text"
-                },
-                {
-                  "key": "website",
-                  "value": "https://academy.jobnest.test",
-                  "type": "text"
-                },
-                {
-                  "key": "industry",
-                  "value": "EdTech",
-                  "type": "text"
-                },
-                {
-                  "key": "location",
-                  "value": "Alexandria",
-                  "type": "text"
-                },
-                {
-                  "key": "about",
-                  "value": "Updated provider profile.",
-                  "type": "text"
-                }
-              ]
-            }
-          },
-          "response": []
-        }
-      ]
-    },
-    {
       "name": "Courses",
       "item": [
         {
@@ -2966,6 +2842,115 @@
               "mode": "raw",
               "raw": "{\n  \"body\": \"Let us discuss the project scope.\",\n  \"message_type\": \"text\"\n}"
             }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Notifications",
+      "item": [
+        {
+          "name": "List Notifications",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": "{{base_url}}/api/auth/notifications"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is expected\", function () { pm.expect(pm.response.code).to.be.oneOf([200]); });",
+                  "var json = pm.response.json();",
+                  "var value = json.data && json.data.data && json.data.data[0] && json.data.data[0].id;",
+                  "if (value) { pm.collectionVariables.set(\"notification_id\", value); }"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Unread Count",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": "{{base_url}}/api/auth/notifications/unread-count"
+          },
+          "response": []
+        },
+        {
+          "name": "Mark Notification As Read",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": "{{base_url}}/api/auth/notifications/{{notification_id}}"
+          },
+          "response": []
+        },
+        {
+          "name": "Mark All As Read",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": "{{base_url}}/api/auth/notifications/mark-all-read"
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Notification",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": "{{base_url}}/api/auth/notifications/{{notification_id}}"
           },
           "response": []
         }

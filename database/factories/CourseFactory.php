@@ -4,7 +4,7 @@ namespace Database\Factories;
 
 use App\Models\Category;
 use App\Models\Course;
-use App\Models\TrainingProviderProfile;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Str;
 
@@ -18,7 +18,7 @@ class CourseFactory extends Factory
         $title = fake()->unique()->sentence(3);
 
         return [
-            'training_provider_id' => TrainingProviderProfile::factory(),
+            'user_id' => User::factory(),
             'category_id' => Category::factory()->state(['type' => 'course']),
             'title' => $title,
             'slug' => Str::slug($title.'-'.fake()->unique()->numberBetween(1, 9999)),

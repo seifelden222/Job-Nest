@@ -15,7 +15,7 @@ class CourseEnrollmentController extends Controller
     public function index(Request $request): JsonResponse
     {
         $enrollments = CourseEnrollment::query()
-            ->with(['course.trainingProvider.user:id,name', 'course.category:id,name,slug,type'])
+            ->with(['course.owner:id,name', 'course.category:id,name,slug,type'])
             ->where('user_id', $request->user()->id)
             ->latest()
             ->paginate((int) $request->query('per_page', 15));
@@ -61,13 +61,13 @@ class CourseEnrollmentController extends Controller
 
         return response()->json([
             'message' => 'Course enrollment created successfully.',
-            'data' => $enrollment->load(['course.trainingProvider.user:id,name']),
+            'data' => $enrollment->load(['course.owner:id,name']),
         ], 201);
     }
 
     public function providerIndex(Request $request, Course $course): JsonResponse
     {
-        if ($request->user()->trainingProviderProfile?->id !== $course->training_provider_id) {
+        if ((int) $request->user()->id !== (int) $course->user_id) {
             return response()->json([
                 'message' => 'Unauthorized.',
             ], 403);

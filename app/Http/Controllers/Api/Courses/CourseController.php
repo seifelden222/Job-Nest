@@ -16,7 +16,7 @@ class CourseController extends Controller
     public function index(Request $request): JsonResponse
     {
         $query = Course::query()
-            ->with(['trainingProvider.user:id,name', 'category:id,name,slug,type', 'skills:id,name'])
+            ->with(['owner:id,name', 'category:id,name,slug,type', 'skills:id,name'])
             ->published();
 
         if ($request->filled('q')) {
@@ -55,29 +55,20 @@ class CourseController extends Controller
 
     public function myCourses(Request $request): JsonResponse
     {
-        $providerProfile = $request->user()->trainingProviderProfile;
-
-        if (! $providerProfile) {
-            return response()->json([
-                'message' => 'Training provider profile is required.',
-            ], 403);
-        }
-
         $courses = Course::query()
             ->with(['category:id,name,slug,type', 'skills:id,name'])
-            ->where('training_provider_id', $providerProfile->id)
+            ->where('user_id', $request->user()->id)
             ->latest()
             ->paginate((int) $request->query('per_page', 15));
 
         return response()->json([
-            'message' => 'Provider courses fetched successfully.',
+            'message' => 'My courses fetched successfully.',
             'data' => $courses,
         ]);
     }
 
     public function store(StoreCourseRequest $request): JsonResponse
     {
-        $providerProfile = $request->user()->trainingProviderProfile;
         $payload = $request->validated();
         $skillIds = $payload['skill_ids'] ?? [];
         unset($payload['skill_ids']);
@@ -86,7 +77,7 @@ class CourseController extends Controller
             $payload['thumbnail'] = $request->file('thumbnail')->store('courses/thumbnails', 'public');
         }
 
-        $payload['training_provider_id'] = $providerProfile->id;
+        $payload['user_id'] = $request->user()->id;
         $payload['slug'] = $this->buildSlug($payload['slug'] ?? $payload['title']);
         $payload['status'] = $payload['status'] ?? 'draft';
         $payload['is_active'] = $payload['is_active'] ?? ($payload['status'] === 'published');
@@ -99,13 +90,13 @@ class CourseController extends Controller
 
         return response()->json([
             'message' => 'Course created successfully.',
-            'data' => $course->load(['trainingProvider.user:id,name', 'category:id,name,slug,type', 'skills:id,name']),
+            'data' => $course->load(['owner:id,name', 'category:id,name,slug,type', 'skills:id,name']),
         ], 201);
     }
 
     public function show(Request $request, Course $course): JsonResponse
     {
-        $isOwner = $request->user()?->trainingProviderProfile?->id === $course->training_provider_id;
+        $isOwner = (int) $request->user()?->id === (int) $course->user_id;
 
         if (($course->status !== 'published' || ! $course->is_active) && ! $isOwner) {
             return response()->json([
@@ -114,7 +105,7 @@ class CourseController extends Controller
         }
 
         $course->load([
-            'trainingProvider.user:id,name,email',
+            'owner:id,name,email',
             'category:id,name,slug,type',
             'skills:id,name',
             'reviews.user:id,name',
@@ -156,7 +147,7 @@ class CourseController extends Controller
 
         return response()->json([
             'message' => 'Course updated successfully.',
-            'data' => $course->fresh(['trainingProvider.user:id,name', 'category:id,name,slug,type', 'skills:id,name']),
+            'data' => $course->fresh(['owner:id,name', 'category:id,name,slug,type', 'skills:id,name']),
         ]);
     }
 

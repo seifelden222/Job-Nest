@@ -7,6 +7,7 @@ use App\Http\Requests\Api\Applications\StoreApplicationRequest;
 use App\Http\Requests\Api\Applications\UpdateApplicationRequest;
 use App\Models\Application;
 use App\Models\Job;
+use App\Notifications\Applications\ApplicationStatusUpdatedNotification;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -145,6 +146,7 @@ class ApplicationController extends Controller
             ], 403);
         }
 
+        $previousStatus = $application->status;
         $application->status = $status;
         $application->notes = $notes;
 
@@ -153,6 +155,11 @@ class ApplicationController extends Controller
         }
 
         $application->save();
+
+        if ($previousStatus !== $application->status) {
+            $application->loadMissing('job:id,title', 'user:id,name,email');
+            $application->user?->notify(new ApplicationStatusUpdatedNotification($application, (string) $user->name));
+        }
 
         return response()->json([
             'message' => 'Application updated successfully.',
