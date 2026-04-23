@@ -16,6 +16,7 @@ class JobController extends Controller
 {
     public function index(Request $request): JsonResponse
     {
+        $this->authorize("index", Job::class);
         $query = Job::query()->with(['company:id,name', 'category:id,name,slug,type', 'skills:id,name'])->active();
 
         if ($request->filled('q')) {
@@ -27,7 +28,7 @@ class JobController extends Controller
         }
 
         if ($request->filled('location')) {
-            $query->where('location', 'like', '%'.$request->query('location').'%');
+            $query->where('location', 'like', '%' . $request->query('location') . '%');
         }
 
         if ($request->filled('employment_type')) {
@@ -55,6 +56,8 @@ class JobController extends Controller
 
     public function store(StoreJobRequest $request): JsonResponse
     {
+        $this->authorize('store', Job::class);
+
         $payload = $request->validated();
         $skillIds = $payload['skill_ids'] ?? [];
         unset($payload['skill_ids']);
@@ -80,6 +83,7 @@ class JobController extends Controller
 
     public function show(Request $request, Job $job): JsonResponse
     {
+        $this->authorize('show', $job);
         $isOwner = $request->user()?->id === $job->company_id;
 
         if (! $job->is_active || $job->status !== 'active') {
@@ -100,6 +104,8 @@ class JobController extends Controller
 
     public function update(UpdateJobRequest $request, Job $job): JsonResponse
     {
+        $this->authorize('update', $job);
+
         $payload = $request->validated();
         $skillIds = $payload['skill_ids'] ?? null;
         unset($payload['skill_ids']);
@@ -124,6 +130,9 @@ class JobController extends Controller
 
     public function destroy(UpdateJobRequest $request, Job $job): JsonResponse
     {
+        $this->authorize('destroy', $job);
+
+
         $job->delete();
 
         return response()->json([
