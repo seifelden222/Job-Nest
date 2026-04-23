@@ -13,9 +13,8 @@ class UpdateJobRequest extends FormRequest
         /** @var Job|null $job */
         $job = $this->route('job');
 
-        return $this->user()?->isCompany() === true
-            && $job instanceof Job
-            && (int) $job->company_id === (int) $this->user()->id;
+        return $job instanceof Job
+            && $this->user()?->can('update', $job) === true;
     }
 
     public function rules(): array

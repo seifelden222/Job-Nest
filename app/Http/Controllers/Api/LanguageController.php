@@ -13,7 +13,10 @@ class LanguageController extends Controller
      */
     public function index()
     {
+        $this->authorize('viewAny', Language::class);
+
         $languages = Language::all();
+
         return response()->json([
             'message' => 'Languages fetched successfully.',
             'data' => $languages,
@@ -25,6 +28,8 @@ class LanguageController extends Controller
      */
     public function store(Request $request)
     {
+        $this->authorize('create', Language::class);
+
         $validatedData = $request->validate([
             'name' => 'required|string|max:255',
         ]);
@@ -40,12 +45,10 @@ class LanguageController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(string $id)
+    public function show(Language $language)
     {
-        $language = Language::find($id);
-        if (!$language) {
-            return response()->json(['message' => 'Language not found'], 404);
-        }
+        $this->authorize('view', $language);
+
         return response()->json([
             'message' => 'Language fetched successfully.',
             'data' => $language,
@@ -55,16 +58,15 @@ class LanguageController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $id)
+    public function update(Request $request, Language $language)
     {
+        $this->authorize('update', $language);
+
         $validatedData = $request->validate([
             'name' => 'required|string|max:255',
         ]);
-        $language = Language::find($id);
-        if (!$language) {
-            return response()->json(['message' => 'Language not found'], 404);
-        }
         $language->update($validatedData);
+
         return response()->json([
             'message' => 'Language updated successfully.',
             'data' => $language,
@@ -74,13 +76,12 @@ class LanguageController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(string $id)
+    public function destroy(Language $language)
     {
-        $language = Language::find($id);
-        if (!$language) {
-            return response()->json(['message' => 'Language not found'], 404);
-        }
+        $this->authorize('delete', $language);
+
         $language->delete();
+
         return response()->json([
             'message' => 'Language deleted successfully.',
         ], 200);

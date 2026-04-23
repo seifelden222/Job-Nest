@@ -55,7 +55,7 @@ class JobController extends Controller
 
     public function store(StoreJobRequest $request): JsonResponse
     {
-        $this->authorize('store', Job::class);
+        $this->authorize('create', Job::class);
 
         $payload = $request->validated();
         $skillIds = $payload['skill_ids'] ?? [];
@@ -128,7 +128,7 @@ class JobController extends Controller
 
     public function destroy(UpdateJobRequest $request, Job $job): JsonResponse
     {
-        $this->authorize('destroy', $job);
+        $this->authorize('delete', $job);
 
         $job->delete();
 

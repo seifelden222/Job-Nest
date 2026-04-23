@@ -28,6 +28,8 @@ class CategoryController extends Controller
 
     public function store(StoreCategoryRequest $request): JsonResponse
     {
+        $this->authorize('create', Category::class);
+
         $payload = $request->validated();
         $payload['slug'] = $this->buildSlug($payload['slug'] ?? $payload['name'], $payload['type']);
 
@@ -49,6 +51,8 @@ class CategoryController extends Controller
 
     public function update(UpdateCategoryRequest $request, Category $category): JsonResponse
     {
+        $this->authorize('update', $category);
+
         $payload = $request->validated();
 
         if (array_key_exists('slug', $payload) || array_key_exists('name', $payload) || array_key_exists('type', $payload)) {
@@ -69,6 +73,8 @@ class CategoryController extends Controller
 
     public function destroy(Category $category): JsonResponse
     {
+        $this->authorize('delete', $category);
+
         $category->delete();
 
         return response()->json([

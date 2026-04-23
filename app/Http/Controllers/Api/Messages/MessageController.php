@@ -16,17 +16,7 @@ class MessageController extends Controller
 {
     public function index(Request $request, Conversation $conversation): JsonResponse
     {
-        $user = $request->user();
-
-        $isParticipant = $conversation->participants()
-            ->where('users.id', $user->id)
-            ->exists();
-
-        if (! $isParticipant) {
-            return response()->json([
-                'message' => 'Unauthorized.',
-            ], 403);
-        }
+        $this->authorize('view', $conversation);
 
         $messages = $conversation->messages()
             ->with('sender:id,name,account_type')
@@ -41,17 +31,9 @@ class MessageController extends Controller
 
     public function store(StoreMessageRequest $request, Conversation $conversation): JsonResponse
     {
+        $this->authorize('view', $conversation);
+
         $user = $request->user();
-
-        $isParticipant = $conversation->participants()
-            ->where('users.id', $user->id)
-            ->exists();
-
-        if (! $isParticipant) {
-            return response()->json([
-                'message' => 'Unauthorized.',
-            ], 403);
-        }
 
         $validated = $request->validated();
 

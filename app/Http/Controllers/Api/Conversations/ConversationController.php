@@ -14,6 +14,8 @@ class ConversationController extends Controller
 {
     public function index(Request $request): JsonResponse
     {
+        $this->authorize('viewAny', Conversation::class);
+
         $user = $request->user();
 
         $conversations = Conversation::query()
@@ -39,6 +41,8 @@ class ConversationController extends Controller
 
     public function store(StoreConversationRequest $request): JsonResponse
     {
+        $this->authorize('create', Conversation::class);
+
         $user = $request->user();
         $type = $request->validated('type');
 
@@ -87,17 +91,7 @@ class ConversationController extends Controller
 
     public function show(Request $request, Conversation $conversation): JsonResponse
     {
-        $user = $request->user();
-
-        $isParticipant = $conversation->participants()
-            ->where('users.id', $user->id)
-            ->exists();
-
-        if (! $isParticipant) {
-            return response()->json([
-                'message' => 'Unauthorized.',
-            ], 403);
-        }
+        $this->authorize('view', $conversation);
 
         $conversation->load([
             'participants:id,name,account_type',
@@ -119,14 +113,7 @@ class ConversationController extends Controller
         $user = $request->user();
         $application = Application::query()->with('job')->findOrFail((int) $request->validated('application_id'));
 
-        $allowed = (int) $application->user_id === (int) $user->id
-            || (int) $application->job->company_id === (int) $user->id;
-
-        if (! $allowed) {
-            return response()->json([
-                'message' => 'Unauthorized.',
-            ], 403);
-        }
+        $this->authorize('createForApplication', [Conversation::class, $application]);
 
         $existing = Conversation::query()
             ->where('type', 'application')

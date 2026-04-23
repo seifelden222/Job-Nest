@@ -17,13 +17,7 @@ class ApplicationController extends Controller
 {
     public function index(Request $request, Job $job): JsonResponse
     {
-        $user = $request->user();
-
-        if (! $user || ! $user->isCompany() || (int) $job->company_id !== (int) $user->id) {
-            return response()->json([
-                'message' => 'Unauthorized.',
-            ], 403);
-        }
+        $this->authorize('viewAny', [Application::class, $job]);
 
         $applications = $job->applications()
             ->with(['user:id,name,email,phone', 'cvDocument'])
@@ -88,16 +82,7 @@ class ApplicationController extends Controller
 
     public function show(Request $request, Application $application): JsonResponse
     {
-        $user = $request->user();
-
-        $isApplicant = (int) $application->user_id === (int) $user->id;
-        $isOwnerCompany = $user->isCompany() && (int) $application->job->company_id === (int) $user->id;
-
-        if (! $isApplicant && ! $isOwnerCompany) {
-            return response()->json([
-                'message' => 'Unauthorized.',
-            ], 403);
-        }
+        $this->authorize('view', $application);
 
         $application->load(['job', 'user:id,name,email,phone', 'cvDocument']);
 
@@ -109,6 +94,8 @@ class ApplicationController extends Controller
 
     public function update(UpdateApplicationRequest $request, Application $application): JsonResponse
     {
+        $this->authorize('update', $application);
+
         $user = $request->user();
         $status = $request->validated('status');
         $notes = $request->validated('notes');
@@ -169,14 +156,7 @@ class ApplicationController extends Controller
 
     public function destroy(Request $request, Application $application): JsonResponse
     {
-        $user = $request->user();
-        $isApplicant = (int) $application->user_id === (int) $user->id;
-
-        if (! $isApplicant) {
-            return response()->json([
-                'message' => 'Unauthorized.',
-            ], 403);
-        }
+        $this->authorize('delete', $application);
 
         if ($application->reviewed_at !== null) {
             return response()->json([

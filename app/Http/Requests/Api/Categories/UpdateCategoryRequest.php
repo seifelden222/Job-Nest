@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Api\Categories;
 
+use App\Models\Category;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -9,7 +10,11 @@ class UpdateCategoryRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user() !== null;
+        /** @var Category|null $category */
+        $category = $this->route('category');
+
+        return $category instanceof Category
+            && $this->user()?->can('update', $category) === true;
     }
 
     public function rules(): array

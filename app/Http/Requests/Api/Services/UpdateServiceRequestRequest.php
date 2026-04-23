@@ -14,7 +14,7 @@ class UpdateServiceRequestRequest extends FormRequest
         $serviceRequest = $this->route('serviceRequest');
 
         return $serviceRequest instanceof ServiceRequest
-            && (int) $serviceRequest->user_id === (int) $this->user()?->id;
+            && $this->user()?->can('update', $serviceRequest) === true;
     }
 
     public function rules(): array

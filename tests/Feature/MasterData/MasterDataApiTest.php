@@ -1,7 +1,7 @@
 <?php
 
-test('authenticated user can manage skills', function () {
-    $user = createCompanyUser();
+test('admin user can manage skills', function () {
+    $user = createAdminUser();
     $token = $user->createToken('manage-skills')->plainTextToken;
 
     $createResponse = $this->withToken($token)
@@ -35,8 +35,8 @@ test('authenticated user can manage skills', function () {
         ->assertSuccessful();
 });
 
-test('authenticated user can manage languages', function () {
-    $user = createCompanyUser();
+test('admin user can manage languages', function () {
+    $user = createAdminUser();
     $token = $user->createToken('manage-languages')->plainTextToken;
 
     $createResponse = $this->withToken($token)
@@ -67,8 +67,8 @@ test('authenticated user can manage languages', function () {
         ->assertSuccessful();
 });
 
-test('authenticated user can manage interests', function () {
-    $user = createCompanyUser();
+test('admin user can manage interests', function () {
+    $user = createAdminUser();
     $token = $user->createToken('manage-interests')->plainTextToken;
 
     $createResponse = $this->withToken($token)
@@ -99,19 +99,58 @@ test('authenticated user can manage interests', function () {
         ->assertSuccessful();
 });
 
-test('master data endpoints return not found for missing resources', function () {
+test('non admin user cannot modify master data', function () {
     $user = createCompanyUser();
     $token = $user->createToken('master-data-404')->plainTextToken;
 
     $this->withToken($token)
-        ->getJson(route('auth.skills.show', ['skill' => 999999]))
-        ->assertNotFound();
+        ->postJson(route('auth.skills.store'), [
+            'name' => 'Forbidden Skill',
+        ])
+        ->assertForbidden();
 
     $this->withToken($token)
-        ->getJson(route('auth.languages.show', ['language' => 999999]))
-        ->assertNotFound();
+        ->postJson(route('auth.languages.store'), [
+            'name' => 'Forbidden Language',
+        ])
+        ->assertForbidden();
 
     $this->withToken($token)
-        ->getJson(route('auth.interests.show', ['interest' => 999999]))
-        ->assertNotFound();
+        ->postJson(route('auth.interests.store'), [
+            'name' => 'Forbidden Interest',
+        ])
+        ->assertForbidden();
+});
+
+test('authenticated user can still read master data', function () {
+    $user = createCompanyUser();
+    $admin = createAdminUser();
+    $token = $user->createToken('master-data-read')->plainTextToken;
+
+    $skillId = $this->withToken($admin->createToken('seed-skill')->plainTextToken)
+        ->postJson(route('auth.skills.store'), ['name' => 'NestJS'])
+        ->json('data.id');
+
+    $languageId = $this->withToken($admin->createToken('seed-language')->plainTextToken)
+        ->postJson(route('auth.languages.store'), ['name' => 'German'])
+        ->json('data.id');
+
+    $interestId = $this->withToken($admin->createToken('seed-interest')->plainTextToken)
+        ->postJson(route('auth.interests.store'), ['name' => 'Robotics'])
+        ->json('data.id');
+
+    $this->withToken($token)
+        ->getJson(route('auth.skills.show', ['skill' => $skillId]))
+        ->assertSuccessful()
+        ->assertJsonPath('data.name', 'NestJS');
+
+    $this->withToken($token)
+        ->getJson(route('auth.languages.show', ['language' => $languageId]))
+        ->assertSuccessful()
+        ->assertJsonPath('data.name', 'German');
+
+    $this->withToken($token)
+        ->getJson(route('auth.interests.show', ['interest' => $interestId]))
+        ->assertSuccessful()
+        ->assertJsonPath('data.name', 'Robotics');
 });

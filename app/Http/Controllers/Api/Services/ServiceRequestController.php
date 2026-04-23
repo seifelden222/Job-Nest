@@ -62,6 +62,8 @@ class ServiceRequestController extends Controller
 
     public function store(StoreServiceRequestRequest $request): JsonResponse
     {
+        $this->authorize('create', ServiceRequest::class);
+
         $payload = $request->validated();
         $skillIds = $payload['skill_ids'] ?? [];
         unset($payload['skill_ids']);
@@ -101,6 +103,8 @@ class ServiceRequestController extends Controller
 
     public function update(UpdateServiceRequestRequest $request, ServiceRequest $serviceRequest): JsonResponse
     {
+        $this->authorize('update', $serviceRequest);
+
         $payload = $request->validated();
         $skillIds = $payload['skill_ids'] ?? null;
         unset($payload['skill_ids']);
@@ -119,6 +123,8 @@ class ServiceRequestController extends Controller
 
     public function destroy(UpdateServiceRequestRequest $request, ServiceRequest $serviceRequest): JsonResponse
     {
+        $this->authorize('delete', $serviceRequest);
+
         $serviceRequest->delete();
 
         return response()->json([

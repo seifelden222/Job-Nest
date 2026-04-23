@@ -13,7 +13,7 @@ class UpdateCourseReviewRequest extends FormRequest
         $courseReview = $this->route('courseReview');
 
         return $courseReview instanceof CourseReview
-            && (int) $courseReview->user_id === (int) $this->user()?->id;
+            && $this->user()?->can('update', $courseReview) === true;
     }
 
     public function rules(): array

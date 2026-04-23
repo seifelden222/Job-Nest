@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\Admin;
 use App\Models\CompanyProfile;
 use App\Models\PersonProfile;
 use App\Models\User;
@@ -70,6 +71,21 @@ function createCompanyUser(array $userAttributes = [], array $profileAttributes 
     CompanyProfile::factory()->create(array_merge([
         'user_id' => $user->id,
     ], $profileAttributes));
+
+    return $user->fresh();
+}
+
+function createAdminUser(array $userAttributes = [], array $profileAttributes = []): User
+{
+    $user = createCompanyUser($userAttributes, $profileAttributes);
+
+    Admin::query()->create([
+        'name' => $user->name,
+        'email' => $user->email,
+        'phone' => $user->phone,
+        'password' => 'not-used-for-api-auth',
+        'status' => 'active',
+    ]);
 
     return $user->fresh();
 }

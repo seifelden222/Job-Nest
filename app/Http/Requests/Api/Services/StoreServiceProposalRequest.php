@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Api\Services;
 
+use App\Models\ServiceProposal;
 use App\Models\ServiceRequest;
 use Illuminate\Foundation\Http\FormRequest;
 
@@ -13,8 +14,7 @@ class StoreServiceProposalRequest extends FormRequest
         $serviceRequest = $this->route('serviceRequest');
 
         return $serviceRequest instanceof ServiceRequest
-            && $this->user() !== null
-            && (int) $serviceRequest->user_id !== (int) $this->user()->id;
+            && $this->user()?->can('create', [ServiceProposal::class, $serviceRequest]) === true;
     }
 
     public function rules(): array

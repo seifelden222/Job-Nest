@@ -13,7 +13,10 @@ class SkillController extends Controller
      */
     public function index()
     {
+        $this->authorize('viewAny', Skill::class);
+
         $skills = Skill::all();
+
         return response()->json([
             'message' => 'Skills fetched successfully.',
             'data' => $skills,
@@ -25,6 +28,8 @@ class SkillController extends Controller
      */
     public function store(Request $request)
     {
+        $this->authorize('create', Skill::class);
+
         $validatedData = $request->validate([
             'name' => 'required|string|max:255',
         ]);
@@ -40,12 +45,10 @@ class SkillController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(string $id)
+    public function show(Skill $skill)
     {
-        $skill = Skill::find($id);
-        if (!$skill) {
-            return response()->json(['message' => 'Skill not found'], 404);
-        }
+        $this->authorize('view', $skill);
+
         return response()->json([
             'message' => 'Skill fetched successfully.',
             'data' => $skill,
@@ -55,16 +58,15 @@ class SkillController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $id)
+    public function update(Request $request, Skill $skill)
     {
+        $this->authorize('update', $skill);
+
         $validatedData = $request->validate([
             'name' => 'required|string|max:255',
         ]);
-        $skill = Skill::find($id);
-        if (!$skill) {
-            return response()->json(['message' => 'Skill not found'], 404);
-        }
         $skill->update($validatedData);
+
         return response()->json([
             'message' => 'Skill updated successfully.',
             'data' => $skill,
@@ -74,13 +76,12 @@ class SkillController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(string $id)
+    public function destroy(Skill $skill)
     {
-        $skill = Skill::find($id);
-        if (!$skill) {
-            return response()->json(['message' => 'Skill not found'], 404);
-        }
+        $this->authorize('delete', $skill);
+
         $skill->delete();
+
         return response()->json([
             'message' => 'Skill deleted successfully.',
         ], 200);

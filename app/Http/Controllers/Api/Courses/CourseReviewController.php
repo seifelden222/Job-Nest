@@ -45,6 +45,8 @@ class CourseReviewController extends Controller
 
     public function update(UpdateCourseReviewRequest $request, CourseReview $courseReview): JsonResponse
     {
+        $this->authorize('update', $courseReview);
+
         $courseReview->update($request->validated());
 
         return response()->json([
@@ -55,6 +57,8 @@ class CourseReviewController extends Controller
 
     public function destroy(UpdateCourseReviewRequest $request, CourseReview $courseReview): JsonResponse
     {
+        $this->authorize('delete', $courseReview);
+
         $courseReview->delete();
 
         return response()->json([

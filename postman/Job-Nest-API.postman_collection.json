@@ -1145,6 +1145,7 @@
         },
         {
           "name": "Create Skill",
+          "description": "Admin-only. Requires an authenticated user whose email exists in the active admins table.",
           "request": {
             "method": "POST",
             "header": [
@@ -1203,6 +1204,7 @@
         },
         {
           "name": "Update Skill",
+          "description": "Admin-only. Requires an authenticated user whose email exists in the active admins table.",
           "request": {
             "method": "PUT",
             "header": [
@@ -1229,6 +1231,7 @@
         },
         {
           "name": "Delete Skill",
+          "description": "Admin-only. Requires an authenticated user whose email exists in the active admins table.",
           "request": {
             "method": "DELETE",
             "header": [
@@ -1270,6 +1273,7 @@
         },
         {
           "name": "Create Language",
+          "description": "Admin-only. Requires an authenticated user whose email exists in the active admins table.",
           "request": {
             "method": "POST",
             "header": [
@@ -1328,6 +1332,7 @@
         },
         {
           "name": "Update Language",
+          "description": "Admin-only. Requires an authenticated user whose email exists in the active admins table.",
           "request": {
             "method": "PUT",
             "header": [
@@ -1354,6 +1359,7 @@
         },
         {
           "name": "Delete Language",
+          "description": "Admin-only. Requires an authenticated user whose email exists in the active admins table.",
           "request": {
             "method": "DELETE",
             "header": [
@@ -1395,6 +1401,7 @@
         },
         {
           "name": "Create Interest",
+          "description": "Admin-only. Requires an authenticated user whose email exists in the active admins table.",
           "request": {
             "method": "POST",
             "header": [
@@ -1453,6 +1460,7 @@
         },
         {
           "name": "Update Interest",
+          "description": "Admin-only. Requires an authenticated user whose email exists in the active admins table.",
           "request": {
             "method": "PUT",
             "header": [
@@ -1479,6 +1487,7 @@
         },
         {
           "name": "Delete Interest",
+          "description": "Admin-only. Requires an authenticated user whose email exists in the active admins table.",
           "request": {
             "method": "DELETE",
             "header": [
@@ -1980,6 +1989,7 @@
         },
         {
           "name": "Create Category",
+          "description": "Admin-only. Requires an authenticated user whose email exists in the active admins table.",
           "request": {
             "method": "POST",
             "header": [
@@ -2020,6 +2030,7 @@
         },
         {
           "name": "Update Category",
+          "description": "Admin-only. Requires an authenticated user whose email exists in the active admins table.",
           "request": {
             "method": "PUT",
             "header": [
@@ -2046,6 +2057,7 @@
         },
         {
           "name": "Delete Category",
+          "description": "Admin-only. Requires an authenticated user whose email exists in the active admins table.",
           "request": {
             "method": "DELETE",
             "header": [

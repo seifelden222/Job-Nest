@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Api\Services;
 
+use App\Models\ServiceRequest;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -9,7 +10,7 @@ class StoreServiceRequestRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user() !== null;
+        return $this->user()?->can('create', ServiceRequest::class) === true;
     }
 
     public function rules(): array

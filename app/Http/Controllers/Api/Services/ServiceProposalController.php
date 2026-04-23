@@ -13,11 +13,7 @@ class ServiceProposalController extends Controller
 {
     public function index(ServiceRequest $serviceRequest): JsonResponse
     {
-        if ((int) $serviceRequest->user_id !== (int) request()->user()->id) {
-            return response()->json([
-                'message' => 'Unauthorized.',
-            ], 403);
-        }
+        $this->authorize('viewProposals', $serviceRequest);
 
         $proposals = $serviceRequest->proposals()
             ->with('user:id,name,email,phone,account_type')
@@ -58,15 +54,7 @@ class ServiceProposalController extends Controller
 
     public function show(ServiceProposal $serviceProposal): JsonResponse
     {
-        $userId = (int) request()->user()->id;
-        $isOwner = (int) $serviceProposal->serviceRequest->user_id === $userId;
-        $isProposer = (int) $serviceProposal->user_id === $userId;
-
-        if (! $isOwner && ! $isProposer) {
-            return response()->json([
-                'message' => 'Unauthorized.',
-            ], 403);
-        }
+        $this->authorize('view', $serviceProposal);
 
         return response()->json([
             'message' => 'Service proposal fetched successfully.',
@@ -76,6 +64,8 @@ class ServiceProposalController extends Controller
 
     public function update(UpdateServiceProposalRequest $request, ServiceProposal $serviceProposal): JsonResponse
     {
+        $this->authorize('update', $serviceProposal);
+
         $userId = (int) $request->user()->id;
         $isOwner = (int) $serviceProposal->serviceRequest->user_id === $userId;
         $isProposer = (int) $serviceProposal->user_id === $userId;
