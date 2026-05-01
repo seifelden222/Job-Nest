@@ -2,11 +2,14 @@
 
 namespace App\Http\Requests\Api\Courses;
 
+use App\Http\Requests\Concerns\HasSourceLanguage;
 use App\Models\CourseReview;
 use Illuminate\Foundation\Http\FormRequest;
 
 class UpdateCourseReviewRequest extends FormRequest
 {
+    use HasSourceLanguage;
+
     public function authorize(): bool
     {
         /** @var CourseReview|null $courseReview */
@@ -18,9 +21,14 @@ class UpdateCourseReviewRequest extends FormRequest
 
     public function rules(): array
     {
-        return [
+        return array_merge([
             'rating' => ['sometimes', 'integer', 'between:1,5'],
             'comment' => ['sometimes', 'nullable', 'string'],
-        ];
+        ], $this->sourceLanguageRules(true));
+    }
+
+    protected function translatableFields(): array
+    {
+        return ['comment'];
     }
 }

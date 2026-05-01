@@ -4,6 +4,8 @@ use App\Models\Job;
 use App\Models\Skill;
 
 test('company can create job with skills', function () {
+    fakeContentTranslator();
+
     $company = createCompanyUser();
     $skillA = Skill::create(['name' => 'PHP']);
     $skillB = Skill::create(['name' => 'Laravel']);
@@ -23,6 +25,7 @@ test('company can create job with skills', function () {
             'deadline' => now()->addWeek()->toDateString(),
             'status' => 'active',
             'skill_ids' => [$skillA->id, $skillB->id],
+            'source_language' => 'en',
         ]);
 
     $response->assertCreated()
@@ -35,12 +38,15 @@ test('company can create job with skills', function () {
 });
 
 test('non company cannot create job', function () {
+    fakeContentTranslator();
+
     $person = createPersonUser();
 
     $this->withToken($person->createToken('person-job-store')->plainTextToken)
         ->postJson(route('jobs.store'), [
             'title' => 'Forbidden Job',
             'description' => 'Should not be created.',
+            'source_language' => 'en',
         ])
         ->assertForbidden();
 });
@@ -88,6 +94,8 @@ test('non owner cannot view inactive job', function () {
 });
 
 test('owner can update own job and sync skills', function () {
+    fakeContentTranslator();
+
     $company = createCompanyUser();
     $job = Job::factory()->create(['company_id' => $company->id]);
     $newSkill = Skill::create(['name' => 'Docker']);
@@ -97,6 +105,7 @@ test('owner can update own job and sync skills', function () {
             'title' => 'Senior Backend Engineer',
             'status' => 'active',
             'skill_ids' => [$newSkill->id],
+            'source_language' => 'en',
         ])
         ->assertSuccessful()
         ->assertJsonPath('data.title', 'Senior Backend Engineer')
@@ -106,6 +115,8 @@ test('owner can update own job and sync skills', function () {
 });
 
 test('company cannot update another company job', function () {
+    fakeContentTranslator();
+
     $owner = createCompanyUser();
     $otherCompany = createCompanyUser();
     $job = Job::factory()->create(['company_id' => $owner->id]);
@@ -113,6 +124,7 @@ test('company cannot update another company job', function () {
     $this->withToken($otherCompany->createToken('job-update-forbidden')->plainTextToken)
         ->putJson(route('jobs.update', ['job' => $job->id]), [
             'title' => 'Hijacked Title',
+            'source_language' => 'en',
         ])
         ->assertForbidden();
 });

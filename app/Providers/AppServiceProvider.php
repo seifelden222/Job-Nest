@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Contracts\MachineTranslator;
 use App\Models\Application;
 use App\Models\Category;
 use App\Models\Conversation;
@@ -26,6 +27,8 @@ use App\Policies\LanguagePolicy;
 use App\Policies\ServiceProposalPolicy;
 use App\Policies\ServiceRequestPolicy;
 use App\Policies\SkillPolicy;
+use App\Services\Translation\FallbackMachineTranslator;
+use App\Services\Translation\LibreTranslateMachineTranslator;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
@@ -39,7 +42,12 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        $this->app->bind(MachineTranslator::class, function () {
+            return match (config('translation.driver')) {
+                'libretranslate' => new LibreTranslateMachineTranslator,
+                default => new FallbackMachineTranslator,
+            };
+        });
     }
 
     /**

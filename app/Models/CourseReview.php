@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\HasTranslatableAttributes;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -9,6 +10,11 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class CourseReview extends Model
 {
     use HasFactory;
+    use HasTranslatableAttributes;
+
+    protected array $translatable = [
+        'comment',
+    ];
 
     protected $fillable = [
         'course_id',
@@ -16,6 +22,13 @@ class CourseReview extends Model
         'rating',
         'comment',
     ];
+
+    protected function casts(): array
+    {
+        return [
+            'comment' => 'json:unicode',
+        ];
+    }
 
     public function course(): BelongsTo
     {

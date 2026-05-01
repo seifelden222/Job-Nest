@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\HasTranslatableAttributes;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -9,6 +10,11 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class Message extends Model
 {
     use HasFactory;
+    use HasTranslatableAttributes;
+
+    protected array $translatable = [
+        'body',
+    ];
 
     protected $fillable = [
         'conversation_id',
@@ -28,6 +34,7 @@ class Message extends Model
         return [
             'is_edited' => 'boolean',
             'edited_at' => 'datetime',
+            'body' => 'json:unicode',
         ];
     }
 

@@ -2,12 +2,15 @@
 
 namespace App\Http\Requests\Api\Services;
 
+use App\Http\Requests\Concerns\HasSourceLanguage;
 use App\Models\ServiceRequest;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
 class UpdateServiceRequestRequest extends FormRequest
 {
+    use HasSourceLanguage;
+
     public function authorize(): bool
     {
         /** @var ServiceRequest|null $serviceRequest */
@@ -19,7 +22,7 @@ class UpdateServiceRequestRequest extends FormRequest
 
     public function rules(): array
     {
-        return [
+        return array_merge([
             'category_id' => [
                 'sometimes',
                 'nullable',
@@ -37,6 +40,11 @@ class UpdateServiceRequestRequest extends FormRequest
             'status' => ['sometimes', Rule::in(['open', 'in_progress', 'closed', 'cancelled'])],
             'skill_ids' => ['sometimes', 'array'],
             'skill_ids.*' => ['integer', 'exists:skills,id'],
-        ];
+        ], $this->sourceLanguageRules(true));
+    }
+
+    protected function translatableFields(): array
+    {
+        return ['title', 'description'];
     }
 }

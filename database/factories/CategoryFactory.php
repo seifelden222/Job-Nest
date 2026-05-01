@@ -16,10 +16,10 @@ class CategoryFactory extends Factory
         $name = fake()->unique()->words(2, true);
 
         return [
-            'name' => Str::title($name),
+            'name' => ['en' => Str::title($name), 'ar' => Str::title($name)],
             'slug' => Str::slug($name),
             'type' => fake()->randomElement(['job', 'course', 'service']),
-            'description' => fake()->sentence(),
+            'description' => ['en' => fake()->sentence(), 'ar' => fake()->sentence()],
             'icon' => null,
             'is_active' => true,
         ];

@@ -10,10 +10,10 @@ return new class extends Migration
     {
         Schema::create('categories', function (Blueprint $table) {
             $table->id();
-            $table->string('name');
+            $table->json('name');
             $table->string('slug');
             $table->enum('type', ['job', 'course', 'service']);
-            $table->text('description')->nullable();
+            $table->json('description')->nullable();
             $table->string('icon')->nullable();
             $table->boolean('is_active')->default(true);
             $table->timestamps();

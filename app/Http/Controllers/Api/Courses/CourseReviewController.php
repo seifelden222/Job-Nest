@@ -7,6 +7,7 @@ use App\Http\Requests\Api\Courses\StoreCourseReviewRequest;
 use App\Http\Requests\Api\Courses\UpdateCourseReviewRequest;
 use App\Models\Course;
 use App\Models\CourseReview;
+use App\Services\Translation\ContentTranslationService;
 use Illuminate\Http\JsonResponse;
 
 class CourseReviewController extends Controller
@@ -21,7 +22,7 @@ class CourseReviewController extends Controller
         ]);
     }
 
-    public function store(StoreCourseReviewRequest $request, Course $course): JsonResponse
+    public function store(StoreCourseReviewRequest $request, Course $course, ContentTranslationService $translationService): JsonResponse
     {
         if (! $course->enrollments()->where('user_id', $request->user()->id)->exists()) {
             return response()->json([
@@ -29,12 +30,22 @@ class CourseReviewController extends Controller
             ], 422);
         }
 
+        $reviewPayload = $request->validated();
+
+        if ($request->filled('source_language')) {
+            $reviewPayload = $translationService->translatePayload(
+                $reviewPayload,
+                ['comment'],
+                (string) $request->validated('source_language'),
+            );
+        }
+
         $review = CourseReview::query()->updateOrCreate(
             [
                 'course_id' => $course->id,
                 'user_id' => $request->user()->id,
             ],
-            $request->validated(),
+            $reviewPayload,
         );
 
         return response()->json([
@@ -43,11 +54,21 @@ class CourseReviewController extends Controller
         ], 201);
     }
 
-    public function update(UpdateCourseReviewRequest $request, CourseReview $courseReview): JsonResponse
+    public function update(UpdateCourseReviewRequest $request, CourseReview $courseReview, ContentTranslationService $translationService): JsonResponse
     {
         $this->authorize('update', $courseReview);
 
-        $courseReview->update($request->validated());
+        $payload = $request->validated();
+
+        if ($request->filled('source_language')) {
+            $payload = $translationService->translatePayload(
+                $payload,
+                ['comment'],
+                (string) $request->validated('source_language'),
+            );
+        }
+
+        $courseReview->update($payload);
 
         return response()->json([
             'message' => 'Course review updated successfully.',

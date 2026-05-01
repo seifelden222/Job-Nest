@@ -13,7 +13,7 @@ return new class extends Migration
             $table->foreignId('conversation_id')->constrained('conversations')->cascadeOnDelete();
             $table->foreignId('sender_id')->constrained('users')->cascadeOnDelete();
             $table->enum('message_type', ['text', 'file', 'system'])->default('text');
-            $table->text('body')->nullable();
+            $table->json('body')->nullable();
             $table->string('attachment_path')->nullable();
             $table->string('attachment_name')->nullable();
             $table->string('attachment_mime_type')->nullable();

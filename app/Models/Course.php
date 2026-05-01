@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\HasTranslatableAttributes;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -12,6 +13,15 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class Course extends Model
 {
     use HasFactory;
+    use HasTranslatableAttributes;
+
+    protected array $translatable = [
+        'title',
+        'short_description',
+        'description',
+        'course_overview',
+        'what_you_learn',
+    ];
 
     protected $fillable = [
         'user_id',
@@ -43,6 +53,11 @@ class Course extends Model
             'start_date' => 'date',
             'end_date' => 'date',
             'is_active' => 'boolean',
+            'title' => 'json:unicode',
+            'short_description' => 'json:unicode',
+            'description' => 'json:unicode',
+            'course_overview' => 'json:unicode',
+            'what_you_learn' => 'json:unicode',
         ];
     }
 

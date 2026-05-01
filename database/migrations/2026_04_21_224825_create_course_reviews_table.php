@@ -13,7 +13,7 @@ return new class extends Migration
             $table->foreignId('course_id')->constrained('courses')->cascadeOnDelete();
             $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
             $table->unsignedTinyInteger('rating');
-            $table->text('comment')->nullable();
+            $table->json('comment')->nullable();
             $table->timestamps();
 
             $table->unique(['course_id', 'user_id']);

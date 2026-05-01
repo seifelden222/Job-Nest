@@ -5,6 +5,8 @@ use App\Models\Document;
 use App\Models\Job;
 
 test('person can apply to active job', function () {
+    fakeContentTranslator();
+
     $company = createCompanyUser();
     $person = createPersonUser();
     $job = Job::factory()->create(['company_id' => $company->id]);
@@ -14,6 +16,7 @@ test('person can apply to active job', function () {
         ->postJson(route('jobs.applications.store', ['job' => $job->id]), [
             'cv_document_id' => $cv->id,
             'cover_letter' => 'I am a strong fit for this role.',
+            'source_language' => 'en',
         ])
         ->assertCreated()
         ->assertJsonPath('data.user_id', $person->id)

@@ -11,16 +11,16 @@ return new class extends Migration
         Schema::create('jobs', function (Blueprint $table) {
             $table->id();
             $table->foreignId('company_id')->constrained('users')->cascadeOnDelete();
-            $table->string('title');
-            $table->text('description');
+            $table->json('title');
+            $table->json('description');
             $table->string('location')->nullable();
             $table->string('employment_type')->nullable();
             $table->decimal('salary_min', 12, 2)->nullable();
             $table->decimal('salary_max', 12, 2)->nullable();
             $table->string('currency', 10)->nullable();
             $table->string('experience_level')->nullable();
-            $table->text('requirements')->nullable();
-            $table->text('responsibilities')->nullable();
+            $table->json('requirements')->nullable();
+            $table->json('responsibilities')->nullable();
             $table->date('deadline')->nullable();
             $table->enum('status', ['draft', 'active', 'closed', 'archived'])->default('draft');
             $table->boolean('is_active')->default(true);

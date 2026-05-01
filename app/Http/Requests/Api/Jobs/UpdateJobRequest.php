@@ -2,12 +2,15 @@
 
 namespace App\Http\Requests\Api\Jobs;
 
+use App\Http\Requests\Concerns\HasSourceLanguage;
 use App\Models\Job;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
 class UpdateJobRequest extends FormRequest
 {
+    use HasSourceLanguage;
+
     public function authorize(): bool
     {
         /** @var Job|null $job */
@@ -19,7 +22,7 @@ class UpdateJobRequest extends FormRequest
 
     public function rules(): array
     {
-        return [
+        return array_merge([
             'category_id' => [
                 'sometimes',
                 'nullable',
@@ -41,6 +44,11 @@ class UpdateJobRequest extends FormRequest
             'is_active' => ['sometimes', 'boolean'],
             'skill_ids' => ['sometimes', 'array'],
             'skill_ids.*' => ['integer', 'exists:skills,id'],
-        ];
+        ], $this->sourceLanguageRules(true));
+    }
+
+    protected function translatableFields(): array
+    {
+        return ['title', 'description', 'requirements', 'responsibilities'];
     }
 }

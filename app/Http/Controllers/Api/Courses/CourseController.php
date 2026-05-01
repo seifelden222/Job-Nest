@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Courses\StoreCourseRequest;
 use App\Http\Requests\Api\Courses\UpdateCourseRequest;
 use App\Models\Course;
+use App\Services\Translation\ContentTranslationService;
+use App\Support\TranslatableJson;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -22,9 +24,9 @@ class CourseController extends Controller
         if ($request->filled('q')) {
             $term = (string) $request->query('q');
             $query->where(function ($inner) use ($term) {
-                $inner->where('title', 'like', "%{$term}%")
-                    ->orWhere('short_description', 'like', "%{$term}%")
-                    ->orWhere('description', 'like', "%{$term}%");
+                TranslatableJson::whereLike($inner, 'title', $term);
+                TranslatableJson::orWhereLike($inner, 'short_description', $term);
+                TranslatableJson::orWhereLike($inner, 'description', $term);
             });
         }
 
@@ -67,20 +69,26 @@ class CourseController extends Controller
         ]);
     }
 
-    public function store(StoreCourseRequest $request): JsonResponse
+    public function store(StoreCourseRequest $request, ContentTranslationService $translationService): JsonResponse
     {
         $this->authorize('create', Course::class);
 
         $payload = $request->validated();
         $skillIds = $payload['skill_ids'] ?? [];
         unset($payload['skill_ids']);
+        $slugSource = (string) ($payload['slug'] ?? $payload['title']);
+        $payload = $translationService->translatePayload(
+            $payload,
+            ['title', 'short_description', 'description', 'course_overview', 'what_you_learn'],
+            (string) $request->validated('source_language'),
+        );
 
         if ($request->hasFile('thumbnail')) {
             $payload['thumbnail'] = $request->file('thumbnail')->store('courses/thumbnails', 'public');
         }
 
         $payload['user_id'] = $request->user()->id;
-        $payload['slug'] = $this->buildSlug($payload['slug'] ?? $payload['title']);
+        $payload['slug'] = $this->buildSlug($slugSource);
         $payload['status'] = $payload['status'] ?? 'draft';
         $payload['is_active'] = $payload['is_active'] ?? ($payload['status'] === 'published');
 
@@ -119,13 +127,17 @@ class CourseController extends Controller
         ]);
     }
 
-    public function update(UpdateCourseRequest $request, Course $course): JsonResponse
+    public function update(UpdateCourseRequest $request, Course $course, ContentTranslationService $translationService): JsonResponse
     {
         $this->authorize('update', $course);
 
         $payload = $request->validated();
         $skillIds = $payload['skill_ids'] ?? null;
         unset($payload['skill_ids']);
+        $slugSource = $payload['slug']
+            ?? $payload['title']
+            ?? $course->getTranslations('title')[config('translation.default_locale')]
+            ?? $course->title;
 
         if ($request->hasFile('thumbnail')) {
             if ($course->thumbnail && Storage::disk('public')->exists($course->thumbnail)) {
@@ -135,8 +147,16 @@ class CourseController extends Controller
             $payload['thumbnail'] = $request->file('thumbnail')->store('courses/thumbnails', 'public');
         }
 
+        if ($request->filled('source_language')) {
+            $payload = $translationService->translatePayload(
+                $payload,
+                ['title', 'short_description', 'description', 'course_overview', 'what_you_learn'],
+                (string) $request->validated('source_language'),
+            );
+        }
+
         if (array_key_exists('slug', $payload) || array_key_exists('title', $payload)) {
-            $payload['slug'] = $this->buildSlug($payload['slug'] ?? $payload['title'] ?? $course->title, $course->id);
+            $payload['slug'] = $this->buildSlug((string) $slugSource, $course->id);
         }
 
         if (array_key_exists('status', $payload) && ! array_key_exists('is_active', $payload)) {

@@ -12,8 +12,8 @@ return new class extends Migration
             $table->id();
             $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
             $table->foreignId('category_id')->nullable()->constrained('categories')->nullOnDelete();
-            $table->string('title');
-            $table->text('description');
+            $table->json('title');
+            $table->json('description');
             $table->decimal('budget_min', 10, 2)->nullable();
             $table->decimal('budget_max', 10, 2)->nullable();
             $table->string('currency', 10)->nullable();

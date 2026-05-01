@@ -1,5 +1,6 @@
 <?php
 
+use App\Contracts\MachineTranslator;
 use App\Models\Admin;
 use App\Models\CompanyProfile;
 use App\Models\PersonProfile;
@@ -51,6 +52,17 @@ expect()->extend('toBeOne', function () {
 function something()
 {
     // ..
+}
+
+function fakeContentTranslator(): void
+{
+    app()->bind(MachineTranslator::class, fn () => new class implements MachineTranslator
+    {
+        public function translate(string $text, string $sourceLanguage, string $targetLanguage): ?string
+        {
+            return sprintf('[%s]%s', $targetLanguage, $text);
+        }
+    });
 }
 
 function createPersonUser(array $userAttributes = [], array $profileAttributes = []): User

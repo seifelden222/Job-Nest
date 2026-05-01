@@ -3,8 +3,11 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Api\MasterData\StoreMasterDataRequest;
+use App\Http\Requests\Api\MasterData\UpdateMasterDataRequest;
 use App\Models\Language;
-use Illuminate\Http\Request;
+use App\Services\Translation\ContentTranslationService;
+use App\Support\TranslatableJson;
 
 class LanguageController extends Controller
 {
@@ -15,7 +18,9 @@ class LanguageController extends Controller
     {
         $this->authorize('viewAny', Language::class);
 
-        $languages = Language::all();
+        $languages = Language::query()
+            ->orderByRaw(TranslatableJson::extractExpression('name').' asc')
+            ->get();
 
         return response()->json([
             'message' => 'Languages fetched successfully.',
@@ -26,13 +31,15 @@ class LanguageController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(StoreMasterDataRequest $request, ContentTranslationService $translationService)
     {
         $this->authorize('create', Language::class);
 
-        $validatedData = $request->validate([
-            'name' => 'required|string|max:255',
-        ]);
+        $validatedData = $translationService->translatePayload(
+            $request->validated(),
+            ['name'],
+            (string) $request->validated('source_language'),
+        );
 
         $language = Language::create($validatedData);
 
@@ -58,13 +65,15 @@ class LanguageController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Language $language)
+    public function update(UpdateMasterDataRequest $request, Language $language, ContentTranslationService $translationService)
     {
         $this->authorize('update', $language);
 
-        $validatedData = $request->validate([
-            'name' => 'required|string|max:255',
-        ]);
+        $validatedData = $translationService->translatePayload(
+            $request->validated(),
+            ['name'],
+            (string) $request->validated('source_language'),
+        );
         $language->update($validatedData);
 
         return response()->json([

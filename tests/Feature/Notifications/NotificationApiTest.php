@@ -129,6 +129,8 @@ test('application status update creates notification for applicant', function ()
 });
 
 test('sending a new message creates notifications for other participants except sender', function () {
+    fakeContentTranslator();
+
     $sender = createPersonUser();
     $recipient = createCompanyUser();
 
@@ -146,6 +148,7 @@ test('sending a new message creates notifications for other participants except 
         ->postJson(route('conversations.messages.store', ['conversation' => $conversation->id]), [
             'body' => 'Hello recipient.',
             'message_type' => 'text',
+            'source_language' => 'en',
         ])
         ->assertCreated();
 
@@ -158,6 +161,8 @@ test('sending a new message creates notifications for other participants except 
 });
 
 test('creating an active job notifies matching users by skills', function () {
+    fakeContentTranslator();
+
     $company = createCompanyUser();
     $person = createPersonUser();
     $skill = Skill::create(['name' => 'Laravel']);
@@ -179,6 +184,7 @@ test('creating an active job notifies matching users by skills', function () {
             'deadline' => now()->addWeek()->toDateString(),
             'status' => 'active',
             'skill_ids' => [$skill->id],
+            'source_language' => 'en',
         ])
         ->assertCreated();
 

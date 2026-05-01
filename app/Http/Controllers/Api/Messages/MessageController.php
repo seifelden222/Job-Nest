@@ -7,6 +7,7 @@ use App\Http\Requests\Api\Messages\StoreMessageRequest;
 use App\Models\Conversation;
 use App\Models\Message;
 use App\Notifications\Messages\NewMessageReceivedNotification;
+use App\Services\Translation\ContentTranslationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -29,13 +30,21 @@ class MessageController extends Controller
         ]);
     }
 
-    public function store(StoreMessageRequest $request, Conversation $conversation): JsonResponse
+    public function store(StoreMessageRequest $request, Conversation $conversation, ContentTranslationService $translationService): JsonResponse
     {
         $this->authorize('view', $conversation);
 
         $user = $request->user();
 
         $validated = $request->validated();
+
+        if ($request->filled('source_language')) {
+            $validated = $translationService->translatePayload(
+                $validated,
+                ['body'],
+                (string) $request->validated('source_language'),
+            );
+        }
 
         if (empty($validated['body']) && ! $request->hasFile('file')) {
             return response()->json([

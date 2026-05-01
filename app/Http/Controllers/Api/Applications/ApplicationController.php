@@ -8,6 +8,7 @@ use App\Http\Requests\Api\Applications\UpdateApplicationRequest;
 use App\Models\Application;
 use App\Models\Job;
 use App\Notifications\Applications\ApplicationStatusUpdatedNotification;
+use App\Services\Translation\ContentTranslationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -30,7 +31,7 @@ class ApplicationController extends Controller
         ]);
     }
 
-    public function store(StoreApplicationRequest $request, Job $job): JsonResponse
+    public function store(StoreApplicationRequest $request, Job $job, ContentTranslationService $translationService): JsonResponse
     {
         $user = $request->user();
 
@@ -57,12 +58,22 @@ class ApplicationController extends Controller
             ], 409);
         }
 
-        $application = DB::transaction(function () use ($request, $job, $user) {
+        $applicationPayload = $request->validated();
+
+        if ($request->filled('source_language')) {
+            $applicationPayload = $translationService->translatePayload(
+                $applicationPayload,
+                ['cover_letter'],
+                (string) $request->validated('source_language'),
+            );
+        }
+
+        $application = DB::transaction(function () use ($applicationPayload, $job, $user) {
             $application = Application::create([
                 'job_id' => $job->id,
                 'user_id' => $user->id,
-                'cv_document_id' => $request->validated('cv_document_id'),
-                'cover_letter' => $request->validated('cover_letter'),
+                'cv_document_id' => $applicationPayload['cv_document_id'] ?? null,
+                'cover_letter' => $applicationPayload['cover_letter'] ?? null,
                 'status' => 'submitted',
                 'applied_at' => now(),
             ]);

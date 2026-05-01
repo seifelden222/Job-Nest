@@ -108,6 +108,8 @@ test('participant can list messages', function () {
 });
 
 test('participant can send message and last message timestamp updates', function () {
+    fakeContentTranslator();
+
     Storage::fake('public');
     $user = createPersonUser();
     $otherUser = createCompanyUser();
@@ -120,6 +122,7 @@ test('participant can send message and last message timestamp updates', function
     $this->withToken($user->createToken('messages-store')->plainTextToken)
         ->postJson(route('conversations.messages.store', ['conversation' => $conversation->id]), [
             'body' => 'Hello from JobNest.',
+            'source_language' => 'en',
         ])
         ->assertCreated()
         ->assertJsonPath('data.body', 'Hello from JobNest.');
@@ -129,6 +132,8 @@ test('participant can send message and last message timestamp updates', function
 });
 
 test('non participant cannot view or send messages', function () {
+    fakeContentTranslator();
+
     $user = createPersonUser();
     $otherUser = createCompanyUser();
     $outsider = createPersonUser();
@@ -147,6 +152,7 @@ test('non participant cannot view or send messages', function () {
     $this->withToken($token)
         ->postJson(route('conversations.messages.store', ['conversation' => $conversation->id]), [
             'body' => 'I should not be here.',
+            'source_language' => 'en',
         ])
         ->assertForbidden();
 });

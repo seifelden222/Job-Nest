@@ -19,7 +19,7 @@ class ApplicationFactory extends Factory
             'job_id' => Job::factory(),
             'user_id' => User::factory()->person(),
             'cv_document_id' => Document::factory()->cv(),
-            'cover_letter' => fake()->paragraph(),
+            'cover_letter' => ['en' => fake()->paragraph(), 'ar' => fake()->paragraph()],
             'status' => 'submitted',
             'match_percentage' => fake()->numberBetween(50, 95),
             'applied_at' => now(),

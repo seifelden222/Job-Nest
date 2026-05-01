@@ -17,8 +17,8 @@ class ServiceRequestFactory extends Factory
         return [
             'user_id' => User::factory(),
             'category_id' => Category::factory()->state(['type' => 'service']),
-            'title' => fake()->sentence(4),
-            'description' => fake()->paragraph(),
+            'title' => ['en' => fake()->sentence(4), 'ar' => fake()->sentence(4)],
+            'description' => ['en' => fake()->paragraph(), 'ar' => fake()->paragraph()],
             'budget_min' => 1000,
             'budget_max' => 3000,
             'currency' => 'EGP',

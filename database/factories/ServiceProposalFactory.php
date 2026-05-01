@@ -17,7 +17,7 @@ class ServiceProposalFactory extends Factory
         return [
             'service_request_id' => ServiceRequest::factory(),
             'user_id' => User::factory(),
-            'message' => fake()->paragraph(),
+            'message' => ['en' => fake()->paragraph(), 'ar' => fake()->paragraph()],
             'proposed_budget' => 2000,
             'delivery_days' => fake()->numberBetween(3, 21),
             'status' => 'submitted',
