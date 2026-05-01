@@ -18,7 +18,7 @@ class CourseReviewFactory extends Factory
             'course_id' => Course::factory(),
             'user_id' => User::factory(),
             'rating' => fake()->numberBetween(3, 5),
-            'comment' => fake()->sentence(),
+            'comment' => ['en' => fake()->sentence(), 'ar' => fake()->sentence()],
         ];
     }
 }

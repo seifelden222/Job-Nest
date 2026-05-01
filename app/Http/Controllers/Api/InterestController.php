@@ -3,8 +3,11 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Api\MasterData\StoreMasterDataRequest;
+use App\Http\Requests\Api\MasterData\UpdateMasterDataRequest;
 use App\Models\Interest;
-use Illuminate\Http\Request;
+use App\Services\Translation\ContentTranslationService;
+use App\Support\TranslatableJson;
 
 class InterestController extends Controller
 {
@@ -15,7 +18,9 @@ class InterestController extends Controller
     {
         $this->authorize('viewAny', Interest::class);
 
-        $interests = Interest::all();
+        $interests = Interest::query()
+            ->orderByRaw(TranslatableJson::extractExpression('name').' asc')
+            ->get();
 
         return response()->json([
             'message' => 'Interests fetched successfully.',
@@ -26,13 +31,15 @@ class InterestController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(StoreMasterDataRequest $request, ContentTranslationService $translationService)
     {
         $this->authorize('create', Interest::class);
 
-        $validatedData = $request->validate([
-            'name' => 'required|string|max:255',
-        ]);
+        $validatedData = $translationService->translatePayload(
+            $request->validated(),
+            ['name'],
+            (string) $request->validated('source_language'),
+        );
         $interest = Interest::create($validatedData);
 
         return response()->json([
@@ -57,13 +64,15 @@ class InterestController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Interest $interest)
+    public function update(UpdateMasterDataRequest $request, Interest $interest, ContentTranslationService $translationService)
     {
         $this->authorize('update', $interest);
 
-        $validatedData = $request->validate([
-            'name' => 'required|string|max:255',
-        ]);
+        $validatedData = $translationService->translatePayload(
+            $request->validated(),
+            ['name'],
+            (string) $request->validated('source_language'),
+        );
         $interest->update($validatedData);
 
         return response()->json([

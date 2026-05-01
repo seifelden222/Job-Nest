@@ -13,7 +13,7 @@ return new class extends Migration
             $table->foreignId('job_id')->constrained('jobs')->cascadeOnDelete();
             $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
             $table->foreignId('cv_document_id')->nullable()->constrained('documents')->nullOnDelete();
-            $table->text('cover_letter')->nullable();
+            $table->json('cover_letter')->nullable();
             $table->enum('status', [
                 'submitted',
                 'under_review',

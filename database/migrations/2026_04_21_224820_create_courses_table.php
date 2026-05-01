@@ -12,13 +12,13 @@ return new class extends Migration
             $table->id();
             $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
             $table->foreignId('category_id')->nullable()->constrained('categories')->nullOnDelete();
-            $table->string('title');
+            $table->json('title');
             $table->string('slug')->unique();
             $table->string('thumbnail')->nullable();
-            $table->text('short_description')->nullable();
-            $table->longText('description')->nullable();
-            $table->longText('course_overview')->nullable();
-            $table->longText('what_you_learn')->nullable();
+            $table->json('short_description')->nullable();
+            $table->json('description')->nullable();
+            $table->json('course_overview')->nullable();
+            $table->json('what_you_learn')->nullable();
             $table->enum('level', ['beginner', 'intermediate', 'advanced'])->default('beginner');
             $table->enum('delivery_mode', ['online', 'offline', 'hybrid'])->default('online');
             $table->string('language', 20)->default('en');

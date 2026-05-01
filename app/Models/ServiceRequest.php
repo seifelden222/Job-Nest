@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\HasTranslatableAttributes;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -12,6 +13,12 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class ServiceRequest extends Model
 {
     use HasFactory;
+    use HasTranslatableAttributes;
+
+    protected array $translatable = [
+        'title',
+        'description',
+    ];
 
     protected $fillable = [
         'user_id',
@@ -33,6 +40,8 @@ class ServiceRequest extends Model
             'budget_min' => 'decimal:2',
             'budget_max' => 'decimal:2',
             'deadline' => 'date',
+            'title' => 'json:unicode',
+            'description' => 'json:unicode',
         ];
     }
 

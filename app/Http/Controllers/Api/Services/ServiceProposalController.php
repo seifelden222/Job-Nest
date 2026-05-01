@@ -7,6 +7,7 @@ use App\Http\Requests\Api\Services\StoreServiceProposalRequest;
 use App\Http\Requests\Api\Services\UpdateServiceProposalRequest;
 use App\Models\ServiceProposal;
 use App\Models\ServiceRequest;
+use App\Services\Translation\ContentTranslationService;
 use Illuminate\Http\JsonResponse;
 
 class ServiceProposalController extends Controller
@@ -26,7 +27,7 @@ class ServiceProposalController extends Controller
         ]);
     }
 
-    public function store(StoreServiceProposalRequest $request, ServiceRequest $serviceRequest): JsonResponse
+    public function store(StoreServiceProposalRequest $request, ServiceRequest $serviceRequest, ContentTranslationService $translationService): JsonResponse
     {
         if ($serviceRequest->status !== 'open') {
             return response()->json([
@@ -40,8 +41,18 @@ class ServiceProposalController extends Controller
             ], 409);
         }
 
+        $proposalPayload = $request->validated();
+
+        if ($request->filled('source_language')) {
+            $proposalPayload = $translationService->translatePayload(
+                $proposalPayload,
+                ['message'],
+                (string) $request->validated('source_language'),
+            );
+        }
+
         $proposal = $serviceRequest->proposals()->create([
-            ...$request->validated(),
+            ...$proposalPayload,
             'user_id' => $request->user()->id,
             'status' => 'submitted',
         ]);

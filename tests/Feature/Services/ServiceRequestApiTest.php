@@ -6,6 +6,8 @@ use App\Models\ServiceRequest;
 // Store
 
 test('person can create a service request', function () {
+    fakeContentTranslator();
+
     $person = createPersonUser();
     $category = Category::factory()->create(['type' => 'service']);
 
@@ -15,18 +17,19 @@ test('person can create a service request', function () {
             'description' => 'Landing page redesign',
             'category_id' => $category->id,
             'delivery_mode' => 'online',
+            'source_language' => 'en',
         ]);
 
     $response->assertCreated()
         ->assertJsonPath('data.user_id', $person->id);
 
-    $this->assertDatabaseHas('service_requests', [
-        'user_id' => $person->id,
-        'title' => 'Need UI design help',
-    ]);
+    expect(ServiceRequest::query()->find($response->json('data.id'))?->getTranslations('title'))
+        ->toMatchArray(['en' => 'Need UI design help', 'ar' => '[ar]Need UI design help']);
 });
 
 test('company can create a service request', function () {
+    fakeContentTranslator();
+
     $company = createCompanyUser();
     $category = Category::factory()->create(['type' => 'service']);
 
@@ -36,6 +39,7 @@ test('company can create a service request', function () {
             'description' => 'Integrate payment gateway',
             'category_id' => $category->id,
             'delivery_mode' => 'hybrid',
+            'source_language' => 'en',
         ]);
 
     $response->assertCreated()
@@ -45,6 +49,8 @@ test('company can create a service request', function () {
 // Update / Delete ownership
 
 test('owner can update own service request', function () {
+    fakeContentTranslator();
+
     $owner = createPersonUser();
 
     $serviceRequest = ServiceRequest::factory()->create([
@@ -55,12 +61,15 @@ test('owner can update own service request', function () {
     $this->withToken($owner->createToken('test')->plainTextToken)
         ->putJson(route('service-requests.update', $serviceRequest), [
             'title' => 'Updated Title',
+            'source_language' => 'en',
         ])
         ->assertOk()
         ->assertJsonPath('data.title', 'Updated Title');
 });
 
 test('non-owner cannot update another user service request', function () {
+    fakeContentTranslator();
+
     $owner = createPersonUser();
     $other = createCompanyUser();
 
@@ -72,6 +81,7 @@ test('non-owner cannot update another user service request', function () {
     $this->withToken($other->createToken('test')->plainTextToken)
         ->putJson(route('service-requests.update', $serviceRequest), [
             'title' => 'Hijacked Title',
+            'source_language' => 'en',
         ])
         ->assertForbidden();
 });

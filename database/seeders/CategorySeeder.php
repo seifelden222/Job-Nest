@@ -11,26 +11,32 @@ class CategorySeeder extends Seeder
     public function run(): void
     {
         $categories = [
-            ['name' => 'Software Development', 'type' => 'job'],
-            ['name' => 'Marketing', 'type' => 'job'],
-            ['name' => 'Design', 'type' => 'job'],
-            ['name' => 'Programming', 'type' => 'course'],
-            ['name' => 'Data Analysis', 'type' => 'course'],
-            ['name' => 'Project Management', 'type' => 'course'],
-            ['name' => 'Web Development', 'type' => 'service'],
-            ['name' => 'Graphic Design', 'type' => 'service'],
-            ['name' => 'Content Writing', 'type' => 'service'],
+            ['en' => 'Software Development', 'ar' => 'تطوير البرمجيات', 'type' => 'job'],
+            ['en' => 'Marketing', 'ar' => 'التسويق', 'type' => 'job'],
+            ['en' => 'Design', 'ar' => 'التصميم', 'type' => 'job'],
+            ['en' => 'Programming', 'ar' => 'البرمجة', 'type' => 'course'],
+            ['en' => 'Data Analysis', 'ar' => 'تحليل البيانات', 'type' => 'course'],
+            ['en' => 'Project Management', 'ar' => 'إدارة المشاريع', 'type' => 'course'],
+            ['en' => 'Web Development', 'ar' => 'تطوير الويب', 'type' => 'service'],
+            ['en' => 'Graphic Design', 'ar' => 'التصميم الجرافيكي', 'type' => 'service'],
+            ['en' => 'Content Writing', 'ar' => 'كتابة المحتوى', 'type' => 'service'],
         ];
 
         foreach ($categories as $category) {
             Category::query()->updateOrCreate(
                 [
-                    'slug' => Str::slug($category['name']),
+                    'slug' => Str::slug($category['en']),
                     'type' => $category['type'],
                 ],
                 [
-                    'name' => $category['name'],
-                    'description' => $category['name'].' category',
+                    'name' => [
+                        'en' => $category['en'],
+                        'ar' => $category['ar'],
+                    ],
+                    'description' => [
+                        'en' => $category['en'].' category',
+                        'ar' => 'فئة '.$category['ar'],
+                    ],
                     'is_active' => true,
                 ],
             );

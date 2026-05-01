@@ -8,6 +8,8 @@ use App\Http\Requests\Api\Jobs\UpdateJobRequest;
 use App\Models\Job;
 use App\Models\User;
 use App\Notifications\Jobs\NewJobPostedNotification;
+use App\Services\Translation\ContentTranslationService;
+use App\Support\TranslatableJson;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
@@ -21,8 +23,8 @@ class JobController extends Controller
         if ($request->filled('q')) {
             $term = (string) $request->query('q');
             $query->where(function ($inner) use ($term) {
-                $inner->where('title', 'like', "%{$term}%")
-                    ->orWhere('description', 'like', "%{$term}%");
+                TranslatableJson::whereLike($inner, 'title', $term);
+                TranslatableJson::orWhereLike($inner, 'description', $term);
             });
         }
 
@@ -53,13 +55,18 @@ class JobController extends Controller
         ]);
     }
 
-    public function store(StoreJobRequest $request): JsonResponse
+    public function store(StoreJobRequest $request, ContentTranslationService $translationService): JsonResponse
     {
         $this->authorize('create', Job::class);
 
         $payload = $request->validated();
         $skillIds = $payload['skill_ids'] ?? [];
         unset($payload['skill_ids']);
+        $payload = $translationService->translatePayload(
+            $payload,
+            ['title', 'description', 'requirements', 'responsibilities'],
+            (string) $request->validated('source_language'),
+        );
 
         $payload['company_id'] = $request->user()->id;
         $payload['status'] = $payload['status'] ?? 'draft';
@@ -100,13 +107,21 @@ class JobController extends Controller
         ]);
     }
 
-    public function update(UpdateJobRequest $request, Job $job): JsonResponse
+    public function update(UpdateJobRequest $request, Job $job, ContentTranslationService $translationService): JsonResponse
     {
         $this->authorize('update', $job);
 
         $payload = $request->validated();
         $skillIds = $payload['skill_ids'] ?? null;
         unset($payload['skill_ids']);
+
+        if ($request->filled('source_language')) {
+            $payload = $translationService->translatePayload(
+                $payload,
+                ['title', 'description', 'requirements', 'responsibilities'],
+                (string) $request->validated('source_language'),
+            );
+        }
 
         if (array_key_exists('status', $payload) && ! array_key_exists('is_active', $payload)) {
             $payload['is_active'] = $payload['status'] === 'active';

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\HasTranslatableAttributes;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -10,6 +11,11 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 class ServiceProposal extends Model
 {
     use HasFactory;
+    use HasTranslatableAttributes;
+
+    protected array $translatable = [
+        'message',
+    ];
 
     protected $fillable = [
         'service_request_id',
@@ -24,6 +30,7 @@ class ServiceProposal extends Model
     {
         return [
             'proposed_budget' => 'decimal:2',
+            'message' => 'json:unicode',
         ];
     }
 

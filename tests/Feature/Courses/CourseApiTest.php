@@ -7,6 +7,8 @@ use App\Models\Skill;
 // Store
 
 test('person user can create a course', function () {
+    fakeContentTranslator();
+
     $person = createPersonUser();
     $category = Category::factory()->create(['type' => 'course']);
 
@@ -17,16 +19,20 @@ test('person user can create a course', function () {
             'level' => 'beginner',
             'delivery_mode' => 'online',
             'price' => 0,
+            'source_language' => 'en',
         ]);
 
     $response->assertCreated()
         ->assertJsonPath('data.user_id', $person->id)
         ->assertJsonPath('data.title', 'Laravel for Beginners');
 
-    $this->assertDatabaseHas('courses', ['user_id' => $person->id, 'title' => 'Laravel for Beginners']);
+    expect(Course::query()->find($response->json('data.id'))?->getTranslations('title'))
+        ->toMatchArray(['en' => 'Laravel for Beginners', 'ar' => '[ar]Laravel for Beginners']);
 });
 
 test('company user can create a course', function () {
+    fakeContentTranslator();
+
     $company = createCompanyUser();
     $category = Category::factory()->create(['type' => 'course']);
 
@@ -37,12 +43,14 @@ test('company user can create a course', function () {
             'level' => 'intermediate',
             'delivery_mode' => 'hybrid',
             'price' => 999,
+            'source_language' => 'en',
         ]);
 
     $response->assertCreated()
         ->assertJsonPath('data.user_id', $company->id);
 
-    $this->assertDatabaseHas('courses', ['user_id' => $company->id, 'title' => 'Company Training Course']);
+    expect(Course::query()->find($response->json('data.id'))?->getTranslations('title'))
+        ->toMatchArray(['en' => 'Company Training Course', 'ar' => '[ar]Company Training Course']);
 });
 
 test('unauthenticated user cannot create a course', function () {
@@ -54,27 +62,33 @@ test('unauthenticated user cannot create a course', function () {
 // Update / Delete
 
 test('owner can update their own course', function () {
+    fakeContentTranslator();
+
     $user = createPersonUser();
     $course = Course::factory()->create(['user_id' => $user->id, 'status' => 'draft']);
 
     $response = $this->withToken($user->createToken('test')->plainTextToken)
         ->putJson(route('courses.update', $course), [
             'title' => 'Updated Title',
+            'source_language' => 'en',
         ]);
 
     $response->assertOk()
         ->assertJsonPath('data.title', 'Updated Title');
 
-    $this->assertDatabaseHas('courses', ['id' => $course->id, 'title' => 'Updated Title']);
+    expect($course->fresh()?->getTranslations('title'))
+        ->toMatchArray(['en' => 'Updated Title', 'ar' => '[ar]Updated Title']);
 });
 
 test('non-owner cannot update another user course', function () {
+    fakeContentTranslator();
+
     $owner = createPersonUser();
     $other = createPersonUser();
     $course = Course::factory()->create(['user_id' => $owner->id]);
 
     $this->withToken($other->createToken('test')->plainTextToken)
-        ->putJson(route('courses.update', $course), ['title' => 'Hijacked'])
+        ->putJson(route('courses.update', $course), ['title' => 'Hijacked', 'source_language' => 'en'])
         ->assertForbidden();
 });
 
@@ -131,6 +145,8 @@ test('published courses appear in the public listing', function () {
 // Skills
 
 test('owner can create a course with skills', function () {
+    fakeContentTranslator();
+
     $user = createPersonUser();
     $skill = Skill::create(['name' => 'PHP']);
 
@@ -139,6 +155,7 @@ test('owner can create a course with skills', function () {
             'title' => 'PHP Course',
             'price' => 0,
             'skill_ids' => [$skill->id],
+            'source_language' => 'en',
         ]);
 
     $response->assertCreated();

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\HasTranslatableAttributes;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -12,6 +13,14 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class Job extends Model
 {
     use HasFactory;
+    use HasTranslatableAttributes;
+
+    protected array $translatable = [
+        'title',
+        'description',
+        'requirements',
+        'responsibilities',
+    ];
 
     protected $fillable = [
         'company_id',
@@ -39,6 +48,10 @@ class Job extends Model
             'salary_max' => 'decimal:2',
             'deadline' => 'date',
             'is_active' => 'boolean',
+            'title' => 'json:unicode',
+            'description' => 'json:unicode',
+            'requirements' => 'json:unicode',
+            'responsibilities' => 'json:unicode',
         ];
     }
 

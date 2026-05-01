@@ -2,12 +2,15 @@
 
 namespace App\Http\Requests\Api\Courses;
 
+use App\Http\Requests\Concerns\HasSourceLanguage;
 use App\Models\Course;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
 class StoreCourseRequest extends FormRequest
 {
+    use HasSourceLanguage;
+
     public function authorize(): bool
     {
         return $this->user()?->can('create', Course::class) === true;
@@ -15,7 +18,7 @@ class StoreCourseRequest extends FormRequest
 
     public function rules(): array
     {
-        return [
+        return array_merge([
             'category_id' => [
                 'nullable',
                 'integer',
@@ -41,6 +44,11 @@ class StoreCourseRequest extends FormRequest
             'is_active' => ['nullable', 'boolean'],
             'skill_ids' => ['nullable', 'array'],
             'skill_ids.*' => ['integer', 'exists:skills,id'],
-        ];
+        ], $this->sourceLanguageRules());
+    }
+
+    protected function translatableFields(): array
+    {
+        return ['title', 'short_description', 'description', 'course_overview', 'what_you_learn'];
     }
 }

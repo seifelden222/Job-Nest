@@ -1,12 +1,15 @@
 <?php
 
 test('admin user can manage skills', function () {
+    fakeContentTranslator();
+
     $user = createAdminUser();
     $token = $user->createToken('manage-skills')->plainTextToken;
 
     $createResponse = $this->withToken($token)
         ->postJson(route('auth.skills.store'), [
             'name' => 'NestJS',
+            'source_language' => 'en',
         ]);
 
     $createResponse->assertCreated()
@@ -26,6 +29,7 @@ test('admin user can manage skills', function () {
     $this->withToken($token)
         ->putJson(route('auth.skills.update', ['skill' => $skillId]), [
             'name' => 'Advanced NestJS',
+            'source_language' => 'en',
         ])
         ->assertSuccessful()
         ->assertJsonPath('data.name', 'Advanced NestJS');
@@ -36,12 +40,15 @@ test('admin user can manage skills', function () {
 });
 
 test('admin user can manage languages', function () {
+    fakeContentTranslator();
+
     $user = createAdminUser();
     $token = $user->createToken('manage-languages')->plainTextToken;
 
     $createResponse = $this->withToken($token)
         ->postJson(route('auth.languages.store'), [
             'name' => 'German',
+            'source_language' => 'en',
         ]);
 
     $languageId = $createResponse->assertCreated()->json('data.id');
@@ -58,6 +65,7 @@ test('admin user can manage languages', function () {
     $this->withToken($token)
         ->putJson(route('auth.languages.update', ['language' => $languageId]), [
             'name' => 'German B2',
+            'source_language' => 'en',
         ])
         ->assertSuccessful()
         ->assertJsonPath('data.name', 'German B2');
@@ -68,12 +76,15 @@ test('admin user can manage languages', function () {
 });
 
 test('admin user can manage interests', function () {
+    fakeContentTranslator();
+
     $user = createAdminUser();
     $token = $user->createToken('manage-interests')->plainTextToken;
 
     $createResponse = $this->withToken($token)
         ->postJson(route('auth.interests.store'), [
             'name' => 'Robotics',
+            'source_language' => 'en',
         ]);
 
     $interestId = $createResponse->assertCreated()->json('data.id');
@@ -90,6 +101,7 @@ test('admin user can manage interests', function () {
     $this->withToken($token)
         ->putJson(route('auth.interests.update', ['interest' => $interestId]), [
             'name' => 'Industrial Robotics',
+            'source_language' => 'en',
         ])
         ->assertSuccessful()
         ->assertJsonPath('data.name', 'Industrial Robotics');
@@ -100,43 +112,50 @@ test('admin user can manage interests', function () {
 });
 
 test('non admin user cannot modify master data', function () {
+    fakeContentTranslator();
+
     $user = createCompanyUser();
     $token = $user->createToken('master-data-404')->plainTextToken;
 
     $this->withToken($token)
         ->postJson(route('auth.skills.store'), [
             'name' => 'Forbidden Skill',
+            'source_language' => 'en',
         ])
         ->assertForbidden();
 
     $this->withToken($token)
         ->postJson(route('auth.languages.store'), [
             'name' => 'Forbidden Language',
+            'source_language' => 'en',
         ])
         ->assertForbidden();
 
     $this->withToken($token)
         ->postJson(route('auth.interests.store'), [
             'name' => 'Forbidden Interest',
+            'source_language' => 'en',
         ])
         ->assertForbidden();
 });
 
 test('authenticated user can still read master data', function () {
+    fakeContentTranslator();
+
     $user = createCompanyUser();
     $admin = createAdminUser();
     $token = $user->createToken('master-data-read')->plainTextToken;
 
     $skillId = $this->withToken($admin->createToken('seed-skill')->plainTextToken)
-        ->postJson(route('auth.skills.store'), ['name' => 'NestJS'])
+        ->postJson(route('auth.skills.store'), ['name' => 'NestJS', 'source_language' => 'en'])
         ->json('data.id');
 
     $languageId = $this->withToken($admin->createToken('seed-language')->plainTextToken)
-        ->postJson(route('auth.languages.store'), ['name' => 'German'])
+        ->postJson(route('auth.languages.store'), ['name' => 'German', 'source_language' => 'en'])
         ->json('data.id');
 
     $interestId = $this->withToken($admin->createToken('seed-interest')->plainTextToken)
-        ->postJson(route('auth.interests.store'), ['name' => 'Robotics'])
+        ->postJson(route('auth.interests.store'), ['name' => 'Robotics', 'source_language' => 'en'])
         ->json('data.id');
 
     $this->withToken($token)

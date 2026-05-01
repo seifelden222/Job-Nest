@@ -2,12 +2,15 @@
 
 namespace App\Http\Requests\Api\Services;
 
+use App\Http\Requests\Concerns\HasSourceLanguage;
 use App\Models\ServiceRequest;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
 class StoreServiceRequestRequest extends FormRequest
 {
+    use HasSourceLanguage;
+
     public function authorize(): bool
     {
         return $this->user()?->can('create', ServiceRequest::class) === true;
@@ -15,7 +18,7 @@ class StoreServiceRequestRequest extends FormRequest
 
     public function rules(): array
     {
-        return [
+        return array_merge([
             'category_id' => [
                 'nullable',
                 'integer',
@@ -32,6 +35,11 @@ class StoreServiceRequestRequest extends FormRequest
             'status' => ['nullable', Rule::in(['open', 'in_progress', 'closed', 'cancelled'])],
             'skill_ids' => ['nullable', 'array'],
             'skill_ids.*' => ['integer', 'exists:skills,id'],
-        ];
+        ], $this->sourceLanguageRules());
+    }
+
+    protected function translatableFields(): array
+    {
+        return ['title', 'description'];
     }
 }

@@ -74,6 +74,8 @@ test('outsider cannot open a service proposal conversation', function () {
 });
 
 test('admin user can manage categories', function () {
+    fakeContentTranslator();
+
     $admin = createAdminUser();
 
     $createResponse = $this->withToken($admin->createToken('categories-admin')->plainTextToken)
@@ -81,6 +83,7 @@ test('admin user can manage categories', function () {
             'name' => 'Engineering',
             'type' => 'job',
             'is_active' => true,
+            'source_language' => 'en',
         ]);
 
     $categoryId = $createResponse->assertCreated()->json('data.id');
@@ -88,12 +91,15 @@ test('admin user can manage categories', function () {
     $this->withToken($admin->createToken('categories-admin-update')->plainTextToken)
         ->putJson(route('auth.categories.update', ['category' => $categoryId]), [
             'name' => 'Engineering Updated',
+            'source_language' => 'en',
         ])
         ->assertSuccessful()
         ->assertJsonPath('data.name', 'Engineering Updated');
 });
 
 test('non admin user cannot manage categories', function () {
+    fakeContentTranslator();
+
     $nonAdmin = createCompanyUser();
     $category = Category::factory()->create(['type' => 'job']);
 
@@ -101,12 +107,14 @@ test('non admin user cannot manage categories', function () {
         ->postJson(route('auth.categories.store'), [
             'name' => 'Blocked Category',
             'type' => 'job',
+            'source_language' => 'en',
         ])
         ->assertForbidden();
 
     $this->withToken($nonAdmin->createToken('categories-non-admin-update')->plainTextToken)
         ->putJson(route('auth.categories.update', ['category' => $category->id]), [
             'name' => 'Hijacked Category',
+            'source_language' => 'en',
         ])
         ->assertForbidden();
 });

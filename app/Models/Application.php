@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\HasTranslatableAttributes;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -10,6 +11,11 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 class Application extends Model
 {
     use HasFactory;
+    use HasTranslatableAttributes;
+
+    protected array $translatable = [
+        'cover_letter',
+    ];
 
     protected $fillable = [
         'job_id',
@@ -30,6 +36,7 @@ class Application extends Model
             'applied_at' => 'datetime',
             'reviewed_at' => 'datetime',
             'withdrawn_at' => 'datetime',
+            'cover_letter' => 'json:unicode',
         ];
     }
 
