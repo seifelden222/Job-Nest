@@ -779,6 +779,61 @@ Tracks which migrations have been executed.
 **Business Use in JobNest**  
 Ensures the database schema reflects the applied migration history.
 
+### 3.39 Database Relationships and ER Diagram
+
+#### Core relationship summary
+
+- `users` has one `person_profiles` and one `company_profiles` (by account type).
+- `users` has many business records: `jobs`, `applications`, `courses`, `course_enrollments`, `course_reviews`, `service_requests`, `service_proposals`, `messages`, `documents`, `saved_items`, `refresh_tokens`.
+- `jobs` belongs to `users` (company owner) and `categories`, has many `applications`, and belongs to many `skills` through `job_skills`.
+- `applications` belongs to `jobs`, `users`, and optional `documents` (`cv_document_id`).
+- `conversations` can belong to one of: `applications`, `jobs`, `service_requests`, `service_proposals`; participants are tracked in `conversation_participants`; messages are stored in `messages`.
+- `courses` belongs to `users` and `categories`, belongs to many `skills` through `course_skills`, and has many `course_enrollments` and `course_reviews`.
+- `service_requests` belongs to `users` and `categories`, belongs to many `skills` through `service_request_skills`, and has many `service_proposals`.
+- `saved_items` belongs to `users` and points polymorphically by (`type`, `target_id`) to `jobs`, `courses`, or `service_requests`.
+- `notifications` are polymorphic records (`notifiable_type`, `notifiable_id`) and target `users` in this project.
+
+#### ER diagram (logical view)
+
+```mermaid
+erDiagram
+ USERS ||--o| PERSON_PROFILES : has
+ USERS ||--o| COMPANY_PROFILES : has
+ USERS ||--o{ DOCUMENTS : uploads
+ USERS ||--o{ REFRESH_TOKENS : owns
+ USERS ||--o{ JOBS : creates
+ USERS ||--o{ APPLICATIONS : submits
+ USERS ||--o{ COURSES : publishes
+ USERS ||--o{ COURSE_ENROLLMENTS : enrolls
+ USERS ||--o{ COURSE_REVIEWS : writes
+ USERS ||--o{ SERVICE_REQUESTS : posts
+ USERS ||--o{ SERVICE_PROPOSALS : submits
+ USERS ||--o{ SAVED_ITEMS : saves
+ USERS ||--o{ MESSAGES : sends
+
+ CATEGORIES ||--o{ JOBS : classifies
+ CATEGORIES ||--o{ COURSES : classifies
+ CATEGORIES ||--o{ SERVICE_REQUESTS : classifies
+
+ JOBS ||--o{ APPLICATIONS : receives
+ JOBS ||--o{ JOB_SKILLS : maps
+ SKILLS ||--o{ JOB_SKILLS : maps
+
+ COURSES ||--o{ COURSE_SKILLS : maps
+ SKILLS ||--o{ COURSE_SKILLS : maps
+ COURSES ||--o{ COURSE_ENROLLMENTS : has
+ COURSES ||--o{ COURSE_REVIEWS : has
+
+ SERVICE_REQUESTS ||--o{ SERVICE_REQUEST_SKILLS : maps
+ SKILLS ||--o{ SERVICE_REQUEST_SKILLS : maps
+ SERVICE_REQUESTS ||--o{ SERVICE_PROPOSALS : receives
+
+ APPLICATIONS ||--o| CONVERSATIONS : context
+ SERVICE_PROPOSALS ||--o| CONVERSATIONS : context
+ CONVERSATIONS ||--o{ CONVERSATION_PARTICIPANTS : has
+ CONVERSATIONS ||--o{ MESSAGES : has
+```
+
 ## 4. Implemented Project Features
 
 ### 4.1 Authentication and Account Access
@@ -893,17 +948,6 @@ Users can bookmark jobs, courses, and service requests. The API supports listing
 The category system is shared across the three main marketplace modules. Each category is scoped by `type`, allowing the same management module to support job categories, course categories, and service categories. Public category listing supports type filtering and active-only filtering, while admin-authorized endpoints support full category management.
 Category names and descriptions are stored as bilingual JSON and returned as a single localized value to API clients.
 
-### 4.16 API Localization and Translation Behavior
-
-- Locale selection is centralized in API middleware and supports `Accept-Language` first, then `lang`, then English fallback.
-- Only `ar` and `en` are accepted as supported API languages.
-- The installed Laravel localization package is used for locale metadata and supported-locale resolution, but dynamic marketplace content translation is handled by JobNest application services.
-- Translated attributes are stored in the same business tables as JSON objects instead of separate translation tables or language-specific columns.
-- Translatable tables in the current implementation are `skills`, `languages`, `interests`, `categories`, `jobs`, `applications`, `messages`, `courses`, `course_reviews`, `service_requests`, and `service_proposals`.
-- Create and update endpoints that write translated content accept `source_language` so the backend can preserve the submitted language and generate the missing counterpart automatically.
-- Normal API resources return only the resolved locale string for each translated field rather than exposing both stored languages.
-- If translation cannot be generated, the source text is preserved and reused as the fallback value so unrelated business flows continue to work safely.
-
 ### 4.15 Authorization and Rate Limiting
 
 The project uses dedicated policies to enforce ownership and role-aware access:
@@ -916,6 +960,17 @@ The project uses dedicated policies to enforce ownership and role-aware access:
 - admin membership controls reference-data management.
 
 The API also defines rate limiters for login, refresh token usage, forgot-password OTP requests, OTP verification, OTP resend, and email verification resend.
+
+### 4.16 API Localization and Translation Behavior
+
+- Locale selection is centralized in API middleware and supports `Accept-Language` first, then `lang`, then English fallback.
+- Only `ar` and `en` are accepted as supported API languages.
+- The installed Laravel localization package is used for locale metadata and supported-locale resolution, but dynamic marketplace content translation is handled by JobNest application services.
+- Translated attributes are stored in the same business tables as JSON objects instead of separate translation tables or language-specific columns.
+- Translatable tables in the current implementation are `skills`, `languages`, `interests`, `categories`, `jobs`, `applications`, `messages`, `courses`, `course_reviews`, `service_requests`, and `service_proposals`.
+- Create and update endpoints that write translated content accept `source_language` so the backend can preserve the submitted language and generate the missing counterpart automatically.
+- Normal API resources return only the resolved locale string for each translated field rather than exposing both stored languages.
+- If translation cannot be generated, the source text is preserved and reused as the fallback value so unrelated business flows continue to work safely.
 
 ## 5. Conclusion
 
@@ -1034,3 +1089,638 @@ the exact notification types and what user action triggers each one
 the direct/application/service conversation creation rules
 Final verdict
 Documentation is complete
+
+## 6. API Endpoints Reference
+
+This section provides a practical endpoint map aligned with the active Postman collection.
+
+Access legend:
+
+- `[Public]`: no token required.
+- `[Public+SignedURL]`: no token, but valid signed URL parameters required.
+- `[Auth]`: authenticated user token required.
+- `[Auth+Person]`: authenticated user with person account type.
+- `[Auth+Company]`: authenticated user with company account type.
+- `[Auth+Admin]`: authenticated user mapped to active admin.
+- `[Auth+Owner]`: authenticated user must own the target resource.
+- `[Auth+Participant]`: authenticated user must belong to conversation.
+
+### 6.1 Auth
+
+- `[Public] POST /api/auth/register/step-1`
+- `[Public] POST /api/auth/register/company`
+- `[Auth] POST /api/auth/register/step-2`
+- `[Auth] POST /api/auth/register/step-3`
+- `[Public] POST /api/auth/login`
+- `[Public] POST /api/auth/google/login`
+- `[Public] POST /api/auth/refresh-token`
+- `[Public] POST /api/auth/forgot-password`
+- `[Public] POST /api/auth/verify-reset-otp`
+- `[Public] POST /api/auth/resend-reset-otp`
+- `[Public] POST /api/auth/reset-password`
+- `[Auth] GET /api/auth/me`
+- `[Auth] GET /api/auth/email/verification-status`
+- `[Auth] POST /api/auth/email/verification/send`
+- `[Auth] POST /api/auth/email/verification/resend`
+- `[Public+SignedURL] GET /api/auth/email/verify/{user_id}/{verification_hash}`
+- `[Auth] GET /api/auth/sessions`
+- `[Auth] DELETE /api/auth/sessions/{session_id}`
+- `[Auth] POST /api/auth/logout`
+- `[Auth] POST /api/auth/logout-all`
+
+### 6.2 Profile and User Assets
+
+- `[Auth] GET /api/auth/profile`
+- `[Auth] PUT /api/auth/profile`
+- `[Auth] GET /api/auth/user-documents`
+- `[Auth] POST /api/auth/user-documents`
+- `[Auth+Owner] DELETE /api/auth/user-documents/{document_id}`
+
+### 6.3 User Skill/Language/Interest Assignment
+
+- `[Auth] GET /api/auth/user-skills`
+- `[Auth] POST /api/auth/user-skills`
+- `[Auth] DELETE /api/auth/user-skills/{skill_id}`
+- `[Auth] GET /api/auth/user-languages`
+- `[Auth] POST /api/auth/user-languages`
+- `[Auth] DELETE /api/auth/user-languages/{language_id}`
+- `[Auth] GET /api/auth/user-interests`
+- `[Auth] POST /api/auth/user-interests`
+- `[Auth] DELETE /api/auth/user-interests/{interest_id}`
+
+### 6.4 Reference Data (Admin-Managed)
+
+- Skills:
+  - `[Public] GET /api/auth/skills`
+  - `[Auth+Admin] POST /api/auth/skills`
+  - `[Public] GET /api/auth/skills/{skill_id}`
+  - `[Auth+Admin] PUT /api/auth/skills/{skill_id}`
+  - `[Auth+Admin] DELETE /api/auth/skills/{skill_id}`
+- Languages:
+  - `[Public] GET /api/auth/languages`
+  - `[Auth+Admin] POST /api/auth/languages`
+  - `[Public] GET /api/auth/languages/{language_id}`
+  - `[Auth+Admin] PUT /api/auth/languages/{language_id}`
+  - `[Auth+Admin] DELETE /api/auth/languages/{language_id}`
+- Interests:
+  - `[Public] GET /api/auth/interests`
+  - `[Auth+Admin] POST /api/auth/interests`
+  - `[Public] GET /api/auth/interests/{interest_id}`
+  - `[Auth+Admin] PUT /api/auth/interests/{interest_id}`
+  - `[Auth+Admin] DELETE /api/auth/interests/{interest_id}`
+- Categories:
+  - `[Public] GET /api/categories`
+  - `[Public] GET /api/categories/{category_id}`
+  - `[Auth+Admin] POST /api/auth/categories`
+  - `[Auth+Admin] PUT /api/auth/categories/{category_id}`
+  - `[Auth+Admin] DELETE /api/auth/categories/{category_id}`
+
+### 6.5 Jobs and Applications
+
+- Jobs:
+  - `[Public] GET /api/jobs`
+  - `[Auth+Company] POST /api/jobs`
+  - `[Public] GET /api/jobs/{job_id}`
+  - `[Auth+Owner] PUT /api/jobs/{job_id}`
+  - `[Auth+Owner] DELETE /api/jobs/{job_id}`
+- Applications:
+  - `[Auth+Person] POST /api/jobs/{job_id}/applications`
+  - `[Auth+Owner] GET /api/jobs/{job_id}/applications`
+  - `[Auth+OwnerOrApplicant] GET /api/applications/{application_id}`
+  - `[Auth+Owner] PUT /api/applications/{application_id}`
+  - `[Auth+Person+Owner] DELETE /api/applications/{application_id}`
+
+### 6.6 Conversations and Messages
+
+- Conversations:
+  - `[Auth] GET /api/conversations`
+  - `[Auth] POST /api/conversations`
+  - `[Auth+Participant] GET /api/conversations/{conversation_id}`
+- Messages:
+  - `[Auth+Participant] GET /api/conversations/{conversation_id}/messages`
+  - `[Auth+Participant] POST /api/conversations/{conversation_id}/messages`
+
+### 6.7 Courses, Enrollments, Reviews
+
+- Courses:
+  - `[Public] GET /api/courses`
+  - `[Auth] GET /api/auth/my-courses`
+  - `[Auth] POST /api/courses`
+  - `[Public] GET /api/courses/{course_id}`
+  - `[Auth+Owner] PUT /api/courses/{course_id}`
+  - `[Auth+Owner] DELETE /api/courses/{course_id}`
+- Enrollments:
+  - `[Auth] POST /api/courses/{course_id}/enrollments`
+  - `[Auth] GET /api/course-enrollments`
+  - `[Auth+Owner] GET /api/courses/{course_id}/enrollments`
+  - `[Auth+Owner] PUT /api/course-enrollments/{course_enrollment_id}`
+- Reviews:
+  - `[Public] GET /api/courses/{course_id}/reviews`
+  - `[Auth+Enrolled] POST /api/courses/{course_id}/reviews`
+  - `[Auth+ReviewOwner] PUT /api/course-reviews/{course_review_id}`
+  - `[Auth+ReviewOwner] DELETE /api/course-reviews/{course_review_id}`
+
+### 6.8 Service Requests and Proposals
+
+- Service Requests:
+  - `[Public] GET /api/service-requests`
+  - `[Auth] GET /api/auth/my-service-requests`
+  - `[Auth] POST /api/service-requests`
+  - `[Public] GET /api/service-requests/{service_request_id}`
+  - `[Auth+Owner] PUT /api/service-requests/{service_request_id}`
+  - `[Auth+Owner] DELETE /api/service-requests/{service_request_id}`
+- Service Proposals:
+  - `[Auth] POST /api/service-requests/{service_request_id}/proposals`
+  - `[Auth+Owner] GET /api/service-requests/{service_request_id}/proposals`
+  - `[Auth+OwnerOrProposer] GET /api/service-proposals/{service_proposal_id}`
+  - `[Auth+OwnerOrProposer] PUT /api/service-proposals/{service_proposal_id}`
+- Service Conversations:
+  - `[Auth+OwnerOrProposer] POST /api/service-proposals/{service_proposal_id}/conversation`
+  - `[Auth+Participant] GET /api/conversations/{conversation_id}/messages`
+  - `[Auth+Participant] POST /api/conversations/{conversation_id}/messages`
+
+### 6.9 Saved Items and Notifications
+
+- Saved Items:
+  - `[Auth] GET /api/auth/saved-items`
+  - `[Auth] POST /api/auth/saved-items`
+  - `[Auth] DELETE /api/auth/saved-items/{saved_type}/{saved_target_id}`
+  - `[Auth] GET /api/auth/saved-items/check`
+- Notifications:
+  - `[Auth] GET /api/auth/notifications`
+  - `[Auth] GET /api/auth/notifications/unread-count`
+  - `[Auth] PATCH /api/auth/notifications/{notification_id}`
+  - `[Auth] PATCH /api/auth/notifications/mark-all-read`
+  - `[Auth] DELETE /api/auth/notifications/{notification_id}`
+
+## 7. Request/Response Examples
+
+All examples assume:
+
+- Header: `Accept: application/json`
+- Authenticated routes also include: `Authorization: Bearer {access_token}`
+
+### 7.1 Login
+
+Request
+
+```http
+POST /api/auth/login
+Content-Type: application/json
+
+{
+ "email": "ali@example.com",
+ "password": "password123",
+ "device_name": "iphone-15"
+}
+```
+
+Response (200)
+
+```json
+{
+ "access_token": "1|xxxxxxxxxxxxxxxx",
+ "refresh_token": "rt_xxxxxxxxxxxxxxxx",
+ "token_type": "Bearer",
+ "expires_at": "2026-05-01T18:22:44Z",
+ "current_token_id": "12",
+ "user": {
+  "id": 15,
+  "name": "Ali Hassan",
+  "email": "ali@example.com",
+  "account_type": "person",
+  "status": "active"
+ }
+}
+```
+
+### 7.2 Create Job (Translatable)
+
+Request
+
+```http
+POST /api/jobs
+Content-Type: application/json
+Accept-Language: en
+
+{
+ "title": "Backend Engineer",
+ "description": "Build and maintain APIs.",
+ "location": "Cairo",
+ "employment_type": "full_time",
+ "salary_min": 8000,
+ "salary_max": 12000,
+ "currency": "EGP",
+ "experience_level": "mid",
+ "requirements": "Laravel and MySQL.",
+ "responsibilities": "Own the API lifecycle.",
+ "deadline": "2026-05-30",
+ "status": "active",
+ "skill_ids": [1, 2],
+ "source_language": "en"
+}
+```
+
+Response (201)
+
+```json
+{
+ "data": {
+  "id": 88,
+  "title": "Backend Engineer",
+  "description": "Build and maintain APIs.",
+  "location": "Cairo",
+  "employment_type": "full_time",
+  "status": "active",
+  "applications_count": 0,
+  "created_at": "2026-05-01T18:25:03Z"
+ }
+}
+```
+
+### 7.3 Apply to Job
+
+Request
+
+```http
+POST /api/jobs/88/applications
+Content-Type: application/json
+Accept-Language: en
+
+{
+ "cv_document_id": 44,
+ "cover_letter": "I am a strong fit for this role.",
+ "source_language": "en"
+}
+```
+
+Response (201)
+
+```json
+{
+ "data": {
+  "id": 301,
+  "job_id": 88,
+  "user_id": 15,
+  "status": "submitted",
+  "cover_letter": "I am a strong fit for this role.",
+  "applied_at": "2026-05-01T18:27:12Z"
+ }
+}
+```
+
+### 7.4 Create Course Review
+
+Request
+
+```http
+POST /api/courses/17/reviews
+Content-Type: application/json
+Accept-Language: en
+
+{
+ "rating": 5,
+ "comment": "Excellent practical course.",
+ "source_language": "en"
+}
+```
+
+Response (201)
+
+```json
+{
+ "data": {
+  "id": 93,
+  "course_id": 17,
+  "user_id": 15,
+  "rating": 5,
+  "comment": "Excellent practical course.",
+  "created_at": "2026-05-01T18:30:00Z"
+ }
+}
+```
+
+### 7.5 Create Service Proposal
+
+Request
+
+```http
+POST /api/service-requests/22/proposals
+Content-Type: application/json
+Accept-Language: en
+
+{
+ "message": "I can deliver this in one week.",
+ "proposed_budget": 2500,
+ "delivery_days": 7,
+ "source_language": "en"
+}
+```
+
+Response (201)
+
+```json
+{
+ "data": {
+  "id": 140,
+  "service_request_id": 22,
+  "user_id": 15,
+  "status": "submitted",
+  "proposed_budget": 2500,
+  "delivery_days": 7
+ }
+}
+```
+
+### 7.6 Notifications Unread Count
+
+Request
+
+```http
+GET /api/auth/notifications/unread-count
+```
+
+Response (200)
+
+```json
+{
+ "unread_count": 4
+}
+```
+
+### 7.7 Standard Validation Error Shape
+
+Response (422)
+
+```json
+{
+ "message": "The given data was invalid.",
+ "errors": {
+  "email": [
+   "The email field is required."
+  ],
+  "password": [
+   "The password field is required."
+  ]
+ }
+}
+```
+
+### 7.8 Standard Unauthorized Error Shape
+
+Response (401)
+
+```json
+{
+ "message": "Unauthenticated."
+}
+```
+
+### 7.9 Person Registration Step 1 (Core Onboarding)
+
+Request
+
+```http
+POST /api/auth/register/step-1
+Content-Type: application/json
+
+{
+  "account_type": "person",
+  "name": "Ali Hassan",
+  "email": "ali@example.com",
+  "phone": "01012345678",
+  "password": "password123",
+  "password_confirmation": "password123",
+  "university": "Cairo University",
+  "major": "Computer Science",
+  "device_name": "flutter-android"
+}
+```
+
+Response (201)
+
+```json
+{
+  "access_token": "1|xxxxxxxx",
+  "refresh_token": "rt_xxxxxxxx",
+  "current_token_id": "22",
+  "user": {
+    "id": 15,
+    "account_type": "person",
+    "email": "ali@example.com"
+  }
+}
+```
+
+### 7.10 Refresh Token Rotation (Core Session Lifecycle)
+
+Request
+
+```http
+POST /api/auth/refresh-token
+Content-Type: application/json
+
+{
+  "refresh_token": "rt_xxxxxxxx",
+  "device_name": "iphone-15"
+}
+```
+
+Response (200)
+
+```json
+{
+  "access_token": "2|yyyyyyyy",
+  "refresh_token": "rt_yyyyyyyy",
+  "token_type": "Bearer",
+  "current_token_id": "23"
+}
+```
+
+### 7.11 Sessions List and Revoke Session
+
+Sessions request
+
+```http
+GET /api/auth/sessions
+Authorization: Bearer {access_token}
+```
+
+Sessions response (200)
+
+```json
+{
+  "data": [
+    {
+      "id": "23",
+      "name": "iphone-15",
+      "is_current": true,
+      "last_used_at": "2026-05-01T19:20:00Z"
+    }
+  ]
+}
+```
+
+Revoke session request
+
+```http
+DELETE /api/auth/sessions/23
+Authorization: Bearer {access_token}
+```
+
+Revoke response (200)
+
+```json
+{
+  "message": "Session revoked successfully."
+}
+```
+
+### 7.12 Direct Conversation + Send Message
+
+Create conversation request
+
+```http
+POST /api/conversations
+Content-Type: application/json
+Authorization: Bearer {access_token}
+
+{
+  "type": "direct",
+  "participant_id": 41
+}
+```
+
+Create conversation response (201)
+
+```json
+{
+  "data": {
+    "id": 54,
+    "type": "direct",
+    "created_by": 15
+  }
+}
+```
+
+Send message request
+
+```http
+POST /api/conversations/54/messages
+Content-Type: application/json
+Authorization: Bearer {access_token}
+
+{
+  "body": "Hello from JobNest.",
+  "message_type": "text",
+  "source_language": "en"
+}
+```
+
+Send message response (201)
+
+```json
+{
+  "data": {
+    "id": 900,
+    "conversation_id": 54,
+    "message_type": "text",
+    "body": "Hello from JobNest."
+  }
+}
+```
+
+### 7.13 Accept Service Proposal (Core Marketplace Flow)
+
+Request
+
+```http
+PUT /api/service-proposals/140
+Content-Type: application/json
+Authorization: Bearer {access_token}
+
+{
+  "status": "accepted"
+}
+```
+
+Response (200)
+
+```json
+{
+  "data": {
+    "id": 140,
+    "status": "accepted",
+    "service_request": {
+      "id": 22,
+      "status": "in_progress"
+    }
+  }
+}
+```
+
+## 8. Flow Diagrams
+
+### 8.1 Auth and Session Lifecycle
+
+```mermaid
+flowchart TD
+  A[Register or Login] --> B[Issue Sanctum access token]
+  B --> C[Create refresh token family]
+  C --> D[Authenticated API calls]
+  D --> E{Access token expired?}
+  E -- No --> D
+  E -- Yes --> F[POST refresh-token]
+  F --> G[Rotate refresh token]
+  G --> H[Issue new access token]
+  H --> D
+  D --> I[POST logout]
+  D --> J[POST logout-all]
+  I --> K[Revoke current device tokens]
+  J --> L[Revoke token family or all sessions]
+```
+
+### 8.2 Job Application Flow
+
+```mermaid
+flowchart TD
+  A[Company creates active job] --> B[Job listed in /api/jobs]
+  B --> C[Person submits application]
+  C --> D[Application status = submitted]
+  D --> E[Company reviews application]
+  E --> F{Decision}
+  F -- under_review --> G[Update status and optional notes]
+  F -- accepted --> H[Applicant notified]
+  F -- rejected --> I[Applicant notified]
+  C --> J[Optional application conversation]
+  J --> K[Participants exchange messages]
+```
+
+### 8.3 Service Request and Proposal Flow
+
+```mermaid
+flowchart TD
+  A[Owner creates service request] --> B[Request is open]
+  B --> C[Provider submits proposal]
+  C --> D[Proposal status = submitted]
+  D --> E{Owner decision}
+  E -- accepted --> F[Proposal status = accepted]
+  F --> G[Service request status = in_progress]
+  F --> H[Create or open service conversation]
+  H --> I[Delivery discussion in messages]
+  E -- rejected --> J[Proposal status = rejected]
+  C --> K[Provider may withdraw]
+  K --> L[Proposal status = withdrawn]
+```
+
+### 8.4 Localization and Translation Lifecycle
+
+```mermaid
+flowchart LR
+  A[Client sends content + source_language] --> B[Store source locale text]
+  B --> C[Generate counterpart locale text]
+  C --> D[Persist JSON: en/ar]
+  D --> E[Client requests data with Accept-Language or lang]
+  E --> F[Middleware resolves locale]
+  F --> G[API resource returns single localized value]
+```
