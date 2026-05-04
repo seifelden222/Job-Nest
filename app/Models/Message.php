@@ -12,6 +12,12 @@ class Message extends Model
     use HasFactory;
     use HasTranslatableAttributes;
 
+    public const ROLE_USER = 'user';
+
+    public const ROLE_ASSISTANT = 'assistant';
+
+    public const ROLE_SYSTEM = 'system';
+
     protected array $translatable = [
         'body',
     ];
@@ -19,6 +25,7 @@ class Message extends Model
     protected $fillable = [
         'conversation_id',
         'sender_id',
+        'message_role',
         'message_type',
         'body',
         'attachment_path',
@@ -46,5 +53,10 @@ class Message extends Model
     public function sender(): BelongsTo
     {
         return $this->belongsTo(User::class, 'sender_id');
+    }
+
+    public function isAssistant(): bool
+    {
+        return $this->message_role === self::ROLE_ASSISTANT;
     }
 }

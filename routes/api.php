@@ -3,6 +3,8 @@
 use App\Http\Controllers\Api\Applications\ApplicationController;
 use App\Http\Controllers\Api\Auth\AuthController;
 use App\Http\Controllers\Api\Categories\CategoryController;
+use App\Http\Controllers\Api\Chatbot\ChatbotConversationController;
+use App\Http\Controllers\Api\Chatbot\ChatbotMessageController;
 use App\Http\Controllers\Api\Conversations\ConversationController;
 use App\Http\Controllers\Api\Courses\CourseController;
 use App\Http\Controllers\Api\Courses\CourseEnrollmentController;
@@ -51,6 +53,14 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('conversations/{conversation}', [ConversationController::class, 'show'])->name('conversations.show');
     Route::get('conversations/{conversation}/messages', [MessageController::class, 'index'])->name('conversations.messages.index');
     Route::post('conversations/{conversation}/messages', [MessageController::class, 'store'])->name('conversations.messages.store');
+
+    Route::prefix('chatbot')->name('chatbot.')->group(function () {
+        Route::get('conversations', [ChatbotConversationController::class, 'index'])->name('conversations.index');
+        Route::post('conversations', [ChatbotConversationController::class, 'store'])->name('conversations.store');
+        Route::get('conversations/{conversation}', [ChatbotConversationController::class, 'show'])->name('conversations.show');
+        Route::get('conversations/{conversation}/messages', [ChatbotMessageController::class, 'index'])->name('conversations.messages.index');
+        Route::post('conversations/{conversation}/messages', [ChatbotMessageController::class, 'store'])->name('conversations.messages.store');
+    });
 
     Route::post('courses', [CourseController::class, 'store'])->name('courses.store');
     Route::put('courses/{course}', [CourseController::class, 'update'])->name('courses.update');

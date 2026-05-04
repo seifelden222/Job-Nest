@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -11,6 +12,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class Conversation extends Model
 {
     use HasFactory;
+
+    public const TYPE_CHATBOT = 'chatbot';
 
     protected $fillable = [
         'type',
@@ -75,5 +78,15 @@ class Conversation extends Model
     public function lastMessage(): BelongsTo
     {
         return $this->belongsTo(Message::class, 'last_message_id');
+    }
+
+    public function scopeChatbot(Builder $query): Builder
+    {
+        return $query->where('type', self::TYPE_CHATBOT);
+    }
+
+    public function isChatbot(): bool
+    {
+        return $this->type === self::TYPE_CHATBOT;
     }
 }

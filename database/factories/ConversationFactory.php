@@ -25,6 +25,16 @@ class ConversationFactory extends Factory
         ];
     }
 
+    public function chatbot(?User $creator = null): static
+    {
+        return $this->state(function () use ($creator): array {
+            return [
+                'type' => Conversation::TYPE_CHATBOT,
+                'created_by' => $creator?->id ?? User::factory(),
+            ];
+        });
+    }
+
     public function applicationType(?Application $application = null, ?Job $job = null, ?User $creator = null): static
     {
         return $this->state(function () use ($application, $job, $creator): array {
