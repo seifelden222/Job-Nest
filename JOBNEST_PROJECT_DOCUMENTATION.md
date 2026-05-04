@@ -407,6 +407,7 @@ Stores chat threads used by direct messaging, job applications, and service prop
 **Key Columns**
 
 - `type`: `direct`, `application`, or `service`.
+- `type`: `direct`, `application`, `service`, or `chatbot`.
 - `application_id`, `job_id`: links for application-context conversations.
 - `service_request_id`, `service_proposal_id`: links for service-context conversations.
 - `created_by`: user who initiated the conversation.
@@ -420,7 +421,7 @@ Stores chat threads used by direct messaging, job applications, and service prop
 - Belongs to the last `messages` record through `last_message_id`.
 
 **Business Use in JobNest**  
-This table gives the messaging system business context, allowing the API to expose direct chat, job-related discussion, and service-delivery discussion through one unified structure.
+This table gives the messaging system business context, allowing the API to expose direct chat, job-related discussion, service-delivery discussion, and stored chatbot assistant threads through one unified structure.
 
 ### 3.20 Table: `conversation_participants`
 
@@ -451,6 +452,7 @@ Stores individual conversation messages and file attachments.
 
 - `conversation_id`: parent thread.
 - `sender_id`: authoring user.
+- `message_role`: `user`, `assistant`, or `system` for chatbot timelines.
 - `message_type`: `text`, `file`, or `system`.
 - `body`: bilingual JSON message body for text and system messages.
 - `attachment_path`, `attachment_name`, `attachment_mime_type`, `attachment_size`: file metadata for attachments.
@@ -462,7 +464,7 @@ Stores individual conversation messages and file attachments.
 - Belongs to `users` as sender.
 
 **Business Use in JobNest**  
-The table powers message history, attachment sharing, conversation ordering through `last_message_at`, and new-message notifications to all other participants. Textual message content is stored bilingually and returned in the currently selected API language.
+The table powers message history, attachment sharing, conversation ordering through `last_message_at`, new-message notifications to all other participants, and stored chatbot replies. Textual message content is stored bilingually and returned in the currently selected API language.
 
 ### 3.22 Table: `courses`
 
@@ -972,6 +974,14 @@ The API also defines rate limiters for login, refresh token usage, forgot-passwo
 - Normal API resources return only the resolved locale string for each translated field rather than exposing both stored languages.
 - If translation cannot be generated, the source text is preserved and reused as the fallback value so unrelated business flows continue to work safely.
 
+### 4.17 Chatbot Assistant Flow
+
+JobNest now includes a stored chatbot assistant for authenticated users. The feature reuses the existing conversations/messages stack and adds a `chatbot` conversation type plus a message role so user prompts and assistant replies remain in the same persisted timeline.
+
+The Flutter app calls Laravel only. Laravel stores the user message, sends the recent conversation history to the external AI endpoint, stores the assistant reply, and returns the reply to the client. The service sends only a recent history window instead of the full thread, and the history limit is configurable.
+
+The chatbot conversation is owner-scoped to the authenticated user and is not exposed to unrelated users.
+
 ## 5. Conclusion
 
 JobNest is implemented as a structured Laravel API that combines account onboarding, profile enrichment, recruitment flows, learning content, service-marketplace workflows, messaging, notifications, saved items, and supporting infrastructure in one cohesive backend. Its database design, route structure, policies, and controller logic are aligned around the current production architecture: jobs are company-owned, courses and service requests are user-owned, categories are shared across modules, and notifications and chat are first-class parts of the platform.
@@ -1200,7 +1210,15 @@ Access legend:
   - `[Auth+Participant] GET /api/conversations/{conversation_id}/messages`
   - `[Auth+Participant] POST /api/conversations/{conversation_id}/messages`
 
-### 6.7 Courses, Enrollments, Reviews
+  ### 6.7 Chatbot
+
+  - `[Auth] GET /api/chatbot/conversations`
+  - `[Auth] POST /api/chatbot/conversations`
+  - `[Auth] GET /api/chatbot/conversations/{conversation_id}`
+  - `[Auth] GET /api/chatbot/conversations/{conversation_id}/messages`
+  - `[Auth] POST /api/chatbot/conversations/{conversation_id}/messages`
+
+  ### 6.8 Courses, Enrollments, Reviews
 
 - Courses:
   - `[Public] GET /api/courses`
@@ -1220,7 +1238,7 @@ Access legend:
   - `[Auth+ReviewOwner] PUT /api/course-reviews/{course_review_id}`
   - `[Auth+ReviewOwner] DELETE /api/course-reviews/{course_review_id}`
 
-### 6.8 Service Requests and Proposals
+### 6.9 Service Requests and Proposals
 
 - Service Requests:
   - `[Public] GET /api/service-requests`
@@ -1239,7 +1257,7 @@ Access legend:
   - `[Auth+Participant] GET /api/conversations/{conversation_id}/messages`
   - `[Auth+Participant] POST /api/conversations/{conversation_id}/messages`
 
-### 6.9 Saved Items and Notifications
+### 6.10 Saved Items and Notifications
 
 - Saved Items:
   - `[Auth] GET /api/auth/saved-items`

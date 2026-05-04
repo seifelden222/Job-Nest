@@ -42,6 +42,11 @@
       "type": "string"
     },
     {
+      "key": "chatbot_conversation_id",
+      "value": "",
+      "type": "string"
+    },
+    {
       "key": "document_id",
       "value": "",
       "type": "string"
@@ -1840,6 +1845,126 @@
               }
             ],
             "url": "{{base_url}}/api/conversations/{{conversation_id}}"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Chatbot",
+      "item": [
+        {
+          "name": "List Chatbot Conversations",
+          "description": "Lists stored chatbot conversations for the authenticated user.",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": "{{base_url}}/api/chatbot/conversations"
+          },
+          "response": []
+        },
+        {
+          "name": "Create or Reuse Chatbot Conversation",
+          "description": "Creates a stored chatbot conversation or returns the existing one for the authenticated user.",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": "{{base_url}}/api/chatbot/conversations"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is expected\", function () { pm.expect(pm.response.code).to.be.oneOf([200,201]); });",
+                  "var json = pm.response.json();",
+                  "var value = json.data && json.data.id;",
+                  "if (value) { pm.collectionVariables.set('chatbot_conversation_id', value); pm.collectionVariables.set('conversation_id', value); }"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Show Chatbot Conversation",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": "{{base_url}}/api/chatbot/conversations/{{chatbot_conversation_id}}"
+          },
+          "response": []
+        },
+        {
+          "name": "List Chatbot Messages",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": "{{base_url}}/api/chatbot/conversations/{{chatbot_conversation_id}}/messages"
+          },
+          "response": []
+        },
+        {
+          "name": "Send Chatbot Message",
+          "description": "Stores the user message, sends recent chatbot history to the external AI service, and stores the assistant reply.",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/api/chatbot/conversations/{{chatbot_conversation_id}}/messages",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"body\": \"Help me find a backend job.\",\n  \"source_language\": \"{{api_language}}\"\n}"
+            }
           },
           "response": []
         }

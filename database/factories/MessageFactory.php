@@ -17,6 +17,7 @@ class MessageFactory extends Factory
         return [
             'conversation_id' => Conversation::factory(),
             'sender_id' => User::factory(),
+            'message_role' => Message::ROLE_USER,
             'message_type' => 'text',
             'body' => ['en' => fake()->sentence(), 'ar' => fake()->sentence()],
             'attachment_path' => null,
@@ -26,5 +27,13 @@ class MessageFactory extends Factory
             'is_edited' => false,
             'edited_at' => null,
         ];
+    }
+
+    public function assistant(): static
+    {
+        return $this->state(fn (): array => [
+            'sender_id' => null,
+            'message_role' => Message::ROLE_ASSISTANT,
+        ]);
     }
 }
