@@ -337,6 +337,7 @@ Stores company-created job opportunities.
 
 - `company_id`: owner company user.
 - `category_id`: shared category reference for job classification.
+- `industry`: optional string describing the industry vertical the job belongs to (for example `FinTech`, `Healthcare`, `Technology`).
 - `title`, `description`: bilingual JSON core job content.
 - `location`, `employment_type`, `experience_level`: hiring context.
 - `salary_min`, `salary_max`, `currency`: salary range fields.
@@ -406,7 +407,6 @@ Stores chat threads used by direct messaging, job applications, and service prop
 
 **Key Columns**
 
-- `type`: `direct`, `application`, or `service`.
 - `type`: `direct`, `application`, `service`, or `chatbot`.
 - `application_id`, `job_id`: links for application-context conversations.
 - `service_request_id`, `service_proposal_id`: links for service-context conversations.
@@ -877,7 +877,7 @@ The reference-data names for skills, languages, interests, and categories are bi
 
 ### 4.6 Job Management and Discovery
 
-Jobs are company-owned records. Companies can create, update, and delete their own jobs, while public clients can browse active jobs and view active job details. The listing endpoint supports keyword search and filtering by location, employment type, category, and skill. Job records also maintain publication status and an `applications_count` summary field.
+Jobs are company-owned records. Companies can create, update, and delete their own jobs, while public clients can browse active jobs and view active job details. The listing endpoint supports keyword search and filtering by location, employment type, category, and skill. Job records include an optional `industry` field for vertical classification and maintain a publication status plus an `applications_count` summary field.
 
 When a job is created as active, the API resolves recipients by matching the job’s required skills against person user skills and sends a database notification announcing the new opportunity.
 Translatable job fields accept a `source_language` on create and update, are stored as bilingual JSON in the same table, and are returned as a single localized string in list and detail responses.
@@ -1008,119 +1008,7 @@ External AI failures are normalized before reaching Flutter. Missing configurati
 
 JobNest is implemented as a structured Laravel API that combines account onboarding, profile enrichment, recruitment flows, learning content, service-marketplace workflows, messaging, notifications, saved items, and supporting infrastructure in one cohesive backend. Its database design, route structure, policies, and controller logic are aligned around the current production architecture: jobs are company-owned, courses and service requests are user-owned, categories are shared across modules, and notifications and chat are first-class parts of the platform.
 
-The documentation is broadly accurate and covers the core JobNest modules well. I verified the current repository against the Markdown file, and the major implemented areas are represented: auth/onboarding, profiles, documents, skills/languages/interests, jobs, applications, conversations/messages, categories, courses, service requests/proposals, notifications, saved items, and the supporting session/token infrastructure.
-
-Coverage review
-Fully covered
-
-Authentication and onboarding flows
-Profile management for person and company accounts
-User documents
-Skills, languages, and interests
-Jobs and job skills
-Applications
-Conversations, conversation participants, and messages
-Categories
-Courses, course skills, course enrollments, and course reviews
-Service requests, service request skills, and service proposals
-Notifications
-Saved items
-Session, token, verification, OTP, cache, queue, and failed-job infrastructure
-Partially covered
-
-The feature section describes the main APIs well, but it stays higher-level than the database section. For handoff-grade completeness, the following areas could be expanded a bit more:
-session management, including the active session listing and revoke-by-session flow
-notification center actions, including unread count and mark-all-read behavior
-conversation creation variants, especially direct vs application vs service conversation creation
-course enrollment behavior for free vs paid courses
-service proposal ownership rules and the accepted-proposal transition to in_progress
-Missing from documentation
-
-No major implemented module appears to be missing from the file.
-Database review
-Tables correctly documented
-
-users
-person_profiles
-company_profiles
-admins
-otp_codes
-personal_access_tokens
-refresh_tokens
-documents
-skills
-user_skills
-languages
-user_languages
-interests
-user_interests
-categories
-jobs
-job_skills
-applications
-conversations
-conversation_participants
-messages
-courses
-course_skills
-course_enrollments
-course_reviews
-service_requests
-service_request_skills
-service_proposals
-notifications
-saved_items
-sessions
-password_reset_tokens
-cache
-cache_locks
-queue_jobs
-job_batches
-failed_jobs
-migrations
-Tables missing
-
-None.
-Tables inaccurately described
-
-No material table-level inaccuracies stood out from the current codebase.
-Feature review
-Features correctly documented
-
-Email/password login
-Google login
-Token refresh and session revocation
-Email verification
-OTP-based password reset
-Person onboarding
-Company onboarding
-Profile retrieval and update
-User documents
-User skills/languages/interests
-Admin-managed reference data
-Job publishing and browsing
-Job filtering and skill matching
-Job applications and application review
-Direct, application, and service conversations
-Messaging with attachments
-Course publishing, browsing, enrollment, and review
-Service request publishing, browsing, proposal submission, and proposal review
-Notifications center
-Saved items
-Shared categories
-Authorization policies and rate limiting
-Features missing
-
-None.
-Features needing more detail
-
-The documentation would benefit from slightly more specificity on:
-the exact session/token lifecycle exposed by /auth/sessions, /auth/logout, and /auth/logout-all
-the difference between public listing endpoints and owner-only management endpoints for jobs, courses, and service requests
-the exact notification types and what user action triggers each one
-the direct/application/service conversation creation rules
-Final verdict
-Documentation is complete
+The documentation covers all core JobNest modules: authentication and onboarding, profiles, documents, skills, languages and interests, jobs, applications, conversations and messages, categories, courses, service requests and proposals, notifications, saved items, AI integration, the chatbot assistant, and the supporting session, token, and queue infrastructure.
 
 ## 6. API Endpoints Reference
 
@@ -1358,6 +1246,7 @@ Accept-Language: en
 {
  "title": "Backend Engineer",
  "description": "Build and maintain APIs.",
+ "industry": "Technology",
  "location": "Cairo",
  "employment_type": "full_time",
  "salary_min": 8000,

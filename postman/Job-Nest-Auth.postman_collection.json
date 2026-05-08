@@ -1525,7 +1525,7 @@
                         "url": "{{base_url}}/api/jobs",
                         "body": {
                             "mode": "raw",
-                            "raw": "{\n  \"title\": \"Backend Engineer\",\n  \"description\": \"Build and maintain APIs.\",\n  \"location\": \"Cairo\",\n  \"employment_type\": \"full_time\",\n  \"salary_min\": 8000,\n  \"salary_max\": 12000,\n  \"currency\": \"EGP\",\n  \"experience_level\": \"mid\",\n  \"requirements\": \"Laravel and MySQL.\",\n  \"responsibilities\": \"Own the API lifecycle.\",\n  \"deadline\": \"2026-05-30\",\n  \"status\": \"active\",\n  \"skill_ids\": [\n    \"{{skill_id}}\"\n  ]\n}"
+                            "raw": "{\n  \"title\": \"Backend Engineer\",\n  \"description\": \"Build and maintain APIs.\",\n  \"industry\": \"Technology\",\n  \"location\": \"Cairo\",\n  \"employment_type\": \"full_time\",\n  \"salary_min\": 8000,\n  \"salary_max\": 12000,\n  \"currency\": \"EGP\",\n  \"experience_level\": \"mid\",\n  \"requirements\": \"Laravel and MySQL.\",\n  \"responsibilities\": \"Own the API lifecycle.\",\n  \"deadline\": \"2026-05-30\",\n  \"status\": \"active\",\n  \"skill_ids\": [\n    \"{{skill_id}}\"\n  ],\n  \"source_language\": \"en\"\n}"
                         }
                     },
                     "response": [],
@@ -1579,7 +1579,7 @@
                         "url": "{{base_url}}/api/jobs/{{job_id}}",
                         "body": {
                             "mode": "raw",
-                            "raw": "{\n  \"title\": \"Senior Backend Engineer\",\n  \"status\": \"active\",\n  \"skill_ids\": [\n    \"{{skill_id}}\"\n  ]\n}"
+                            "raw": "{\n  \"title\": \"Senior Backend Engineer\",\n  \"industry\": \"Technology\",\n  \"status\": \"active\",\n  \"skill_ids\": [\n    \"{{skill_id}}\"\n  ],\n  \"source_language\": \"en\"\n}"
                         }
                     },
                     "response": []
