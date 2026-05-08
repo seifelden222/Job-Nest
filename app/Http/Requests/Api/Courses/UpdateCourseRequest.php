@@ -34,6 +34,7 @@ class UpdateCourseRequest extends FormRequest
             ],
             'title' => ['sometimes', 'string', 'max:255'],
             'slug' => ['sometimes', 'nullable', 'string', 'max:255', Rule::unique('courses', 'slug')->ignore($course?->id)],
+            'url' => ['sometimes', 'nullable', 'url', 'max:255'],
             'thumbnail' => ['sometimes', 'nullable', 'file', 'image', 'max:5120'],
             'short_description' => ['sometimes', 'nullable', 'string'],
             'description' => ['sometimes', 'nullable', 'string'],

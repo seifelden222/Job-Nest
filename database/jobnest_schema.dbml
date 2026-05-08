@@ -1,0 +1,542 @@
+// Paste into dbdiagram.io
+
+Table admins {
+  id bigint [pk, increment]
+  name varchar(255)
+  email varchar(255) [unique]
+  phone varchar(255) [null, unique]
+  password varchar(255)
+  profile_photo varchar(255) [null]
+  status enum('active','inactive') [default: 'active']
+  last_login_at timestamp [null]
+  remember_token varchar(100) [null]
+  created_at timestamp [null]
+  updated_at timestamp [null]
+}
+
+Table applications {
+  id bigint [pk, increment]
+  job_id bigint [ref: > jobs.id]
+  user_id bigint [ref: > users.id]
+  cv_document_id bigint [null, ref: - documents.id]
+  cover_letter json [null]
+  status enum('submitted','under_review','shortlisted','interview_scheduled','offered','accepted','rejected','withdrawn') [default: 'submitted']
+  match_percentage tinyint [null]
+  applied_at timestamp [null]
+  reviewed_at timestamp [null]
+  withdrawn_at timestamp [null]
+  notes text [null]
+  created_at timestamp [null]
+  updated_at timestamp [null]
+
+  indexes {
+    (job_id, status)
+    (job_id, user_id) [unique]
+    (user_id, status)
+  }
+}
+
+Table cache {
+  key varchar(255) [pk]
+  value mediumtext
+  expiration bigint
+}
+
+Table cache_locks {
+  key varchar(255) [pk]
+  owner varchar(255)
+  expiration bigint
+}
+
+Table categories {
+  id bigint [pk, increment]
+  name json
+  slug varchar(255)
+  type enum('job','course','service')
+  description json [null]
+  icon varchar(255) [null]
+  is_active boolean [default: 1]
+  created_at timestamp [null]
+  updated_at timestamp [null]
+
+  indexes {
+    (slug, type) [unique]
+    (type, is_active)
+  }
+}
+
+Table company_profiles {
+  id bigint [pk, increment]
+  user_id bigint [unique, ref: > users.id]
+  company_name varchar(255)
+  website varchar(255) [null]
+  company_size varchar(255) [null]
+  industry varchar(255) [null]
+  location varchar(255) [null]
+  about text [null]
+  logo varchar(255) [null]
+  onboarding_step tinyint [default: 1]
+  is_profile_completed boolean [default: 0]
+  created_at timestamp [null]
+  updated_at timestamp [null]
+}
+
+Table conversation_participants {
+  id bigint [pk, increment]
+  conversation_id bigint [ref: > conversations.id]
+  user_id bigint [ref: > users.id]
+  joined_at timestamp [null]
+  last_read_at timestamp [null]
+  is_muted boolean [default: 0]
+  created_at timestamp [null]
+  updated_at timestamp [null]
+
+  indexes {
+    (conversation_id, user_id) [unique]
+  }
+}
+
+Table conversations {
+  id bigint [pk, increment]
+  type enum('direct','application','service','chatbot') [default: 'direct']
+  application_id bigint [null, ref: - applications.id]
+  job_id bigint [null, ref: - jobs.id]
+  service_request_id bigint [null, ref: - service_requests.id]
+  service_proposal_id bigint [null, ref: - service_proposals.id]
+  created_by bigint [null, ref: - users.id]
+  last_message_id bigint [null, ref: - messages.id]
+  last_message_at timestamp [null]
+  created_at timestamp [null]
+  updated_at timestamp [null]
+
+  indexes {
+    (type, last_message_at)
+  }
+}
+
+Table course_enrollments {
+  id bigint [pk, increment]
+  course_id bigint [ref: > courses.id]
+  user_id bigint [ref: > users.id]
+  status enum('pending','enrolled','completed','cancelled') [default: 'pending']
+  payment_status enum('unpaid','paid','failed','refunded') [default: 'unpaid']
+  payment_method enum('card','cash','free') [null]
+  amount_paid decimal(10,2) [default: '0.00']
+  enrolled_at timestamp [null]
+  completed_at timestamp [null]
+  created_at timestamp [null]
+  updated_at timestamp [null]
+
+  indexes {
+    (course_id, user_id) [unique]
+  }
+}
+
+Table course_reviews {
+  id bigint [pk, increment]
+  course_id bigint [ref: > courses.id]
+  user_id bigint [ref: > users.id]
+  rating tinyint
+  comment json [null]
+  created_at timestamp [null]
+  updated_at timestamp [null]
+
+  indexes {
+    (course_id, user_id) [unique]
+  }
+}
+
+Table course_skills {
+  id bigint [pk, increment]
+  course_id bigint [ref: > courses.id]
+  skill_id bigint [ref: > skills.id]
+  created_at timestamp [null]
+  updated_at timestamp [null]
+
+  indexes {
+    (course_id, skill_id) [unique]
+  }
+}
+
+Table courses {
+  id bigint [pk, increment]
+  user_id bigint [ref: > users.id]
+  category_id bigint [null, ref: - categories.id]
+  title json
+  slug varchar(255) [unique]
+  thumbnail varchar(255) [null]
+  short_description json [null]
+  description json [null]
+  course_overview json [null]
+  what_you_learn json [null]
+  level enum('beginner','intermediate','advanced') [default: 'beginner']
+  delivery_mode enum('online','offline','hybrid') [default: 'online']
+  language varchar(20) [default: 'en']
+  price decimal(10,2) [default: '0.00']
+  currency varchar(10) [default: 'EGP']
+  duration_hours int [null]
+  seats_count int [null]
+  start_date date [null]
+  end_date date [null]
+  status enum('draft','published','closed','archived') [default: 'draft']
+  is_active boolean [default: 1]
+  created_at timestamp [null]
+  updated_at timestamp [null]
+
+  indexes {
+    (status, is_active)
+  }
+}
+
+Table documents {
+  id bigint [pk, increment]
+  user_id bigint [ref: > users.id]
+  type enum('cv','certificate')
+  title varchar(255) [null]
+  file_path varchar(255)
+  file_name varchar(255)
+  mime_type varchar(255) [null]
+  file_size bigint [null]
+  is_primary boolean [default: 0]
+  created_at timestamp [null]
+  updated_at timestamp [null]
+}
+
+Table failed_jobs {
+  id bigint [pk, increment]
+  uuid varchar(255) [unique]
+  connection text
+  queue text
+  payload longtext
+  exception longtext
+  failed_at timestamp [default: `CURRENT_TIMESTAMP`]
+}
+
+Table interests {
+  id bigint [pk, increment]
+  name json
+  created_at timestamp [null]
+  updated_at timestamp [null]
+}
+
+Table job_batches {
+  id varchar(255) [pk]
+  name varchar(255)
+  total_jobs int
+  pending_jobs int
+  failed_jobs int
+  failed_job_ids longtext
+  options mediumtext [null]
+  cancelled_at int [null]
+  created_at int
+  finished_at int [null]
+}
+
+Table job_skills {
+  id bigint [pk, increment]
+  job_id bigint [ref: > jobs.id]
+  skill_id bigint [ref: > skills.id]
+  created_at timestamp [null]
+  updated_at timestamp [null]
+
+  indexes {
+    (job_id, skill_id) [unique]
+  }
+}
+
+Table jobs {
+  id bigint [pk, increment]
+  company_id bigint [ref: > users.id]
+  category_id bigint [null, ref: - categories.id]
+  title json
+  description json
+  location varchar(255) [null]
+  employment_type varchar(255) [null]
+  salary_min decimal(12,2) [null]
+  salary_max decimal(12,2) [null]
+  currency varchar(10) [null]
+  experience_level varchar(255) [null]
+  requirements json [null]
+  responsibilities json [null]
+  deadline date [null]
+  status enum('draft','active','closed','archived') [default: 'draft']
+  is_active boolean [default: 1]
+  applications_count int [default: 0]
+  created_at timestamp [null]
+  updated_at timestamp [null]
+
+  indexes {
+    (status, is_active)
+  }
+}
+
+Table languages {
+  id bigint [pk, increment]
+  name json
+  created_at timestamp [null]
+  updated_at timestamp [null]
+}
+
+Table messages {
+  id bigint [pk, increment]
+  conversation_id bigint [ref: > conversations.id]
+  sender_id bigint [null, ref: > users.id]
+  message_role enum('user','assistant','system') [default: 'user']
+  message_type enum('text','file','system') [default: 'text']
+  body json [null]
+  attachment_path varchar(255) [null]
+  attachment_name varchar(255) [null]
+  attachment_mime_type varchar(255) [null]
+  attachment_size bigint [null]
+  is_edited boolean [default: 0]
+  edited_at timestamp [null]
+  created_at timestamp [null]
+  updated_at timestamp [null]
+
+  indexes {
+    (conversation_id, created_at)
+  }
+}
+
+Table migrations {
+  id int [pk, increment]
+  migration varchar(255)
+  batch int
+}
+
+Table notifications {
+  id char(36) [pk]
+  type varchar(255)
+  notifiable_type varchar(255)
+  notifiable_id bigint
+  data text
+  read_at timestamp [null]
+  created_at timestamp [null]
+  updated_at timestamp [null]
+
+  indexes {
+    (notifiable_type, notifiable_id)
+  }
+}
+
+Table otp_codes {
+  id bigint [pk, increment]
+  user_type enum('user','super_admin')
+  user_id bigint [null]
+  email varchar(255) [null]
+  phone varchar(255) [null]
+  code varchar(10)
+  type enum('verify_email','reset_password')
+  expires_at timestamp
+  verified_at timestamp [null]
+  created_at timestamp [null]
+  updated_at timestamp [null]
+
+  indexes {
+    (email, type)
+    (phone, type)
+    (user_type, user_id)
+  }
+}
+
+Table password_reset_tokens {
+  email varchar(255) [pk]
+  token varchar(255)
+  created_at timestamp [null]
+}
+
+Table person_profiles {
+  id bigint [pk, increment]
+  user_id bigint [unique, ref: > users.id]
+  university varchar(255) [null]
+  major varchar(255) [null]
+  employment_status varchar(255) [null]
+  employment_type varchar(255) [null]
+  current_job_title varchar(255) [null]
+  company_name varchar(255) [null]
+  linkedin_url varchar(255) [null]
+  portfolio_url varchar(255) [null]
+  preferred_work_location enum('onsite','remote','hybrid') [null]
+  expected_salary_min decimal(10,2) [null]
+  expected_salary_max decimal(10,2) [null]
+  about text [null]
+  onboarding_step tinyint [default: 1]
+  is_profile_completed boolean [default: 0]
+  created_at timestamp [null]
+  updated_at timestamp [null]
+}
+
+Table personal_access_tokens {
+  id bigint [pk, increment]
+  tokenable_type varchar(255)
+  tokenable_id bigint
+  name text
+  token varchar(64) [unique]
+  abilities text [null]
+  last_used_at timestamp [null]
+  expires_at timestamp [null]
+  created_at timestamp [null]
+  updated_at timestamp [null]
+
+  indexes {
+    (tokenable_type, tokenable_id)
+  }
+}
+
+Table queue_jobs {
+  id bigint [pk, increment]
+  queue varchar(255)
+  payload longtext
+  attempts tinyint
+  reserved_at int [null]
+  available_at int
+  created_at int
+}
+
+Table refresh_tokens {
+  id bigint [pk, increment]
+  user_id bigint [ref: > users.id]
+  access_token_id bigint [null, ref: - personal_access_tokens.id]
+  family_id char(36)
+  replaced_by_token_id bigint [null, ref: - refresh_tokens.id]
+  name varchar(120) [null]
+  token_hash varchar(64) [unique]
+  ip_address varchar(45) [null]
+  user_agent text [null]
+  last_used_at timestamp [null]
+  revoked_at timestamp [null]
+  expires_at timestamp
+  created_at timestamp [null]
+  updated_at timestamp [null]
+}
+
+Table saved_items {
+  id bigint [pk, increment]
+  user_id bigint [ref: > users.id]
+  type enum('job','course','service_request')
+  target_id bigint
+  created_at timestamp [null]
+  updated_at timestamp [null]
+
+  indexes {
+    (type, target_id)
+    (user_id, type, target_id) [unique]
+  }
+}
+
+Table service_proposals {
+  id bigint [pk, increment]
+  service_request_id bigint [ref: > service_requests.id]
+  user_id bigint [ref: > users.id]
+  message json [null]
+  proposed_budget decimal(10,2) [null]
+  delivery_days int [null]
+  status enum('submitted','accepted','rejected','withdrawn') [default: 'submitted']
+  created_at timestamp [null]
+  updated_at timestamp [null]
+
+  indexes {
+    (service_request_id, user_id) [unique]
+  }
+}
+
+Table service_request_skills {
+  id bigint [pk, increment]
+  service_request_id bigint [ref: > service_requests.id]
+  skill_id bigint [ref: > skills.id]
+  created_at timestamp [null]
+  updated_at timestamp [null]
+
+  indexes {
+    (service_request_id, skill_id) [unique]
+  }
+}
+
+Table service_requests {
+  id bigint [pk, increment]
+  user_id bigint [ref: > users.id]
+  category_id bigint [null, ref: - categories.id]
+  title json
+  description json
+  budget_min decimal(10,2) [null]
+  budget_max decimal(10,2) [null]
+  currency varchar(10) [null]
+  location varchar(255) [null]
+  delivery_mode enum('online','offline','hybrid') [null]
+  deadline date [null]
+  status enum('open','in_progress','closed','cancelled') [default: 'open']
+  created_at timestamp [null]
+  updated_at timestamp [null]
+
+  indexes {
+    (status, category_id)
+  }
+}
+
+Table sessions {
+  id varchar(255) [pk]
+  user_id bigint [null]
+  ip_address varchar(45) [null]
+  user_agent text [null]
+  payload longtext
+  last_activity int
+}
+
+Table skills {
+  id bigint [pk, increment]
+  name json
+  created_at timestamp [null]
+  updated_at timestamp [null]
+}
+
+Table user_interests {
+  id bigint [pk, increment]
+  user_id bigint [ref: > users.id]
+  interest_id bigint [ref: > interests.id]
+  created_at timestamp [null]
+  updated_at timestamp [null]
+
+  indexes {
+    (user_id, interest_id) [unique]
+  }
+}
+
+Table user_languages {
+  id bigint [pk, increment]
+  user_id bigint [ref: > users.id]
+  language_id bigint [ref: > languages.id]
+  created_at timestamp [null]
+  updated_at timestamp [null]
+
+  indexes {
+    (user_id, language_id) [unique]
+  }
+}
+
+Table user_skills {
+  id bigint [pk, increment]
+  user_id bigint [ref: > users.id]
+  skill_id bigint [ref: > skills.id]
+  created_at timestamp [null]
+  updated_at timestamp [null]
+
+  indexes {
+    (user_id, skill_id) [unique]
+  }
+}
+
+Table users {
+  id bigint [pk, increment]
+  name varchar(255)
+  email varchar(255) [unique]
+  google_id varchar(255) [null, unique]
+  phone varchar(30) [null, unique]
+  account_type enum('person','company') [default: 'person']
+  profile_photo varchar(255) [null]
+  status enum('active','inactive','suspended') [default: 'active']
+  email_verified_at timestamp [null]
+  password varchar(255)
+  remember_token varchar(100) [null]
+  created_at timestamp [null]
+  updated_at timestamp [null]
+}

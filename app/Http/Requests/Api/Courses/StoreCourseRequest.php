@@ -26,6 +26,7 @@ class StoreCourseRequest extends FormRequest
             ],
             'title' => ['required', 'string', 'max:255'],
             'slug' => ['nullable', 'string', 'max:255', 'unique:courses,slug'],
+            'url' => ['nullable', 'url', 'max:255'],
             'thumbnail' => ['nullable', 'file', 'image', 'max:5120'],
             'short_description' => ['nullable', 'string'],
             'description' => ['nullable', 'string'],

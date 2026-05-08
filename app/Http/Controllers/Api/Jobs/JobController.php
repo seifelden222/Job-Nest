@@ -71,7 +71,7 @@ class JobController extends Controller
         $payload['company_id'] = $request->user()->id;
         $payload['status'] = $payload['status'] ?? 'draft';
         $payload['is_active'] = $payload['is_active'] ?? ($payload['status'] === 'active');
-
+        $payload['industry'] = $payload['industry'] ?? '';
         $job = Job::create($payload);
 
         if (! empty($skillIds)) {

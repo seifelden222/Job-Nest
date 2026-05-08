@@ -12,9 +12,17 @@ use App\Models\CourseReview;
 use App\Models\Interest;
 use App\Models\Job;
 use App\Models\Language;
+use App\Models\PersonProfile;
 use App\Models\ServiceProposal;
 use App\Models\ServiceRequest;
 use App\Models\Skill;
+use App\Models\User;
+use App\Models\UserSkill;
+use App\Observers\CourseObserver;
+use App\Observers\JobObserver;
+use App\Observers\PersonProfileObserver;
+use App\Observers\UserObserver;
+use App\Observers\UserSkillObserver;
 use App\Policies\ApplicationPolicy;
 use App\Policies\CategoryPolicy;
 use App\Policies\ConversationPolicy;
@@ -55,6 +63,12 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        User::observe(UserObserver::class);
+        Job::observe(JobObserver::class);
+        Course::observe(CourseObserver::class);
+        PersonProfile::observe(PersonProfileObserver::class);
+        UserSkill::observe(UserSkillObserver::class);
+
         Gate::policy(Job::class, JobPolicy::class);
         Gate::policy(Application::class, ApplicationPolicy::class);
         Gate::policy(Conversation::class, ConversationPolicy::class);

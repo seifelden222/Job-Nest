@@ -974,13 +974,35 @@ The API also defines rate limiters for login, refresh token usage, forgot-passwo
 - Normal API resources return only the resolved locale string for each translated field rather than exposing both stored languages.
 - If translation cannot be generated, the source text is preserved and reused as the fallback value so unrelated business flows continue to work safely.
 
-### 4.17 Chatbot Assistant Flow
+### 4.17 External AI Integration
 
-JobNest now includes a stored chatbot assistant for authenticated users. The feature reuses the existing conversations/messages stack and adds a `chatbot` conversation type plus a message role so user prompts and assistant replies remain in the same persisted timeline.
+JobNest now includes a Laravel-side integration layer for the external AI service published at `https://jopnest-production.up.railway.app/docs#/`. Flutter calls Laravel only, while Laravel authenticates the current user, maps internal JobNest models to the external AI contract, calls the external AI service internally, normalizes the upstream response, and returns a clean API payload.
 
-The Flutter app calls Laravel only. Laravel stores the user message, sends the recent conversation history to the external AI endpoint, stores the assistant reply, and returns the reply to the client. The service sends only a recent history window instead of the full thread, and the history limit is configurable.
+The current Laravel integration supports the following external endpoints:
 
-The chatbot conversation is owner-scoped to the authenticated user and is not exposed to unrelated users.
+- `GET /api/health`
+- `POST /api/recommend`
+- `POST /api/recommend/realtime`
+- `POST /api/chat`
+- `GET /api/jobs`
+- `POST /api/jobs/new`
+- `GET /api/jobs/{job_id}/score`
+- `GET /api/user/search`
+- `GET /api/user/{user_id}`
+- `POST /api/users/new`
+- `GET /api/courses`
+- `POST /api/courses/recommend`
+- `POST /api/courses/new`
+
+Laravel exposes authenticated app-facing endpoints under `/api/ai/*` for health, job recommendations, realtime recommendations, course recommendations, AI user search/detail, AI jobs listing, AI job score checks, and AI course listing. The chatbot flow continues to use the existing `/api/chatbot/*` endpoints while Laravel internally calls external `POST /api/chat`.
+
+Observer-driven sync is used for the AI indexing endpoints. `UserObserver`, `PersonProfileObserver`, and `UserSkillObserver` cooperate to sync person users to `POST /api/users/new` only when the required Swagger fields are available. `JobObserver` and `CourseObserver` sync `POST /api/jobs/new` and `POST /api/courses/new` after the request lifecycle ends so the related skills have already been attached.
+
+To safely use external ID-based endpoints such as `GET /api/user/{user_id}` and `GET /api/jobs/{job_id}/score`, JobNest stores the AI-side identifiers returned by sync responses in three nullable columns: `users.ai_user_id`, `jobs.ai_job_id`, and `courses.ai_course_id`.
+
+The same integration layer also powers the stored chatbot assistant for authenticated users. The feature reuses the existing conversations/messages stack and adds a `chatbot` conversation type plus a message role so user prompts and assistant replies remain in the same persisted timeline. Laravel stores the user message, sends recent conversation context to external `POST /api/chat`, stores the assistant reply, and returns normalized reply metadata including `intent`, `type`, `results`, `confidence`, and the final reply text.
+
+External AI failures are normalized before reaching Flutter. Missing configuration returns a `503` response, upstream connection problems return `504`, and invalid or failed upstream responses return `502`, without exposing raw upstream internals. Observer sync failures do not break the main create/update flow; Laravel logs the failure and leaves the record unsynced until a later eligible observer event can retry.
 
 ## 5. Conclusion
 
@@ -1210,15 +1232,27 @@ Access legend:
   - `[Auth+Participant] GET /api/conversations/{conversation_id}/messages`
   - `[Auth+Participant] POST /api/conversations/{conversation_id}/messages`
 
-  ### 6.7 Chatbot
+### 6.7 AI Endpoints
 
-  - `[Auth] GET /api/chatbot/conversations`
-  - `[Auth] POST /api/chatbot/conversations`
-  - `[Auth] GET /api/chatbot/conversations/{conversation_id}`
-  - `[Auth] GET /api/chatbot/conversations/{conversation_id}/messages`
-  - `[Auth] POST /api/chatbot/conversations/{conversation_id}/messages`
+- `[Auth] GET /api/ai/health`
+- `[Auth] POST /api/ai/recommendations`
+- `[Auth] POST /api/ai/recommendations/realtime`
+- `[Auth] POST /api/ai/courses/recommend`
+- `[Auth] GET /api/ai/users/search`
+- `[Auth] GET /api/ai/users/{user_id}`
+- `[Auth] GET /api/ai/jobs`
+- `[Auth] GET /api/ai/jobs/{job_id}/score`
+- `[Auth] GET /api/ai/courses`
 
-  ### 6.8 Courses, Enrollments, Reviews
+### 6.8 Chatbot
+
+- `[Auth] GET /api/chatbot/conversations`
+- `[Auth] POST /api/chatbot/conversations`
+- `[Auth] GET /api/chatbot/conversations/{conversation_id}`
+- `[Auth] GET /api/chatbot/conversations/{conversation_id}/messages`
+- `[Auth] POST /api/chatbot/conversations/{conversation_id}/messages`
+
+### 6.9 Courses, Enrollments, Reviews
 
 - Courses:
   - `[Public] GET /api/courses`
@@ -1238,7 +1272,7 @@ Access legend:
   - `[Auth+ReviewOwner] PUT /api/course-reviews/{course_review_id}`
   - `[Auth+ReviewOwner] DELETE /api/course-reviews/{course_review_id}`
 
-### 6.9 Service Requests and Proposals
+### 6.10 Service Requests and Proposals
 
 - Service Requests:
   - `[Public] GET /api/service-requests`
@@ -1257,7 +1291,7 @@ Access legend:
   - `[Auth+Participant] GET /api/conversations/{conversation_id}/messages`
   - `[Auth+Participant] POST /api/conversations/{conversation_id}/messages`
 
-### 6.10 Saved Items and Notifications
+### 6.11 Saved Items and Notifications
 
 - Saved Items:
   - `[Auth] GET /api/auth/saved-items`

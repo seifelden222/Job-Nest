@@ -24,6 +24,7 @@ class StoreJobRequest extends FormRequest
                 'integer',
                 Rule::exists('categories', 'id')->where(fn ($query) => $query->where('type', 'job')),
             ],
+            'industry' => ['nullable', 'string', 'max:255'],
             'title' => ['required', 'string', 'max:255'],
             'description' => ['required', 'string'],
             'location' => ['nullable', 'string', 'max:255'],

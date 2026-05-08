@@ -15,6 +15,10 @@ class Job extends Model
     use HasFactory;
     use HasTranslatableAttributes;
 
+    protected $hidden = [
+        'ai_job_id',
+    ];
+
     protected array $translatable = [
         'title',
         'description',
@@ -25,6 +29,7 @@ class Job extends Model
     protected $fillable = [
         'company_id',
         'category_id',
+        'industry',
         'title',
         'description',
         'location',
@@ -48,6 +53,7 @@ class Job extends Model
             'salary_max' => 'decimal:2',
             'deadline' => 'date',
             'is_active' => 'boolean',
+            'ai_job_id' => 'integer',
             'title' => 'json:unicode',
             'description' => 'json:unicode',
             'requirements' => 'json:unicode',
