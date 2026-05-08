@@ -31,6 +31,7 @@ class User extends Authenticatable implements MustVerifyEmailContract
     protected $hidden = [
         'password',
         'remember_token',
+        'ai_user_id',
     ];
 
     protected function casts(): array
@@ -38,6 +39,7 @@ class User extends Authenticatable implements MustVerifyEmailContract
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'ai_user_id' => 'integer',
         ];
     }
 

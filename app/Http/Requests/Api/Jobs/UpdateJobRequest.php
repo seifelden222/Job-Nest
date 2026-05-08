@@ -29,6 +29,7 @@ class UpdateJobRequest extends FormRequest
                 'integer',
                 Rule::exists('categories', 'id')->where(fn ($query) => $query->where('type', 'job')),
             ],
+            'industry' => ['sometimes', 'nullable', 'string', 'max:255'],
             'title' => ['sometimes', 'string', 'max:255'],
             'description' => ['sometimes', 'string'],
             'location' => ['sometimes', 'nullable', 'string', 'max:255'],

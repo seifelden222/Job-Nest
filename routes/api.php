@@ -1,5 +1,8 @@
 <?php
 
+use App\Http\Controllers\Api\Ai\GatewayController;
+use App\Http\Controllers\Api\Ai\HealthController;
+use App\Http\Controllers\Api\Ai\RecommendationController;
 use App\Http\Controllers\Api\Applications\ApplicationController;
 use App\Http\Controllers\Api\Auth\AuthController;
 use App\Http\Controllers\Api\Categories\CategoryController;
@@ -53,6 +56,17 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('conversations/{conversation}', [ConversationController::class, 'show'])->name('conversations.show');
     Route::get('conversations/{conversation}/messages', [MessageController::class, 'index'])->name('conversations.messages.index');
     Route::post('conversations/{conversation}/messages', [MessageController::class, 'store'])->name('conversations.messages.store');
+    Route::prefix('ai')->name('ai.')->group(function () {
+        Route::get('health', [HealthController::class, 'show'])->name('health.show');
+        Route::post('recommendations', [RecommendationController::class, 'recommend'])->name('recommendations.store');
+        Route::post('recommendations/realtime', [RecommendationController::class, 'realtime'])->name('recommendations.realtime');
+        Route::post('courses/recommend', [RecommendationController::class, 'courses'])->name('courses.recommend');
+        Route::get('users/search', [GatewayController::class, 'searchUsers'])->name('users.search');
+        Route::get('users/{user}', [GatewayController::class, 'showUser'])->name('users.show');
+        Route::get('jobs', [GatewayController::class, 'jobs'])->name('jobs.index');
+        Route::get('jobs/{job}/score', [GatewayController::class, 'jobScore'])->name('jobs.score');
+        Route::get('courses', [GatewayController::class, 'courses'])->name('courses.index');
+    });
 
     Route::prefix('chatbot')->name('chatbot.')->group(function () {
         Route::get('conversations', [ChatbotConversationController::class, 'index'])->name('conversations.index');

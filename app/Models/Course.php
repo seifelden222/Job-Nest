@@ -15,6 +15,10 @@ class Course extends Model
     use HasFactory;
     use HasTranslatableAttributes;
 
+    protected $hidden = [
+        'ai_course_id',
+    ];
+
     protected array $translatable = [
         'title',
         'short_description',
@@ -28,6 +32,7 @@ class Course extends Model
         'category_id',
         'title',
         'slug',
+        'url',
         'thumbnail',
         'short_description',
         'description',
@@ -53,6 +58,7 @@ class Course extends Model
             'start_date' => 'date',
             'end_date' => 'date',
             'is_active' => 'boolean',
+            'ai_course_id' => 'integer',
             'title' => 'json:unicode',
             'short_description' => 'json:unicode',
             'description' => 'json:unicode',

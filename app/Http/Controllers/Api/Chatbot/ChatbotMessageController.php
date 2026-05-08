@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\Chatbot;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Chatbot\StoreChatbotMessageRequest;
+use App\Http\Resources\Ai\ChatbotReplyResource;
 use App\Models\Conversation;
 use App\Services\Chatbot\ChatbotService;
 use Illuminate\Http\JsonResponse;
@@ -41,6 +42,7 @@ class ChatbotMessageController extends Controller
             $request->user(),
             (string) $request->validated('body'),
             $request->validated('source_language'),
+            (int) ($request->validated('top_n') ?? 5),
         );
 
         return response()->json([
@@ -53,7 +55,7 @@ class ChatbotMessageController extends Controller
                 ]),
                 'user_message' => $result['user_message']->load('sender:id,name,account_type'),
                 'assistant_message' => $result['assistant_message']->load('sender:id,name,account_type'),
-                'reply' => $result['reply'],
+                'reply' => ChatbotReplyResource::make($result['reply'])->resolve(),
             ],
         ], 201);
     }

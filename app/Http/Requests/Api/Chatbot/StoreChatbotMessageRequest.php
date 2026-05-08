@@ -17,6 +17,7 @@ class StoreChatbotMessageRequest extends FormRequest
         return [
             'body' => ['required', 'string', 'max:5000'],
             'source_language' => ['nullable', Rule::in(['en', 'ar'])],
+            'top_n' => ['nullable', 'integer', 'min:1', 'max:20'],
         ];
     }
 }

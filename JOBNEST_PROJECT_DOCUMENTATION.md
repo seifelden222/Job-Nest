@@ -337,6 +337,7 @@ Stores company-created job opportunities.
 
 - `company_id`: owner company user.
 - `category_id`: shared category reference for job classification.
+- `industry`: optional string describing the industry vertical the job belongs to (for example `FinTech`, `Healthcare`, `Technology`).
 - `title`, `description`: bilingual JSON core job content.
 - `location`, `employment_type`, `experience_level`: hiring context.
 - `salary_min`, `salary_max`, `currency`: salary range fields.
@@ -406,7 +407,6 @@ Stores chat threads used by direct messaging, job applications, and service prop
 
 **Key Columns**
 
-- `type`: `direct`, `application`, or `service`.
 - `type`: `direct`, `application`, `service`, or `chatbot`.
 - `application_id`, `job_id`: links for application-context conversations.
 - `service_request_id`, `service_proposal_id`: links for service-context conversations.
@@ -877,7 +877,7 @@ The reference-data names for skills, languages, interests, and categories are bi
 
 ### 4.6 Job Management and Discovery
 
-Jobs are company-owned records. Companies can create, update, and delete their own jobs, while public clients can browse active jobs and view active job details. The listing endpoint supports keyword search and filtering by location, employment type, category, and skill. Job records also maintain publication status and an `applications_count` summary field.
+Jobs are company-owned records. Companies can create, update, and delete their own jobs, while public clients can browse active jobs and view active job details. The listing endpoint supports keyword search and filtering by location, employment type, category, and skill. Job records include an optional `industry` field for vertical classification and maintain a publication status plus an `applications_count` summary field.
 
 When a job is created as active, the API resolves recipients by matching the job’s required skills against person user skills and sends a database notification announcing the new opportunity.
 Translatable job fields accept a `source_language` on create and update, are stored as bilingual JSON in the same table, and are returned as a single localized string in list and detail responses.
@@ -974,131 +974,41 @@ The API also defines rate limiters for login, refresh token usage, forgot-passwo
 - Normal API resources return only the resolved locale string for each translated field rather than exposing both stored languages.
 - If translation cannot be generated, the source text is preserved and reused as the fallback value so unrelated business flows continue to work safely.
 
-### 4.17 Chatbot Assistant Flow
+### 4.17 External AI Integration
 
-JobNest now includes a stored chatbot assistant for authenticated users. The feature reuses the existing conversations/messages stack and adds a `chatbot` conversation type plus a message role so user prompts and assistant replies remain in the same persisted timeline.
+JobNest now includes a Laravel-side integration layer for the external AI service published at `https://jopnest-production.up.railway.app/docs#/`. Flutter calls Laravel only, while Laravel authenticates the current user, maps internal JobNest models to the external AI contract, calls the external AI service internally, normalizes the upstream response, and returns a clean API payload.
 
-The Flutter app calls Laravel only. Laravel stores the user message, sends the recent conversation history to the external AI endpoint, stores the assistant reply, and returns the reply to the client. The service sends only a recent history window instead of the full thread, and the history limit is configurable.
+The current Laravel integration supports the following external endpoints:
 
-The chatbot conversation is owner-scoped to the authenticated user and is not exposed to unrelated users.
+- `GET /api/health`
+- `POST /api/recommend`
+- `POST /api/recommend/realtime`
+- `POST /api/chat`
+- `GET /api/jobs`
+- `POST /api/jobs/new`
+- `GET /api/jobs/{job_id}/score`
+- `GET /api/user/search`
+- `GET /api/user/{user_id}`
+- `POST /api/users/new`
+- `GET /api/courses`
+- `POST /api/courses/recommend`
+- `POST /api/courses/new`
+
+Laravel exposes authenticated app-facing endpoints under `/api/ai/*` for health, job recommendations, realtime recommendations, course recommendations, AI user search/detail, AI jobs listing, AI job score checks, and AI course listing. The chatbot flow continues to use the existing `/api/chatbot/*` endpoints while Laravel internally calls external `POST /api/chat`.
+
+Observer-driven sync is used for the AI indexing endpoints. `UserObserver`, `PersonProfileObserver`, and `UserSkillObserver` cooperate to sync person users to `POST /api/users/new` only when the required Swagger fields are available. `JobObserver` and `CourseObserver` sync `POST /api/jobs/new` and `POST /api/courses/new` after the request lifecycle ends so the related skills have already been attached.
+
+To safely use external ID-based endpoints such as `GET /api/user/{user_id}` and `GET /api/jobs/{job_id}/score`, JobNest stores the AI-side identifiers returned by sync responses in three nullable columns: `users.ai_user_id`, `jobs.ai_job_id`, and `courses.ai_course_id`.
+
+The same integration layer also powers the stored chatbot assistant for authenticated users. The feature reuses the existing conversations/messages stack and adds a `chatbot` conversation type plus a message role so user prompts and assistant replies remain in the same persisted timeline. Laravel stores the user message, sends recent conversation context to external `POST /api/chat`, stores the assistant reply, and returns normalized reply metadata including `intent`, `type`, `results`, `confidence`, and the final reply text.
+
+External AI failures are normalized before reaching Flutter. Missing configuration returns a `503` response, upstream connection problems return `504`, and invalid or failed upstream responses return `502`, without exposing raw upstream internals. Observer sync failures do not break the main create/update flow; Laravel logs the failure and leaves the record unsynced until a later eligible observer event can retry.
 
 ## 5. Conclusion
 
 JobNest is implemented as a structured Laravel API that combines account onboarding, profile enrichment, recruitment flows, learning content, service-marketplace workflows, messaging, notifications, saved items, and supporting infrastructure in one cohesive backend. Its database design, route structure, policies, and controller logic are aligned around the current production architecture: jobs are company-owned, courses and service requests are user-owned, categories are shared across modules, and notifications and chat are first-class parts of the platform.
 
-The documentation is broadly accurate and covers the core JobNest modules well. I verified the current repository against the Markdown file, and the major implemented areas are represented: auth/onboarding, profiles, documents, skills/languages/interests, jobs, applications, conversations/messages, categories, courses, service requests/proposals, notifications, saved items, and the supporting session/token infrastructure.
-
-Coverage review
-Fully covered
-
-Authentication and onboarding flows
-Profile management for person and company accounts
-User documents
-Skills, languages, and interests
-Jobs and job skills
-Applications
-Conversations, conversation participants, and messages
-Categories
-Courses, course skills, course enrollments, and course reviews
-Service requests, service request skills, and service proposals
-Notifications
-Saved items
-Session, token, verification, OTP, cache, queue, and failed-job infrastructure
-Partially covered
-
-The feature section describes the main APIs well, but it stays higher-level than the database section. For handoff-grade completeness, the following areas could be expanded a bit more:
-session management, including the active session listing and revoke-by-session flow
-notification center actions, including unread count and mark-all-read behavior
-conversation creation variants, especially direct vs application vs service conversation creation
-course enrollment behavior for free vs paid courses
-service proposal ownership rules and the accepted-proposal transition to in_progress
-Missing from documentation
-
-No major implemented module appears to be missing from the file.
-Database review
-Tables correctly documented
-
-users
-person_profiles
-company_profiles
-admins
-otp_codes
-personal_access_tokens
-refresh_tokens
-documents
-skills
-user_skills
-languages
-user_languages
-interests
-user_interests
-categories
-jobs
-job_skills
-applications
-conversations
-conversation_participants
-messages
-courses
-course_skills
-course_enrollments
-course_reviews
-service_requests
-service_request_skills
-service_proposals
-notifications
-saved_items
-sessions
-password_reset_tokens
-cache
-cache_locks
-queue_jobs
-job_batches
-failed_jobs
-migrations
-Tables missing
-
-None.
-Tables inaccurately described
-
-No material table-level inaccuracies stood out from the current codebase.
-Feature review
-Features correctly documented
-
-Email/password login
-Google login
-Token refresh and session revocation
-Email verification
-OTP-based password reset
-Person onboarding
-Company onboarding
-Profile retrieval and update
-User documents
-User skills/languages/interests
-Admin-managed reference data
-Job publishing and browsing
-Job filtering and skill matching
-Job applications and application review
-Direct, application, and service conversations
-Messaging with attachments
-Course publishing, browsing, enrollment, and review
-Service request publishing, browsing, proposal submission, and proposal review
-Notifications center
-Saved items
-Shared categories
-Authorization policies and rate limiting
-Features missing
-
-None.
-Features needing more detail
-
-The documentation would benefit from slightly more specificity on:
-the exact session/token lifecycle exposed by /auth/sessions, /auth/logout, and /auth/logout-all
-the difference between public listing endpoints and owner-only management endpoints for jobs, courses, and service requests
-the exact notification types and what user action triggers each one
-the direct/application/service conversation creation rules
-Final verdict
-Documentation is complete
+The documentation covers all core JobNest modules: authentication and onboarding, profiles, documents, skills, languages and interests, jobs, applications, conversations and messages, categories, courses, service requests and proposals, notifications, saved items, AI integration, the chatbot assistant, and the supporting session, token, and queue infrastructure.
 
 ## 6. API Endpoints Reference
 
@@ -1210,15 +1120,27 @@ Access legend:
   - `[Auth+Participant] GET /api/conversations/{conversation_id}/messages`
   - `[Auth+Participant] POST /api/conversations/{conversation_id}/messages`
 
-  ### 6.7 Chatbot
+### 6.7 AI Endpoints
 
-  - `[Auth] GET /api/chatbot/conversations`
-  - `[Auth] POST /api/chatbot/conversations`
-  - `[Auth] GET /api/chatbot/conversations/{conversation_id}`
-  - `[Auth] GET /api/chatbot/conversations/{conversation_id}/messages`
-  - `[Auth] POST /api/chatbot/conversations/{conversation_id}/messages`
+- `[Auth] GET /api/ai/health`
+- `[Auth] POST /api/ai/recommendations`
+- `[Auth] POST /api/ai/recommendations/realtime`
+- `[Auth] POST /api/ai/courses/recommend`
+- `[Auth] GET /api/ai/users/search`
+- `[Auth] GET /api/ai/users/{user_id}`
+- `[Auth] GET /api/ai/jobs`
+- `[Auth] GET /api/ai/jobs/{job_id}/score`
+- `[Auth] GET /api/ai/courses`
 
-  ### 6.8 Courses, Enrollments, Reviews
+### 6.8 Chatbot
+
+- `[Auth] GET /api/chatbot/conversations`
+- `[Auth] POST /api/chatbot/conversations`
+- `[Auth] GET /api/chatbot/conversations/{conversation_id}`
+- `[Auth] GET /api/chatbot/conversations/{conversation_id}/messages`
+- `[Auth] POST /api/chatbot/conversations/{conversation_id}/messages`
+
+### 6.9 Courses, Enrollments, Reviews
 
 - Courses:
   - `[Public] GET /api/courses`
@@ -1238,7 +1160,7 @@ Access legend:
   - `[Auth+ReviewOwner] PUT /api/course-reviews/{course_review_id}`
   - `[Auth+ReviewOwner] DELETE /api/course-reviews/{course_review_id}`
 
-### 6.9 Service Requests and Proposals
+### 6.10 Service Requests and Proposals
 
 - Service Requests:
   - `[Public] GET /api/service-requests`
@@ -1257,7 +1179,7 @@ Access legend:
   - `[Auth+Participant] GET /api/conversations/{conversation_id}/messages`
   - `[Auth+Participant] POST /api/conversations/{conversation_id}/messages`
 
-### 6.10 Saved Items and Notifications
+### 6.11 Saved Items and Notifications
 
 - Saved Items:
   - `[Auth] GET /api/auth/saved-items`
@@ -1324,6 +1246,7 @@ Accept-Language: en
 {
  "title": "Backend Engineer",
  "description": "Build and maintain APIs.",
+ "industry": "Technology",
  "location": "Cairo",
  "employment_type": "full_time",
  "salary_min": 8000,

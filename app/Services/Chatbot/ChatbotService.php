@@ -5,17 +5,15 @@ namespace App\Services\Chatbot;
 use App\Models\Conversation;
 use App\Models\Message;
 use App\Models\User;
-use App\Support\ApiLocale;
-use Illuminate\Http\Client\ConnectionException;
-use Illuminate\Http\Client\RequestException;
+use App\Services\Ai\ExternalAiClient;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Http;
 use RuntimeException;
-use Throwable;
 
 class ChatbotService
 {
+    public function __construct(private readonly ExternalAiClient $externalAiClient) {}
+
     /**
      * @return array{conversation: Conversation, created: bool}
      */
@@ -74,19 +72,9 @@ class ChatbotService
     }
 
     /**
-     * @return array{
-     *     user_message: Message,
-     *     assistant_message: Message,
-     *     reply: array{
-     *         content: string,
-     *         provider: string,
-     *         model: string,
-     *         response_time_ms: int,
-     *         usage: array<string, mixed>
-     *     }
-     * }
+     * @return array{user_message: Message, assistant_message: Message, reply: array<string, mixed>}
      */
-    public function sendMessage(Conversation $conversation, User $user, string $body, ?string $sourceLanguage = null): array
+    public function sendMessage(Conversation $conversation, User $user, string $body, ?string $sourceLanguage = null, int $topN = 5): array
     {
         $this->ensureChatbotConversation($conversation);
 
@@ -113,7 +101,7 @@ class ChatbotService
             return $message;
         });
 
-        $reply = $this->requestReply($conversation, $user, $body, $sourceLanguage);
+        $reply = $this->requestReply($conversation, $user, $body, $sourceLanguage, $topN);
 
         $assistantMessage = DB::transaction(function () use ($conversation, $reply): Message {
             $message = Message::create([
@@ -140,53 +128,20 @@ class ChatbotService
     }
 
     /**
-     * @return array{content: string, provider: string, model: string, response_time_ms: int, usage: array<string, mixed>}
+     * @return array<string, mixed>
      */
-    public function requestReply(Conversation $conversation, User $user, string $body, ?string $sourceLanguage = null): array
+    public function requestReply(Conversation $conversation, User $user, string $body, ?string $sourceLanguage = null, int $topN = 5): array
     {
-        $baseUrl = (string) config('chatbot.base_url', '');
-
-        if ($baseUrl === '') {
-            throw new RuntimeException('Chatbot API base URL is not configured.');
-        }
-
         $payload = [
-            'conversation_id' => $conversation->id,
-            'provider' => $this->provider(),
-            'model' => $this->model(),
-            'locale' => ApiLocale::current(),
-            'source_language' => ApiLocale::normalize((string) ($sourceLanguage ?: ApiLocale::current())),
-            'system_prompt' => $this->systemPrompt(),
-            'user' => [
-                'id' => $user->id,
-                'name' => $user->name,
-                'account_type' => $user->account_type,
-            ],
-            'messages' => $this->buildPayloadMessages($conversation, $body),
+            'message' => $body,
+            'user_id' => $user->ai_user_id,
+            'top_n' => $topN,
+            'context' => $this->buildPayloadMessages($conversation, $body),
         ];
 
         $startedAt = microtime(true);
 
-        try {
-            $response = Http::baseUrl($baseUrl)
-                ->acceptJson()
-                ->asJson()
-                ->connectTimeout((int) config('chatbot.connect_timeout', 5))
-                ->timeout((int) config('chatbot.timeout', 15))
-                ->retry((int) config('chatbot.retry_attempts', 2), (int) config('chatbot.retry_sleep', 250))
-                ->post((string) config('chatbot.path', '/chatbot/respond'), $payload)
-                ->throw();
-        } catch (ConnectionException|RequestException|Throwable $throwable) {
-            report($throwable);
-
-            throw new RuntimeException('Unable to generate a chatbot reply right now.');
-        }
-
-        $responsePayload = $response->json();
-
-        if (! is_array($responsePayload)) {
-            throw new RuntimeException('Chatbot response payload is invalid.');
-        }
+        $responsePayload = $this->externalAiClient->chat($payload);
 
         $content = $this->extractReplyContent($responsePayload);
 
@@ -196,10 +151,15 @@ class ChatbotService
 
         return [
             'content' => $content,
-            'provider' => (string) (data_get($responsePayload, 'provider') ?: $this->provider()),
-            'model' => (string) (data_get($responsePayload, 'model') ?: $this->model()),
+            'intent' => data_get($responsePayload, 'intent'),
+            'type' => data_get($responsePayload, 'type'),
+            'specialty' => data_get($responsePayload, 'specialty'),
+            'count' => data_get($responsePayload, 'count'),
+            'results' => is_array(data_get($responsePayload, 'results')) ? data_get($responsePayload, 'results') : [],
+            'follow_up' => data_get($responsePayload, 'follow_up'),
+            'confidence' => data_get($responsePayload, 'confidence'),
+            'confidence_label' => data_get($responsePayload, 'confidence_label'),
             'response_time_ms' => (int) round((microtime(true) - $startedAt) * 1000),
-            'usage' => is_array(data_get($responsePayload, 'usage')) ? data_get($responsePayload, 'usage') : [],
         ];
     }
 
@@ -223,7 +183,7 @@ class ChatbotService
     }
 
     /**
-     * @return array<int, array{role: string, content: string}>
+     * @return array<int, array<string, string>>
      */
     private function buildPayloadMessages(Conversation $conversation, string $body): array
     {
@@ -278,20 +238,5 @@ class ChatbotService
         }
 
         return '';
-    }
-
-    private function provider(): string
-    {
-        return (string) config('chatbot.provider', 'external-ai');
-    }
-
-    private function model(): string
-    {
-        return (string) config('chatbot.model', 'jobnest-assistant');
-    }
-
-    private function systemPrompt(): string
-    {
-        return (string) config('chatbot.system_prompt', 'You are the JobNest assistant.');
     }
 }

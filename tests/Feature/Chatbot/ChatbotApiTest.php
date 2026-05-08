@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Http;
 test('user can create and reuse a chatbot conversation', function () {
     $user = createPersonUser();
 
-    config()->set('chatbot.base_url', 'https://chatbot.example.test');
+    config()->set('ai.base_url', 'https://ai.example.test');
 
     $this->withToken($user->createToken('chatbot-conversation-store')->plainTextToken)
         ->postJson(route('chatbot.conversations.store'))
@@ -28,22 +28,27 @@ test('user can create and reuse a chatbot conversation', function () {
 });
 
 test('user can send a chatbot message and store the assistant reply', function () {
+    Http::preventStrayRequests();
+
     Http::fake([
-        'chatbot.example.test/*' => Http::response([
-            'provider' => 'mock-ai',
-            'model' => 'mock-model',
+        'ai.example.test/*' => Http::response([
             'reply' => 'JobNest can help you find the right role.',
-            'usage' => [
-                'prompt_tokens' => 12,
-                'completion_tokens' => 18,
-                'total_tokens' => 30,
+            'intent' => 'job_search',
+            'type' => 'jobs',
+            'specialty' => null,
+            'count' => 1,
+            'results' => [
+                ['job_id' => 935, 'title' => 'Java Developer'],
             ],
+            'follow_up' => null,
+            'confidence' => 0.88,
+            'confidence_label' => 'Great fit',
         ], 200),
     ]);
 
-    config()->set('chatbot.base_url', 'https://chatbot.example.test');
+    config()->set('ai.base_url', 'https://ai.example.test');
 
-    $user = createPersonUser();
+    $user = createPersonUser(['ai_user_id' => 7001]);
     $conversation = Conversation::factory()->chatbot($user)->create([
         'created_by' => $user->id,
     ]);
@@ -56,9 +61,11 @@ test('user can send a chatbot message and store the assistant reply', function (
         ->postJson(route('chatbot.conversations.messages.store', ['conversation' => $conversation->id]), [
             'body' => 'Help me find a backend job.',
             'source_language' => 'en',
+            'top_n' => 2,
         ])
         ->assertCreated()
         ->assertJsonPath('data.reply.content', 'JobNest can help you find the right role.')
+        ->assertJsonPath('data.reply.intent', 'job_search')
         ->assertJsonPath('data.user_message.message_role', Message::ROLE_USER)
         ->assertJsonPath('data.assistant_message.message_role', Message::ROLE_ASSISTANT);
 

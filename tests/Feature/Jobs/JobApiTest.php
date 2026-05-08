@@ -37,6 +37,31 @@ test('company can create job with skills', function () {
     $this->assertDatabaseHas('job_skills', ['job_id' => $jobId, 'skill_id' => $skillB->id]);
 });
 
+test('company can create job with industry field', function () {
+    fakeContentTranslator();
+
+    $company = createCompanyUser();
+
+    $response = $this->withToken($company->createToken('company-job-industry')->plainTextToken)
+        ->postJson(route('jobs.store'), [
+            'title' => 'Data Engineer',
+            'description' => 'Build data pipelines.',
+            'industry' => 'FinTech',
+            'location' => 'Remote',
+            'employment_type' => 'full_time',
+            'status' => 'active',
+            'source_language' => 'en',
+        ]);
+
+    $response->assertCreated()
+        ->assertJsonPath('data.industry', 'FinTech');
+
+    $this->assertDatabaseHas('jobs', [
+        'id' => $response->json('data.id'),
+        'industry' => 'FinTech',
+    ]);
+});
+
 test('non company cannot create job', function () {
     fakeContentTranslator();
 
@@ -112,6 +137,23 @@ test('owner can update own job and sync skills', function () {
         ->assertJsonCount(1, 'data.skills');
 
     $this->assertDatabaseHas('job_skills', ['job_id' => $job->id, 'skill_id' => $newSkill->id]);
+});
+
+test('owner can update industry on existing job', function () {
+    fakeContentTranslator();
+
+    $company = createCompanyUser();
+    $job = Job::factory()->create(['company_id' => $company->id, 'industry' => 'Healthcare']);
+
+    $this->withToken($company->createToken('job-update-industry')->plainTextToken)
+        ->putJson(route('jobs.update', ['job' => $job->id]), [
+            'industry' => 'Technology',
+            'source_language' => 'en',
+        ])
+        ->assertSuccessful()
+        ->assertJsonPath('data.industry', 'Technology');
+
+    $this->assertDatabaseHas('jobs', ['id' => $job->id, 'industry' => 'Technology']);
 });
 
 test('company cannot update another company job', function () {
