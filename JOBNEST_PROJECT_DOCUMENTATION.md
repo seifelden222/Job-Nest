@@ -1,5 +1,40 @@
 # JobNest Project Documentation
 
+## Table of Contents
+
+1. [Project Overview](#1-project-overview)
+2. [System Architecture Summary](#2-system-architecture-summary)
+3. [Database Documentation](#3-database-documentation)
+4. [Implemented Project Features](#4-implemented-project-features)
+5. [Conclusion](#5-conclusion)
+6. [API Endpoints Reference](#6-api-endpoints-reference)
+7. [Request/Response Examples](#7-requestresponse-examples)
+8. [Flow Diagrams](#8-flow-diagrams)
+9. [Request Lifecycle Architecture](#9-request-lifecycle-architecture)
+10. [Validation Rules Reference](#10-validation-rules-reference)
+11. [Error Handling Strategy](#11-error-handling-strategy)
+12. [Authorization Matrix](#12-authorization-matrix)
+13. [Pagination Pattern](#13-pagination-pattern)
+14. [Filtering and Search Contract](#14-filtering-and-search-contract)
+15. [File Storage Rules](#15-file-storage-rules)
+16. [Performance and Indexing Notes](#16-performance-and-indexing-notes)
+17. [AI Sync Lifecycle](#17-ai-sync-lifecycle)
+18. [Core Business Rules](#18-core-business-rules)
+19. [Rate Limiting Specification](#19-rate-limiting-specification)
+20. [Token Lifetimes and Session Configuration](#20-token-lifetimes-and-session-configuration)
+21. [Standard Response Envelope](#21-standard-response-envelope)
+22. [Queued Jobs Reference](#22-queued-jobs-reference)
+23. [Soft Deletes Policy](#23-soft-deletes-policy)
+24. [Security Configuration Notes](#24-security-configuration-notes)
+25. [Chatbot Context Window and AI Chat Flow](#25-chatbot-context-window-and-ai-chat-flow)
+26. [Glossary](#26-glossary)
+27. [Environment Variables](#27-environment-variables)
+28. [Deployment Stack](#28-deployment-stack)
+29. [Sequence Diagrams](#29-sequence-diagrams)
+30. [Directory and Folder Structure](#30-directory-and-folder-structure)
+31. [Testing Strategy](#31-testing-strategy)
+
+---
 ## 1. Project Overview
 
 JobNest is a Laravel 13 REST API for a multi-sided career and professional services platform. The system supports two primary account types, `person` and `company`, and organizes its business flows around account registration, onboarding, profile management, job publishing, job applications, training courses, service requests, proposals, conversations, messages, notifications, and saved items.
@@ -1665,3 +1700,944 @@ flowchart LR
   E --> F[Middleware resolves locale]
   F --> G[API resource returns single localized value]
 ```
+
+---
+
+## 9. Request Lifecycle Architecture
+
+### 9.1 Standard API Request Flow
+
+Every HTTP request from the Flutter client travels through the following layers before a JSON response is returned.
+
+```
+Client (Flutter)
+   ↓
+Routes (api.php)
+   ↓  [middleware: Authenticate, SetLocale, throttle]
+Controller
+   ↓  [form request validation]
+Service Layer
+   ↓  [business logic, policy checks]
+Model / Eloquent
+   ↓
+Database (MySQL)
+   ↓
+API Resource (Eloquent Resource)
+   ↓
+JSON Response
+```
+
+### 9.2 AI-Integrated Request Flow
+
+Endpoints that involve the external AI service follow a separate internal path after the standard controller layer.
+
+```
+Controller
+   ↓
+AI Service (app/Services/AI/*)
+   ↓  [maps internal JobNest payload to external AI contract]
+External AI API (jopnest-production.up.railway.app)
+   ↓
+Normalized Response (intent, type, results, confidence)
+   ↓
+JSON Response to Flutter
+```
+
+---
+
+## 10. Validation Rules Reference
+
+The following rules are enforced by dedicated Form Request classes for key write endpoints.
+
+### 10.1 Create / Update Job
+
+| Field | Rules |
+|---|---|
+| `title` | `required \| string \| max:255` |
+| `description` | `required \| string` |
+| `category_id` | `required \| exists:categories,id` |
+| `industry` | `nullable \| string \| max:255` |
+| `location` | `nullable \| string \| max:255` |
+| `employment_type` | `nullable \| in:full_time,part_time,contract,freelance,internship` |
+| `experience_level` | `nullable \| in:entry,mid,senior,lead` |
+| `salary_min` | `nullable \| numeric \| min:0` |
+| `salary_max` | `nullable \| numeric \| gte:salary_min` |
+| `currency` | `nullable \| string \| max:10` |
+| `requirements` | `nullable \| string` |
+| `responsibilities` | `nullable \| string` |
+| `deadline` | `nullable \| date \| after:today` |
+| `status` | `required \| in:draft,active,closed,archived` |
+| `skill_ids` | `nullable \| array` |
+| `skill_ids.*` | `exists:skills,id` |
+| `source_language` | `required \| in:en,ar` |
+
+### 10.2 Submit Application
+
+| Field | Rules |
+|---|---|
+| `cv_document_id` | `nullable \| exists:documents,id` |
+| `cover_letter` | `nullable \| string` |
+| `source_language` | `required_with:cover_letter \| in:en,ar` |
+
+### 10.3 Create Course
+
+| Field | Rules |
+|---|---|
+| `title` | `required \| string \| max:255` |
+| `short_description` | `nullable \| string` |
+| `description` | `nullable \| string` |
+| `category_id` | `required \| exists:categories,id` |
+| `level` | `nullable \| in:beginner,intermediate,advanced` |
+| `delivery_mode` | `nullable \| in:online,offline,hybrid` |
+| `price` | `nullable \| numeric \| min:0` |
+| `currency` | `nullable \| string \| max:10` |
+| `duration_hours` | `nullable \| integer \| min:1` |
+| `seats_count` | `nullable \| integer \| min:1` |
+| `start_date` | `nullable \| date` |
+| `end_date` | `nullable \| date \| after:start_date` |
+| `status` | `required \| in:draft,published,closed,archived` |
+| `skill_ids` | `nullable \| array` |
+| `skill_ids.*` | `exists:skills,id` |
+| `source_language` | `required \| in:en,ar` |
+
+### 10.4 Submit Service Proposal
+
+| Field | Rules |
+|---|---|
+| `message` | `nullable \| string` |
+| `proposed_budget` | `nullable \| numeric \| min:0` |
+| `delivery_days` | `nullable \| integer \| min:1` |
+| `source_language` | `required_with:message \| in:en,ar` |
+
+### 10.5 Course Review
+
+| Field | Rules |
+|---|---|
+| `rating` | `required \| integer \| between:1,5` |
+| `comment` | `nullable \| string` |
+| `source_language` | `required_with:comment \| in:en,ar` |
+
+---
+
+## 11. Error Handling Strategy
+
+JobNest normalizes all failure conditions into predictable HTTP status codes before they reach the Flutter client.
+
+| Scenario | HTTP Status |
+|---|---|
+| Validation failure | `422 Unprocessable Entity` |
+| Authentication failure (missing or invalid token) | `401 Unauthorized` |
+| Authorization failure (policy denied) | `403 Forbidden` |
+| Resource not found | `404 Not Found` |
+| Duplicate unique action (e.g. double-apply) | `422 Unprocessable Entity` |
+| Rate limit exceeded | `429 Too Many Requests` |
+| AI service not configured | `503 Service Unavailable` |
+| Upstream AI connection timeout | `504 Gateway Timeout` |
+| Upstream AI returned invalid or failed response | `502 Bad Gateway` |
+| Unexpected server failure | `500 Internal Server Error` |
+
+**Observer sync failures** (AI indexing) do not affect the main create/update response. The failure is logged and the record is left with a null `ai_*_id` for a future sync attempt.
+
+**Translation failures** do not abort the request. The source-language text is preserved as the fallback for the missing locale, and the full response is still returned successfully.
+
+---
+
+## 12. Authorization Matrix
+
+The table below summarizes which account type can perform which actions across the core platform resources.
+
+| Action | Person | Company | Admin |
+|---|---|---|---|
+| Register / Login | ✅ | ✅ | — |
+| View own profile | ✅ | ✅ | — |
+| Update own profile | ✅ | ✅ | — |
+| Upload / delete own documents | ✅ | ✅ | — |
+| Manage own skills / languages / interests | ✅ | ✅ | — |
+| Browse active jobs (public) | ✅ | ✅ | ✅ |
+| Create a job | ❌ | ✅ | ✅ |
+| Update / delete own job | ❌ | ✅ (owner) | ✅ |
+| Apply to a job | ✅ | ❌ | ❌ |
+| Withdraw own application | ✅ (owner) | ❌ | ❌ |
+| Review applications for own job | ❌ | ✅ (owner) | ✅ |
+| Create a course | ✅ | ✅ | ✅ |
+| Update / delete own course | ✅ (owner) | ✅ (owner) | ✅ |
+| Enroll in a course | ✅ | ✅ | ✅ |
+| Manage enrollments for own course | ✅ (owner) | ✅ (owner) | ✅ |
+| Review a course (enrolled only) | ✅ | ✅ | ✅ |
+| Create a service request | ✅ | ✅ | ✅ |
+| Update / delete own service request | ✅ (owner) | ✅ (owner) | ✅ |
+| Submit a proposal | ✅ | ✅ | ✅ |
+| Accept / reject proposals on own request | ✅ (owner) | ✅ (owner) | ✅ |
+| Withdraw own proposal | ✅ | ✅ | ❌ |
+| Start or view a conversation | ✅ (participant) | ✅ (participant) | — |
+| Send a message | ✅ (participant) | ✅ (participant) | — |
+| Manage categories catalog | ❌ | ❌ | ✅ |
+| Manage skills / languages / interests catalog | ❌ | ❌ | ✅ |
+| Use AI endpoints | ✅ | ✅ | ✅ |
+| Use chatbot | ✅ | ✅ | ✅ |
+
+---
+
+## 13. Pagination Pattern
+
+All listing endpoints that return multiple records use Laravel's default paginator and expose a unified envelope shape.
+
+### 13.1 Standard Paginated Response
+
+```json
+{
+  "data": [
+    { "id": 1, "title": "Backend Engineer" },
+    { "id": 2, "title": "Frontend Engineer" }
+  ],
+  "links": {
+    "first": "https://api.example.com/api/jobs?page=1",
+    "last":  "https://api.example.com/api/jobs?page=9",
+    "prev":  null,
+    "next":  "https://api.example.com/api/jobs?page=2"
+  },
+  "meta": {
+    "current_page": 1,
+    "per_page": 10,
+    "total": 84,
+    "last_page": 9,
+    "from": 1,
+    "to": 10,
+    "path": "https://api.example.com/api/jobs"
+  }
+}
+```
+
+### 13.2 Pagination Query Parameters
+
+| Parameter | Type | Default | Description |
+|---|---|---|---|
+| `page` | integer | 1 | Page number to retrieve |
+| `per_page` | integer | 10 | Results per page (where supported) |
+
+Endpoints affected: `GET /api/jobs`, `GET /api/courses`, `GET /api/service-requests`, `GET /api/auth/notifications`, `GET /api/conversations`, and all sub-resource listing routes.
+
+---
+
+## 14. Filtering and Search Contract
+
+The following query parameters are supported on public marketplace listing endpoints.
+
+### 14.1 Jobs
+
+```
+GET /api/jobs?keyword=laravel&location=cairo&employment_type=full_time&experience_level=mid&category_id=2&skill_id=5&page=1
+```
+
+| Parameter | Type | Description |
+|---|---|---|
+| `keyword` | string | Full-text search on title and description |
+| `location` | string | Filter by job location |
+| `employment_type` | string | `full_time`, `part_time`, `contract`, `freelance`, `internship` |
+| `experience_level` | string | `entry`, `mid`, `senior`, `lead` |
+| `category_id` | integer | Filter by category ID |
+| `skill_id` | integer | Filter by required skill ID |
+
+### 14.2 Courses
+
+```
+GET /api/courses?keyword=python&category_id=3&skill_id=7&delivery_mode=online&level=beginner&page=1
+```
+
+| Parameter | Type | Description |
+|---|---|---|
+| `keyword` | string | Full-text search on title and description |
+| `category_id` | integer | Filter by category ID |
+| `skill_id` | integer | Filter by course skill ID |
+| `delivery_mode` | string | `online`, `offline`, `hybrid` |
+| `level` | string | `beginner`, `intermediate`, `advanced` |
+
+### 14.3 Service Requests
+
+```
+GET /api/service-requests?keyword=logo&category_id=4&skill_id=9&delivery_mode=online&page=1
+```
+
+| Parameter | Type | Description |
+|---|---|---|
+| `keyword` | string | Full-text search on title and description |
+| `category_id` | integer | Filter by category ID |
+| `skill_id` | integer | Filter by required skill ID |
+| `delivery_mode` | string | `online`, `offline`, `hybrid` |
+
+### 14.4 Categories
+
+```
+GET /api/categories?type=job&active=1
+```
+
+| Parameter | Type | Description |
+|---|---|---|
+| `type` | string | `job`, `course`, or `service` |
+| `active` | boolean | `1` to return only active categories |
+
+---
+
+## 15. File Storage Rules
+
+All user-uploaded files (CVs, certificates, profile photos, logos, course thumbnails, and message attachments) follow a consistent set of storage rules.
+
+### 15.1 Supported File Types
+
+| Upload Context | Accepted MIME Types |
+|---|---|
+| CV documents | `application/pdf` |
+| Certificates | `application/pdf`, `image/jpeg`, `image/png` |
+| Profile photos | `image/jpeg`, `image/png`, `image/webp` |
+| Company logos | `image/jpeg`, `image/png`, `image/webp` |
+| Course thumbnails | `image/jpeg`, `image/png`, `image/webp` |
+| Message attachments | `application/pdf`, `image/jpeg`, `image/png`, `image/webp` |
+
+### 15.2 File Size Limits
+
+| Upload Context | Maximum Size |
+|---|---|
+| CV / certificate | 5 MB |
+| Profile photo / logo | 2 MB |
+| Course thumbnail | 2 MB |
+| Message attachment | 5 MB |
+
+### 15.3 Storage Configuration
+
+- **Storage disk:** `public` (Laravel's public disk backed by `storage/app/public`)
+- **Public URL generation:** files are exposed via the `storage` symlink created by `php artisan storage:link`
+- **Path format:** `storage/{context}/{filename}` (example: `storage/cvs/cv_15_1714566000.pdf`)
+- **URL in API responses:** absolute public URL returned in the `url` field of document and attachment resources
+
+---
+
+## 16. Performance and Indexing Notes
+
+### 16.1 Database Indexes
+
+The following columns are indexed to support high-frequency queries and filtering:
+
+| Table | Indexed Column(s) | Reason |
+|---|---|---|
+| `users` | `email` | Login lookup |
+| `users` | `google_id` | Google login lookup |
+| `users` | `account_type` | Role-based filtering |
+| `jobs` | `status`, `is_active` | Public listing filter |
+| `jobs` | `category_id` | Category filter |
+| `jobs` | `company_id` | Company-owned job listing |
+| `applications` | `job_id` | Applications per job listing |
+| `applications` | `user_id` | Applicant history listing |
+| `messages` | `conversation_id` | Message history per conversation |
+| `conversations` | `last_message_at` | Conversation list ordering |
+| `notifications` | `notifiable_id`, `read_at` | Unread count and listing |
+| `saved_items` | `user_id`, `type` | Saved-item listing per user |
+| `course_enrollments` | `course_id`, `user_id` | Enrollment lookup |
+| `service_proposals` | `service_request_id` | Proposals per request |
+
+### 16.2 Eager Loading
+
+All list and detail endpoints use Eloquent `with()` eager loading to prevent N+1 query problems. Examples:
+
+- `GET /api/jobs` eager-loads `category`, `skills`, and `company.companyProfile`
+- `GET /api/jobs/{id}/applications` eager-loads `applicant`, `cvDocument`
+- `GET /api/conversations` eager-loads `participants`, `lastMessage`
+- `GET /api/courses` eager-loads `category`, `skills`, `owner`
+
+### 16.3 Cached Counts
+
+The `jobs.applications_count` column is maintained as a cached aggregate to avoid a live `COUNT` on the `applications` table on every job list response.
+
+---
+
+## 17. AI Sync Lifecycle
+
+This section describes the complete lifecycle of how a new job, user, or course is indexed in the external AI service.
+
+### 17.1 Job Sync Lifecycle
+
+```
+POST /api/jobs  (Company creates job)
+   ↓
+JobController stores the Job record in DB
+   ↓
+Skill IDs attached to job_skills pivot
+   ↓
+JobObserver::created fires (after request ends via terminable middleware)
+   ↓
+AI Sync Service maps internal Job to external AI contract
+   ↓
+POST https://jopnest-production.up.railway.app/api/jobs/new
+   ↓
+Success → Store ai_job_id on jobs record
+Failure → Log error, jobs.ai_job_id remains null (silent retry on next eligible event)
+```
+
+### 17.2 User Sync Lifecycle
+
+Three observers cooperate to ensure person users are only synced when all required AI fields are available.
+
+```
+UserObserver / PersonProfileObserver / UserSkillObserver
+   ↓
+Check: does the user have name, skills, and profile data?
+   ↓ Yes
+POST /api/users/new
+   ↓
+Store ai_user_id on users record
+```
+
+### 17.3 Course Sync Lifecycle
+
+```
+POST /api/courses  (User creates course)
+   ↓
+CourseController stores the Course record in DB
+   ↓
+Skill IDs attached to course_skills pivot
+   ↓
+CourseObserver::created fires (after request ends)
+   ↓
+POST /api/courses/new
+   ↓
+Store ai_course_id on courses record
+```
+
+### 17.4 Sync Failure Behavior
+
+Observer sync failures are **non-breaking**. The main API response is already returned before the observer runs. If the external AI is unavailable, the `ai_*_id` column stays `null` and the failure is written to the application log. Any subsequent eligible observer event (such as a profile update) will attempt a re-sync automatically.
+
+---
+
+## 18. Core Business Rules
+
+The following rules are enforced at the service and policy layer and represent the fundamental constraints of the JobNest platform.
+
+### 18.1 Applications
+
+- A person cannot apply to the same job more than once. Attempting a second application returns a `422` error.
+- A company user cannot apply to any job, including its own. The `[Auth+Person]` guard enforces this at the route level.
+- An application can only be withdrawn while it is in `submitted` status. Attempts to withdraw after review return a `422` error.
+- Application status can only progress forward through the review pipeline and cannot be reverted by the company.
+
+### 18.2 Service Proposals
+
+- Each user can submit only one proposal per service request. A second submission returns a `422` error.
+- A service request owner cannot submit a proposal on their own request.
+- Accepting one proposal does **not** automatically reject the remaining proposals; the owner must action each separately.
+- Accepting a proposal automatically transitions the parent service request status from `open` to `in_progress`.
+- A proposal can only be withdrawn while its status is `submitted`.
+
+### 18.3 Course Reviews
+
+- Only users who are enrolled in a course may leave a review for that course. Non-enrolled users receive a `403` response.
+- Each user can have at most one review per course. Submitting again uses the update endpoint rather than creating a second record.
+
+### 18.4 Documents and CV Management
+
+- Each user can have at most one **primary** CV at a time. When a new CV is uploaded, the API automatically clears the `is_primary` flag from all previous CVs and marks the new one as primary.
+- Certificates have no primary constraint and can be uploaded freely.
+- Deleting a document that is currently attached to a submitted application is blocked until the application is resolved or withdrawn.
+
+### 18.5 Conversations and Messaging
+
+- Only users who are listed in `conversation_participants` for a given conversation can view messages or send new messages in that conversation. Non-participants receive a `403` response.
+- A direct conversation between two users is created once. Attempting to create a second direct conversation with the same participant returns the existing conversation instead.
+- An application conversation is unique per application. The same rule applies to service conversations per proposal.
+
+### 18.6 Saved Items
+
+- A user cannot save the same item (same `type` + `target_id`) twice. Attempting to do so is idempotent and returns the existing saved-item record.
+
+### 18.7 Admin Authorization
+
+- Admin access is determined by matching the authenticated user's email against the `admins` table where `status = active`. There is no separate admin login flow; admin rights are layered on top of the standard user account.
+
+### 18.8 Email Verification
+
+- Certain sensitive endpoints (password change, session management) are guarded by verified-email middleware. Unverified users receive a `403` response with a prompt to verify their email first.
+
+---
+
+## 19. Rate Limiting Specification
+
+JobNest defines named rate limiters for each sensitive flow. All limits are per-IP unless otherwise noted.
+
+| Limiter Name | Endpoint(s) | Limit |
+|---|---|---|
+| `login` | `POST /api/auth/login` | 5 attempts / minute |
+| `google-login` | `POST /api/auth/google/login` | 10 attempts / minute |
+| `refresh-token` | `POST /api/auth/refresh-token` | 10 attempts / minute |
+| `forgot-password` | `POST /api/auth/forgot-password` | 3 attempts / 10 minutes |
+| `verify-otp` | `POST /api/auth/verify-reset-otp` | 5 attempts / 10 minutes |
+| `resend-otp` | `POST /api/auth/resend-reset-otp` | 3 attempts / 10 minutes |
+| `email-verify-resend` | `POST /api/auth/email/verification/resend` | 3 attempts / 10 minutes |
+| `api` (general) | All other authenticated endpoints | 60 requests / minute per user |
+
+When a rate limit is exceeded the API returns:
+
+```json
+HTTP 429 Too Many Requests
+Retry-After: 60
+
+{
+  "message": "Too many requests. Please try again later."
+}
+```
+
+---
+
+## 20. Token Lifetimes and Session Configuration
+
+| Token Type | Lifetime | Notes |
+|---|---|---|
+| Sanctum access token | 60 minutes (configurable) | Issued on login, registration, and token refresh |
+| Refresh token | 30 days (configurable) | Rotated on each use; old token is invalidated |
+| OTP code (password reset) | 10 minutes | Stored in `otp_codes.expires_at` |
+| Email verification link | 60 minutes | Signed URL with expiry |
+
+### 20.1 Token Rotation Security
+
+- Reusing a consumed refresh token triggers **family revocation**: all tokens in the same `family_id` are immediately revoked, protecting against token-theft replay attacks.
+- Access tokens are stored as hashed values in `personal_access_tokens.token` and are never stored in plain text.
+- Refresh tokens are stored as hashed values in `refresh_tokens.token_hash`.
+
+### 20.2 Session Metadata
+
+Every issued token records `name` (device label), `ip_address`, and `user_agent` so users can identify and revoke specific sessions from the active-sessions screen.
+
+---
+
+## 21. Standard Response Envelope
+
+All API responses follow one of two consistent envelope shapes, making client-side parsing predictable.
+
+### 21.1 Single-Resource Response
+
+```json
+{
+  "data": {
+    "id": 88,
+    "title": "Backend Engineer",
+    "status": "active",
+    "created_at": "2026-05-01T18:25:03Z"
+  }
+}
+```
+
+### 21.2 Paginated Collection Response
+
+```json
+{
+  "data": [ { "..." : "..." } ],
+  "links": { "first": "...", "last": "...", "prev": null, "next": "..." },
+  "meta": { "current_page": 1, "per_page": 10, "total": 84, "last_page": 9 }
+}
+```
+
+### 21.3 Success Message Response
+
+Used by delete, logout, revoke, and similar endpoints that do not return a resource body.
+
+```json
+{
+  "message": "Resource deleted successfully."
+}
+```
+
+### 21.4 Validation Error Response (422)
+
+```json
+{
+  "message": "The given data was invalid.",
+  "errors": {
+    "field_name": ["Error message for this field."]
+  }
+}
+```
+
+### 21.5 Generic Error Response
+
+```json
+{
+  "message": "Human-readable error description."
+}
+```
+
+All error responses include only a `message` key (and `errors` for validation). No stack traces, raw exception classes, or internal identifiers are exposed to the client in production.
+
+---
+
+## 22. Queued Jobs Reference
+
+The following operations are dispatched to the queue and processed asynchronously by the database queue driver.
+
+| Queued Job | Trigger | Description |
+|---|---|---|
+| Send verification email | Registration step 1 | Dispatches email with signed verification URL |
+| Send registration welcome mail | Registration step 1 | Welcome notification to new user |
+| Send password-reset OTP | `POST /api/auth/forgot-password` | Delivers OTP code by email or SMS |
+| Send new-message notification | New message in any conversation | Notifies all other participants |
+| Send application-status notification | Application status updated | Notifies applicant of review decision |
+| Send new-job notification | Active job created | Fan-out to matching person users by skill |
+| AI observer sync (Job) | `JobObserver::created/updated` | Syncs job to external AI index |
+| AI observer sync (User) | `UserObserver` / `PersonProfileObserver` / `UserSkillObserver` | Syncs person user to external AI index |
+| AI observer sync (Course) | `CourseObserver::created/updated` | Syncs course to external AI index |
+
+### 22.1 Queue Configuration
+
+- **Driver:** database (`queue_jobs` table)
+- **Default queue:** `default`
+- **Failed jobs:** stored in `failed_jobs` table with full exception trace
+- **Retry strategy:** standard Laravel retry with exponential back-off
+
+---
+
+## 23. Soft Deletes Policy
+
+The following models use Laravel's `SoftDeletes` trait and are not permanently removed from the database on delete API calls.
+
+| Model | Soft-deleted? | Notes |
+|---|---|---|
+| `Job` | ✅ | Soft-deleted jobs are hidden from public listings |
+| `Course` | ✅ | Soft-deleted courses are hidden from public listings |
+| `ServiceRequest` | ✅ | Soft-deleted requests are hidden from public listings |
+| `User` | ❌ | Hard delete; requires manual admin process |
+| `Application` | ❌ | Applications are withdrawn (status change), not deleted |
+| `ServiceProposal` | ❌ | Proposals are withdrawn (status change), not deleted |
+| `Message` | ❌ | Messages are permanent once sent |
+| `Document` | ❌ | Hard delete after ownership check |
+| `Notification` | ❌ | Hard delete via notification center API |
+
+Soft-deleted records can be restored by admin if needed. The `deleted_at` timestamp is used as the soft-delete indicator.
+
+---
+
+## 24. Security Configuration Notes
+
+### 24.1 CORS
+
+The API is configured to accept cross-origin requests from the registered Flutter and web origins only. Wildcard origins (`*`) are disabled in production.
+
+### 24.2 HTTPS Enforcement
+
+All production API traffic must be served over HTTPS. The API does not serve non-secure responses in production; any HTTP request is redirected to HTTPS at the infrastructure layer.
+
+### 24.3 Sensitive Data Handling
+
+- Passwords are hashed using `bcrypt` (Laravel default).
+- Token values are hashed before storage; only hashes are persisted.
+- OTP codes are short-lived and single-use.
+- No sensitive field (password, token, OTP) is ever returned in any API response.
+
+### 24.4 Authorization Layer
+
+- Every resource-modifying endpoint uses a dedicated Laravel Policy class.
+- Policies check ownership, account type, and admin status before any mutation is allowed.
+- The `[Auth+Admin]` guard verifies email against the `admins` table on every request rather than caching admin status on the token.
+
+### 24.5 Input Sanitization
+
+- All inputs are validated by Form Request classes before reaching any controller logic.
+- File uploads are validated for MIME type and size server-side; client-declared `Content-Type` is not trusted alone.
+- SQL injection is prevented by Eloquent's parameterized query builder used throughout.
+
+---
+
+## 25. Chatbot Context Window and AI Chat Flow
+
+The chatbot feature reuses the existing `conversations` and `messages` tables with a `chatbot` conversation type. This section describes the end-to-end flow.
+
+### 25.1 Request Flow
+
+```
+Flutter sends POST /api/chatbot/conversations/{id}/messages
+   ↓  { body, source_language }
+Laravel stores the user message in messages (message_role = "user")
+   ↓
+Laravel fetches the N most recent messages from the conversation
+   ↓  [context window for AI]
+Laravel calls POST https://jopnest-production.up.railway.app/api/chat
+   ↓  { user_id, messages: [{role, content}, ...] }
+External AI returns { reply, intent, type, results, confidence }
+   ↓
+Laravel stores the AI reply in messages (message_role = "assistant")
+   ↓
+Response returned to Flutter:
+  { reply, intent, type, results, confidence, message_id }
+```
+
+### 25.2 Context Window
+
+| Parameter | Value |
+|---|---|
+| Messages sent as context | Last 10 messages in the conversation |
+| Roles included | `user` and `assistant` only (`system` messages excluded) |
+| Max body length per message | Trimmed to avoid upstream payload limits |
+
+### 25.3 Chatbot Conversation Lifecycle
+
+- Each authenticated user can have multiple chatbot conversations.
+- Creating a chatbot conversation returns a new `conversation` record with `type = chatbot`.
+- The chatbot conversation is private to the creating user; no other participants are added.
+- Chatbot messages are stored persistently so the conversation history is resumable across sessions.
+
+### 25.4 AI Response Fields
+
+| Field | Type | Description |
+|---|---|---|
+| `reply` | string | Final text response from the AI assistant |
+| `intent` | string | Detected intent category (e.g. `job_search`, `career_advice`) |
+| `type` | string | Result type hint for client rendering (e.g. `jobs`, `text`) |
+| `results` | array | Optional structured data items accompanying the reply |
+| `confidence` | float | AI confidence score for the detected intent (0–1) |
+
+---
+
+## 26. Glossary
+
+| Term | Definition |
+|---|---|
+| **Person** | A user account with `account_type = person`; represents a job seeker or freelancer |
+| **Company** | A user account with `account_type = company`; represents a hiring organization |
+| **Admin** | A user whose email matches an active record in the `admins` table; grants elevated permissions |
+| **Access Token** | Short-lived Sanctum bearer token used to authenticate API requests |
+| **Refresh Token** | Long-lived token used to rotate an expired access token without re-login |
+| **Token Family** | A group of refresh tokens sharing the same `family_id`; family revocation invalidates all members |
+| **OTP** | One-time password sent by email or SMS for identity verification or password reset |
+| **Source Language** | The language (`en` or `ar`) of content submitted in a create or update request; the API auto-generates the counterpart |
+| **Translatable Field** | A database column stored as `{"en": "...", "ar": "..."}` JSON; resolved to a single string in API responses |
+| **Observer** | A Laravel model observer class that reacts to Eloquent lifecycle events (created, updated, deleted) |
+| **AI Sync** | The process of pushing a new or updated Job, User, or Course record to the external AI index |
+| **ai_job_id / ai_user_id / ai_course_id** | External AI-side identifiers stored on internal records after successful sync |
+| **Conversation Type** | Classifies a conversation as `direct`, `application`, `service`, or `chatbot` |
+| **Participant** | A user listed in `conversation_participants` for a given conversation; only participants may read or write messages |
+| **Eager Loading** | Using Eloquent `with()` to preload relationships and prevent N+1 database queries |
+| **Cached Count** | A denormalized integer column (e.g. `applications_count`) updated at write time to avoid expensive live aggregates |
+| **Soft Delete** | Marking a record as deleted by setting `deleted_at` without physically removing it from the database |
+| **Policy** | A Laravel authorization class that encapsulates permission logic for a specific model |
+| **Form Request** | A Laravel class that handles validation and authorization before a controller action executes |
+| **API Resource** | A Laravel `JsonResource` class that transforms an Eloquent model into the API response shape |
+
+---
+
+## 27. Environment Variables
+
+Below is a reference guide for configuring the server environment variables in the `.env` file for local development and production.
+
+```env
+# Application Settings
+APP_NAME=JobNest
+APP_ENV=production
+APP_KEY=base64:xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+APP_DEBUG=false
+APP_URL=https://api.jobnest.com
+APP_TIMEZONE=UTC
+APP_LOCALE=en
+APP_FALLBACK_LOCALE=en
+
+# Database Configuration
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=jobnest_db
+DB_USERNAME=root
+DB_PASSWORD=secret_password
+
+# Session & Cache Drivers
+SESSION_DRIVER=database
+QUEUE_CONNECTION=database
+CACHE_STORE=database
+
+# Sanctum & Authentication Stateful Domains
+SANCTUM_STATEFUL_DOMAINS=api.jobnest.com,jobnest.com
+
+# External AI Service Integration
+AI_BASE_URL=https://jopnest-production.up.railway.app
+AI_TIMEOUT=30
+
+# Mail Configuration
+MAIL_MAILER=smtp
+MAIL_HOST=smtp.mailtrap.io
+MAIL_PORT=2525
+MAIL_USERNAME=null
+MAIL_PASSWORD=null
+MAIL_ENCRYPTION=null
+MAIL_FROM_ADDRESS="hello@jobnest.com"
+MAIL_FROM_NAME="${APP_NAME}"
+```
+
+---
+
+## 28. Deployment Stack
+
+This section summarizes the primary technologies and infrastructure used to run the JobNest production API environment.
+
+- **Backend Framework:** Laravel 13
+- **PHP Version:** 8.3+
+- **Database:** MySQL
+- **Queue Driver:** Database (`queue_jobs`)
+- **Cache Driver:** Database (`cache` / `cache_locks`)
+- **Authentication:** Laravel Sanctum (access tokens) with custom Refresh Token Rotation
+- **File Storage:** Laravel Public Disk (symlinked via `php artisan storage:link`)
+- **External AI Service:** FastAPI service hosted on Railway (`https://jopnest-production.up.railway.app`)
+- **Web Server:** Nginx / Apache
+- **SSL / Security:** HTTPS-forced traffic with SSL termination at the gateway level
+
+---
+
+## 29. Sequence Diagrams
+
+### 29.1 Login Lifecycle
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Client as Flutter App
+    participant Route as api.php Route
+    participant Auth as AuthController
+    participant Sanctum as Laravel Sanctum
+    participant DB as MySQL DB
+
+    Client->>Route: POST /api/auth/login { email, password, device_name }
+    Route->>AuthController: Handle request
+    AuthController->>DB: Validate user credentials
+    alt Invalid credentials
+        DB-->>AuthController: Fail
+        AuthController-->>Client: HTTP 401 Unauthorized
+    else Valid credentials
+        DB-->>AuthController: Success (User Model)
+        AuthController->>Sanctum: Create Access Token (last_used_at, abilities)
+        Sanctum->>DB: Save Personal Access Token
+        DB-->>Sanctum: Token ID & Plain Token
+        AuthController->>DB: Create Refresh Token record (family_id, token_hash, expires_at)
+        DB-->>AuthController: Saved
+        AuthController-->>Client: HTTP 200 { access_token, refresh_token, user_payload }
+    end
+```
+
+### 29.2 Refresh Token Rotation
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Client as Flutter App
+    participant Auth as AuthController
+    participant DB as MySQL DB
+
+    Client->>AuthController: POST /api/auth/refresh-token { refresh_token, device_name }
+    AuthController->>DB: Lookup refresh token hash
+    alt Token not found or revoked
+        DB-->>AuthController: Fail
+        AuthController-->>Client: HTTP 401 Unauthorized
+    else Token exists but is consumed (Replay Attack Detected)
+        AuthController->>DB: Revoke all tokens in family_id (Family Revocation)
+        DB-->>AuthController: Success
+        AuthController-->>Client: HTTP 401 Unauthorized (Force re-login)
+    else Active Valid Token
+        AuthController->>DB: Mark old token as revoked/replaced
+        AuthController->>DB: Create new Refresh Token in family_id
+        AuthController->>DB: Revoke corresponding old Sanctum Access Token
+        AuthController->>DB: Create new Sanctum Access Token
+        DB-->>AuthController: Complete transaction
+        AuthController-->>Client: HTTP 200 { access_token, refresh_token }
+    end
+```
+
+### 29.3 AI Sync Flow
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Client as Flutter App
+    participant API as JobController
+    participant DB as MySQL DB
+    participant Obs as JobObserver
+    participant AI as AISyncService
+    participant Ext as External AI API
+
+    Client->>API: POST /api/jobs { title, description, skill_ids, ... }
+    API->>DB: Save job & attach skills (Transaction)
+    DB-->>API: Persisted
+    API-->>Client: HTTP 201 Created (Response returned)
+    
+    note over API, Obs: After response is sent (Terminable middleware)
+    Obs->>DB: Check if job is active and has skills attached
+    DB-->>Obs: Active Job with Skills
+    Obs->>AI: Sync Job to AI index
+    AI->>Ext: POST /api/jobs/new { job_payload }
+    alt Sync Success
+        Ext-->>AI: HTTP 200 { ai_job_id }
+        AI->>DB: Update job: ai_job_id = ai_job_id
+    else Sync Failure
+        Ext-->>AI: Error (Timeout/Connection issue)
+        AI->>DB: Log sync failure; jobs.ai_job_id remains null
+    end
+```
+
+### 29.4 Chatbot Flow
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Client as Flutter App
+    participant Chat as ChatbotController
+    participant DB as MySQL DB
+    participant AI as AIService
+    participant Ext as External AI API (chat)
+
+    Client->>Chat: POST /api/chatbot/conversations/{id}/messages { body }
+    Chat->>DB: Save user message (role: user)
+    DB-->>Chat: Saved
+    Chat->>DB: Fetch last 10 messages for context
+    DB-->>Chat: Messages Context List
+    Chat->>AI: Generate chatbot response
+    AI->>Ext: POST /api/chat { user_id, messages }
+    Ext-->>AI: HTTP 200 { reply, intent, type, results, confidence }
+    AI->>DB: Save chatbot message (role: assistant)
+    DB-->>AI: Saved
+    AI-->>Chat: Complete payload
+    Chat-->>Client: HTTP 201 { reply, intent, type, results, confidence, message_id }
+```
+
+---
+
+## 30. Directory and Folder Structure
+
+The core directories and component organization of the JobNest Laravel backend are structured as follows:
+
+```
+app/
+ ├── Http/
+ │    ├── Controllers/         # Handles routing endpoints and request delegation
+ │    ├── Middleware/          # Locale resolution, authentication, rate limits
+ │    ├── Requests/            # Custom validation rules for inputs (Form Requests)
+ │    └── Resources/           # Transforms Eloquent models to JSON API payloads
+ ├── Models/                   # ActiveRecord Eloquent classes representing database tables
+ ├── Policies/                 # Permission and security checks for user operations
+ ├── Services/                 # Shared business logic layers
+ │    ├── AI/                  # External AI API clients and payload mappers
+ │    ├── Translation/         # Machine translation fallbacks and bilingual handling
+ │    └── Notifications/       # Custom business notification dispatch logic
+ ├── Observers/                # Triggers background AI syncs on Model save/update
+ └── Notifications/            # Laravel-native notification classes (Database, Mail, SMS)
+tests/
+ ├── Feature/                  # HTTP route and endpoints integration tests
+ └── Unit/                     # Small isolated logic and service tests
+```
+
+---
+
+## 31. Testing Strategy
+
+JobNest enforces high reliability through comprehensive automated testing routines built with Pest PHP.
+
+### 31.1 Key Testing Pillars
+
+- **Feature Tests for API Endpoints:** Complete request-response cycles asserting correct JSON structures, status codes, and database changes.
+- **Policy Authorization Tests:** Validating that unauthorized users or mismatched account types receive `403 Forbidden` responses.
+- **Validation Tests:** Verifying that missing fields or incorrect data types trigger validation failures with `422 Unprocessable Entity` and standard error arrays.
+- **AI Integration Mocking:** Isolating external calls using Laravel HTTP Client mocking (`Http::fake()`) to verify correct client request structures without reaching external hosts.
+- **Queue and Notification Testing:** Asserting that notification events (such as New Job Alerts or App Updates) successfully dispatch corresponding background notifications (`Notification::assertSentTo`).
+- **Database Transaction Testing:** Running all tests within database transactions utilizing `RefreshDatabase` to ensure zero side-effects and consistent testing states.
+
+
