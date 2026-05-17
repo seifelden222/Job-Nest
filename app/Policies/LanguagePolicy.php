@@ -2,32 +2,36 @@
 
 namespace App\Policies;
 
+use App\Models\Admin;
 use App\Models\Language;
 use App\Models\User;
+use App\Policies\Concerns\HandlesAdminAccess;
 
 class LanguagePolicy
 {
-    public function viewAny(User $user): bool
+    use HandlesAdminAccess;
+
+    public function viewAny(User|Admin $user): bool
     {
         return $user->isActive();
     }
 
-    public function view(User $user, Language $language): bool
+    public function view(User|Admin $user, Language $language): bool
     {
         return $user->isActive();
     }
 
-    public function create(User $user): bool
+    public function create(User|Admin $user): bool
     {
         return $user->isActive() && $user->isAdmin();
     }
 
-    public function update(User $user, Language $language): bool
+    public function update(User|Admin $user, Language $language): bool
     {
         return $user->isActive() && $user->isAdmin();
     }
 
-    public function delete(User $user, Language $language): bool
+    public function delete(User|Admin $user, Language $language): bool
     {
         return $user->isActive() && $user->isAdmin();
     }
