@@ -13,14 +13,22 @@ class CategoryFactory extends Factory
 {
     public function definition(): array
     {
-        $name = fake()->unique()->words(2, true);
+        $category = fake()->randomElement([
+            ['en' => 'Software Development', 'ar' => 'تطوير البرمجيات', 'type' => 'job', 'icon' => 'heroicon-o-code-bracket'],
+            ['en' => 'Product Design', 'ar' => 'تصميم المنتجات', 'type' => 'job', 'icon' => 'heroicon-o-swatch'],
+            ['en' => 'Digital Marketing', 'ar' => 'التسويق الرقمي', 'type' => 'service', 'icon' => 'heroicon-o-megaphone'],
+            ['en' => 'Data & Analytics', 'ar' => 'البيانات والتحليلات', 'type' => 'course', 'icon' => 'heroicon-o-chart-bar'],
+        ]);
 
         return [
-            'name' => ['en' => Str::title($name), 'ar' => Str::title($name)],
-            'slug' => Str::slug($name),
-            'type' => fake()->randomElement(['job', 'course', 'service']),
-            'description' => ['en' => fake()->sentence(), 'ar' => fake()->sentence()],
-            'icon' => null,
+            'name' => ['en' => $category['en'], 'ar' => $category['ar']],
+            'slug' => Str::slug($category['en']),
+            'type' => $category['type'],
+            'description' => [
+                'en' => 'Curated category for '.$category['en'].' opportunities on JobNest.',
+                'ar' => 'فئة مخصصة لفرص '.$category['ar'].' على منصة JobNest.',
+            ],
+            'icon' => $category['icon'],
             'is_active' => true,
         ];
     }

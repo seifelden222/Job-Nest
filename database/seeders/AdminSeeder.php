@@ -8,23 +8,40 @@ use Illuminate\Support\Facades\Hash;
 
 class AdminSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     */
     public function run(): void
     {
-        Admin::updateOrCreate(
-            ['email' => 'admin@admin.com'],
+        collect([
             [
-                'name' => 'Super Admin',
-                'password' => Hash::make('admin'),
+                'name' => 'JobNest Super Admin',
+                'email' => 'admin@jobnest.test',
+                'phone' => '01030030001',
+                'password' => 'password',
                 'status' => 'active',
-            ]
-        );
-        /*
-        $this->command->info(
-            'Super Admin password reset for admin@admin.com to a new strong password.'
+            ],
+            [
+                'name' => 'Operations Admin',
+                'email' => 'ops@jobnest.test',
+                'phone' => '01030030002',
+                'password' => 'password',
+                'status' => 'active',
+            ],
+            [
+                'name' => 'Support Admin',
+                'email' => 'support@jobnest.test',
+                'phone' => '01030030003',
+                'password' => 'password',
+                'status' => 'active',
+            ],
+        ])->each(function (array $admin): void {
+            Admin::query()->updateOrCreate(
+                ['email' => $admin['email']],
+                [
+                    'name' => $admin['name'],
+                    'phone' => $admin['phone'],
+                    'password' => Hash::make($admin['password']),
+                    'status' => $admin['status'],
+                ]
             );
-            */
+        });
     }
 }

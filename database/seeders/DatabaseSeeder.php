@@ -14,6 +14,7 @@ class DatabaseSeeder extends Seeder
             InterestSeeder::class,
             CategorySeeder::class,
             AdminSeeder::class,
+            JobNestDemoSeeder::class,
         ]);
     }
 }

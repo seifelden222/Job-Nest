@@ -14,12 +14,8 @@ class LanguageSeeder extends Seeder
             ['en' => 'English', 'ar' => 'الإنجليزية'],
             ['en' => 'French', 'ar' => 'الفرنسية'],
             ['en' => 'German', 'ar' => 'الألمانية'],
-            ['en' => 'Spanish', 'ar' => 'الإسبانية'],
-            ['en' => 'Italian', 'ar' => 'الإيطالية'],
-            ['en' => 'Portuguese', 'ar' => 'البرتغالية'],
-            ['en' => 'Chinese', 'ar' => 'الصينية'],
-            ['en' => 'Japanese', 'ar' => 'اليابانية'],
             ['en' => 'Turkish', 'ar' => 'التركية'],
+            ['en' => 'Spanish', 'ar' => 'الإسبانية'],
         ];
 
         foreach ($languages as $language) {

@@ -12,35 +12,27 @@ use Illuminate\Support\Str;
  */
 class AdminFactory extends Factory
 {
-    /**
-     * Define the model's default state.
-     *
-     * @return array<string, mixed>
-     */
     protected static ?string $password;
 
-    /**
-     * Define the model's default state.
-     *
-     * @return array<string, mixed>
-     */
     public function definition(): array
     {
         return [
             'name' => fake()->name(),
             'email' => fake()->unique()->safeEmail(),
+            'phone' => fake()->unique()->numerify('01#########'),
             'password' => static::$password ??= Hash::make('password'),
+            'profile_photo' => null,
+            'status' => 'active',
+            'last_login_at' => fake()->boolean(70) ? now()->subDays(fake()->numberBetween(0, 14)) : null,
             'remember_token' => Str::random(10),
         ];
     }
 
-    /**
-     * Indicate that the model's email address should be unverified.
-     */
-    public function unverified(): static
+    public function inactive(): static
     {
-        return $this->state(fn (array $attributes) => [
-            'is_active' => true,
+        return $this->state(fn (): array => [
+            'status' => 'inactive',
+            'last_login_at' => now()->subMonths(fake()->numberBetween(1, 4)),
         ]);
     }
 }

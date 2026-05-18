@@ -22,9 +22,10 @@ class InterestSeeder extends Seeder
             ['en' => 'Digital Marketing', 'ar' => 'التسويق الرقمي'],
             ['en' => 'Human Resources', 'ar' => 'الموارد البشرية'],
             ['en' => 'Finance & Accounting', 'ar' => 'المالية والمحاسبة'],
-            ['en' => 'Game Development', 'ar' => 'تطوير الألعاب'],
             ['en' => 'DevOps', 'ar' => 'ديف أوبس'],
-            ['en' => 'Blockchain', 'ar' => 'البلوك تشين'],
+            ['en' => 'Career Growth', 'ar' => 'التطور المهني'],
+            ['en' => 'Entrepreneurship', 'ar' => 'ريادة الأعمال'],
+            ['en' => 'Customer Experience', 'ar' => 'تجربة العملاء'],
         ];
 
         foreach ($interests as $interest) {
