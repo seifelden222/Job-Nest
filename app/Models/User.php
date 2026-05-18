@@ -121,6 +121,11 @@ class User extends Authenticatable implements MustVerifyEmailContract
         return $this->hasMany(SavedItem::class);
     }
 
+    public function portfolioItems(): HasMany
+    {
+        return $this->hasMany(PortfolioItem::class);
+    }
+
     public function skills(): BelongsToMany
     {
         return $this->belongsToMany(Skill::class, 'user_skills')->withTimestamps();

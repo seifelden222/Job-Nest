@@ -17,6 +17,7 @@ use App\Http\Controllers\Api\Jobs\JobController;
 use App\Http\Controllers\Api\LanguageController;
 use App\Http\Controllers\Api\Messages\MessageController;
 use App\Http\Controllers\Api\Notifications\NotificationController;
+use App\Http\Controllers\Api\Portfolio\PortfolioItemController;
 use App\Http\Controllers\Api\ProfileController;
 use App\Http\Controllers\Api\SavedItems\SavedItemController;
 use App\Http\Controllers\Api\Services\ServiceConversationController;
@@ -39,6 +40,9 @@ Route::get('courses/{course}', [CourseController::class, 'show'])->name('courses
 Route::get('courses/{course}/reviews', [CourseReviewController::class, 'index'])->name('courses.reviews.index');
 Route::get('service-requests', [ServiceRequestController::class, 'index'])->name('service-requests.index');
 Route::get('service-requests/{serviceRequest}', [ServiceRequestController::class, 'show'])->name('service-requests.show');
+
+Route::get('portfolio', [PortfolioItemController::class, 'index'])->name('portfolio.index');
+Route::get('portfolio/{portfolio}', [PortfolioItemController::class, 'show'])->name('portfolio.show');
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('jobs', [JobController::class, 'store'])->name('jobs.store');
@@ -146,9 +150,15 @@ Route::prefix('auth')->name('auth.')->group(function () {
         });
 
         Route::get('profile', [ProfileController::class, 'show'])->name('profile.show');
-        Route::put('profile', [ProfileController::class, 'update'])->name('profile.update');
+        Route::post('profile', [ProfileController::class, 'update'])->name('profile.update');
+        Route::put('profile', [ProfileController::class, 'update']);
         Route::get('my-courses', [CourseController::class, 'myCourses'])->name('courses.my');
         Route::get('my-service-requests', [ServiceRequestController::class, 'myRequests'])->name('service-requests.my');
+        Route::get('my-applications', [ApplicationController::class, 'myApplications'])->name('my-applications');
+        Route::get('my-portfolio', [PortfolioItemController::class, 'myPortfolio'])->name('portfolio.my');
+        Route::post('portfolio', [PortfolioItemController::class, 'store'])->name('portfolio.store');
+        Route::put('portfolio/{portfolio}', [PortfolioItemController::class, 'update'])->name('portfolio.update');
+        Route::delete('portfolio/{portfolio}', [PortfolioItemController::class, 'destroy'])->name('portfolio.destroy');
         Route::get('saved-items', [SavedItemController::class, 'index'])->name('saved-items.index');
         Route::post('saved-items', [SavedItemController::class, 'store'])->name('saved-items.store');
         Route::delete('saved-items/{type}/{targetId}', [SavedItemController::class, 'destroy'])->name('saved-items.destroy');

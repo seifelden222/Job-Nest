@@ -184,4 +184,24 @@ class ApplicationController extends Controller
             'message' => 'Application withdrawn successfully.',
         ]);
     }
+
+    public function myApplications(Request $request): JsonResponse
+    {
+        $user = $request->user();
+
+        $applications = Application::query()
+            ->where('user_id', $user->id)
+            ->with([
+                'job:id,title,status,is_active,location,employment_type,company_id,category_id',
+                'job.category:id,name',
+                'cvDocument:id,title,file_name,file_path,mime_type,file_size,is_primary',
+            ])
+            ->latest()
+            ->paginate((int) $request->query('per_page', 15));
+
+        return response()->json([
+            'message' => 'My applications fetched successfully.',
+            'data' => $applications,
+        ]);
+    }
 }
