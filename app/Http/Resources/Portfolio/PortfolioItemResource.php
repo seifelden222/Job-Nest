@@ -5,6 +5,7 @@ namespace App\Http\Resources\Portfolio;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class PortfolioItemResource extends JsonResource
 {
@@ -17,7 +18,11 @@ class PortfolioItemResource extends JsonResource
             'description' => $this->description,
             'project_url' => $this->project_url,
             'github_url' => $this->github_url,
-            'thumbnail_url' => $this->thumbnail ? Storage::url($this->thumbnail) : null,
+            'thumbnail_url' => $this->thumbnail
+                ? (Str::startsWith(Storage::url($this->thumbnail), ['http://', 'https://'])
+                    ? Storage::url($this->thumbnail)
+                    : url(Storage::url($this->thumbnail)))
+                : null,
             'technologies' => $this->technologies ?? [],
             'role' => $this->role,
             'start_date' => $this->start_date?->toDateString(),

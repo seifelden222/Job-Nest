@@ -4,6 +4,8 @@ namespace App\Http\Resources\Auth;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class CompanyProfileResource extends JsonResource
 {
@@ -22,7 +24,11 @@ class CompanyProfileResource extends JsonResource
             'industry' => $this->industry,
             'location' => $this->location,
             'about' => $this->about,
-            'logo' => $this->logo,
+            'logo' => $this->logo
+                ? (Str::startsWith(Storage::url($this->logo), ['http://', 'https://'])
+                    ? Storage::url($this->logo)
+                    : url(Storage::url($this->logo)))
+                : null,
             'onboarding_step' => $this->onboarding_step,
             'is_profile_completed' => $this->is_profile_completed,
         ];
