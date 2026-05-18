@@ -5,6 +5,7 @@ namespace App\Http\Resources\Auth;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class UserResource extends JsonResource
 {
@@ -19,7 +20,9 @@ class UserResource extends JsonResource
             'phone' => $this->phone,
             'account_type' => $this->account_type,
             'profile_photo' => $this->profile_photo
-                ? Storage::url($this->profile_photo)
+                ? (Str::startsWith(Storage::url($this->profile_photo), ['http://', 'https://'])
+                    ? Storage::url($this->profile_photo)
+                    : url(Storage::url($this->profile_photo)))
                 : null,
             'status' => $this->status,
             'person_profile' => $this->when(

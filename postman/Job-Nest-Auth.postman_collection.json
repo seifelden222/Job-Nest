@@ -115,6 +115,11 @@
             "key": "service_proposal_id",
             "value": "",
             "type": "string"
+        },
+        {
+            "key": "profile_photo_path",
+            "value": "",
+            "type": "string"
         }
     ],
     "item": [
@@ -738,16 +743,63 @@
                             {
                                 "key": "Authorization",
                                 "value": "Bearer {{access_token}}"
-                            },
-                            {
-                                "key": "Content-Type",
-                                "value": "application/json"
                             }
                         ],
                         "url": "{{base_url}}/api/auth/profile",
                         "body": {
-                            "mode": "raw",
-                            "raw": "{\n  \"name\": \"Ali Hassan Updated\",\n  \"phone\": \"01011112222\",\n  \"university\": \"Alexandria University\",\n  \"major\": \"Software Engineering\",\n  \"current_job_title\": \"API Developer\",\n  \"linkedin_url\": \"https://linkedin.com/in/ali-updated\",\n  \"preferred_work_location\": \"remote\",\n  \"expected_salary_min\": 5000,\n  \"expected_salary_max\": 9000\n}"
+                            "mode": "formdata",
+                            "formdata": [
+                                {
+                                    "key": "profile_photo",
+                                    "type": "file",
+                                    "src": "{{profile_photo_path}}"
+                                },
+                                {
+                                    "key": "name",
+                                    "value": "Ali Hassan Updated",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "phone",
+                                    "value": "01011112222",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "university",
+                                    "value": "Alexandria University",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "major",
+                                    "value": "Software Engineering",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "current_job_title",
+                                    "value": "API Developer",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "linkedin_url",
+                                    "value": "https://linkedin.com/in/ali-updated",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "preferred_work_location",
+                                    "value": "remote",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "expected_salary_min",
+                                    "value": "5000",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "expected_salary_max",
+                                    "value": "9000",
+                                    "type": "text"
+                                }
+                            ]
                         }
                     },
                     "response": []

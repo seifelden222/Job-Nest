@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\UpdateProfileRequest;
+use App\Http\Resources\Auth\UserResource;
 use Illuminate\Http\Request;
 
 class ProfileController extends Controller
@@ -22,7 +23,7 @@ class ProfileController extends Controller
 
         return response()->json([
             'message' => 'Profile fetched successfully.',
-            'data' => $user,
+            'data' => (new UserResource($user))->toArray($request),
         ], 200);
     }
 
@@ -61,6 +62,12 @@ class ProfileController extends Controller
             }
         }
 
+        // handle profile photo upload if present
+        if ($request->hasFile('profile_photo')) {
+            $path = $request->file('profile_photo')->store('profile-photos', 'public');
+            $user->update(['profile_photo' => $path]);
+        }
+
         // reload relations
         if ($user->isPerson()) {
             $user->load(['personProfile', 'skills', 'languages', 'interests', 'documents']);
@@ -70,7 +77,7 @@ class ProfileController extends Controller
 
         return response()->json([
             'message' => 'Profile updated successfully.',
-            'data' => $user,
+            'data' => (new UserResource($user))->toArray($request),
         ], 200);
     }
 }

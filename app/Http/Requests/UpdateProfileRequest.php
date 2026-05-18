@@ -17,6 +17,7 @@ class UpdateProfileRequest extends FormRequest
         $common = [
             'name' => ['sometimes', 'string', 'max:255'],
             'phone' => ['sometimes', 'nullable', 'string', 'max:30'],
+            'profile_photo' => ['sometimes', 'nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
         ];
 
         $person = [
