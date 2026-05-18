@@ -1,4 +1,4 @@
-FROM php:8.3-cli
+FROM php:8.4-cli
 
 RUN apt-get update && apt-get install -y \
     git \
@@ -8,7 +8,8 @@ RUN apt-get update && apt-get install -y \
     libzip-dev \
     libonig-dev \
     libxml2-dev \
-    && docker-php-ext-install pdo pdo_mysql pdo_pgsql mbstring zip exif pcntl \
+    libicu-dev \
+    && docker-php-ext-install pdo pdo_mysql pdo_pgsql mbstring zip exif pcntl intl \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
@@ -32,5 +33,4 @@ CMD php artisan config:clear && \
     php artisan view:clear && \
     php artisan storage:link || true && \
     php artisan migrate --force || true && \
-    php artisan db:seed --force || true && \
     php artisan serve --host=0.0.0.0 --port=${PORT:-10000}
