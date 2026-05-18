@@ -7,6 +7,7 @@ use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Http\Client\RequestException;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use Throwable;
 
 class ExternalAiClient
@@ -184,9 +185,30 @@ class ExternalAiClient
     private function get(string $path, array $query, string $failureMessage): array
     {
         try {
+            $baseUrl = (string) config('ai.base_url', '');
+            $fullUrl = rtrim($baseUrl, '/') . '/' . ltrim($path, '/');
+            $method = 'GET';
+            $payload = $query;
+            $headers = [
+                'Accept' => 'application/json',
+                'Content-Type' => 'application/json',
+            ];
+
+            Log::info('ExternalAiClient outgoing request', [
+                'url' => $fullUrl,
+                'method' => $method,
+                'payload' => $payload,
+                'headers' => $headers,
+            ]);
+
             $response = $this->request()
                 ->get($path, $query)
                 ->throw();
+
+            Log::info('ExternalAiClient response', [
+                'status' => $response->status(),
+                'body' => $response->body(),
+            ]);
         } catch (ExternalAiException $exception) {
             throw $exception;
         } catch (ConnectionException $exception) {
@@ -218,9 +240,30 @@ class ExternalAiClient
     private function post(string $path, array $payload, string $failureMessage): array
     {
         try {
+            $baseUrl = (string) config('ai.base_url', '');
+            $fullUrl = rtrim($baseUrl, '/') . '/' . ltrim($path, '/');
+            $method = 'POST';
+            $body = $payload;
+            $headers = [
+                'Accept' => 'application/json',
+                'Content-Type' => 'application/json',
+            ];
+
+            Log::info('ExternalAiClient outgoing request', [
+                'url' => $fullUrl,
+                'method' => $method,
+                'payload' => $body,
+                'headers' => $headers,
+            ]);
+
             $response = $this->request()
                 ->post($path, $payload)
                 ->throw();
+
+            Log::info('ExternalAiClient response', [
+                'status' => $response->status(),
+                'body' => $response->body(),
+            ]);
         } catch (ExternalAiException $exception) {
             throw $exception;
         } catch (ConnectionException $exception) {
