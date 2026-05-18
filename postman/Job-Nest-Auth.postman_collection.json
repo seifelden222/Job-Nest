@@ -3181,6 +3181,40 @@
             ]
         },
         {
+            "name": "Saved Items",
+            "item": [
+                {
+                    "name": "List Saved Items",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            { "key": "Accept", "value": "application/json" },
+                            { "key": "Authorization", "value": "Bearer {{access_token}}" }
+                        ],
+                        "url": "{{base_url}}/api/auth/saved-items"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Save Item",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            { "key": "Accept", "value": "application/json" },
+                            { "key": "Authorization", "value": "Bearer {{access_token}}" },
+                            { "key": "Content-Type", "value": "application/json" }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"type\": \"job\",\n  \"target_id\": 123\n}"
+                        },
+                        "url": "{{base_url}}/api/auth/saved-items"
+                    },
+                    "response": []
+                }
+            ]
+        },
+        {
             "name": "Portfolio",
             "item": [
                 {
