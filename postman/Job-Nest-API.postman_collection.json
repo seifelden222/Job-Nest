@@ -1973,6 +1973,18 @@
                         "url": "{{base_url}}/api/applications/{{application_id}}"
                     },
                     "response": []
+                },
+                {
+                    "name": "My Applications",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            { "key": "Accept", "value": "application/json" },
+                            { "key": "Authorization", "value": "Bearer {{access_token}}" }
+                        ],
+                        "url": "{{base_url}}/api/auth/my-applications"
+                    },
+                    "response": []
                 }
             ]
         },
@@ -3594,6 +3606,56 @@
                             }
                         ],
                         "url": "{{base_url}}/api/auth/saved-items/check?type={{saved_type}}&target_id={{saved_target_id}}"
+                    },
+                    "response": []
+                }
+            ]
+        },
+        {
+            "name": "Portfolio",
+            "item": [
+                {
+                    "name": "List My Portfolio",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            { "key": "Accept", "value": "application/json" },
+                            { "key": "Authorization", "value": "Bearer {{access_token}}" }
+                        ],
+                        "url": "{{base_url}}/api/auth/portfolio"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Create Portfolio Item",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            { "key": "Accept", "value": "application/json" },
+                            { "key": "Authorization", "value": "Bearer {{access_token}}" },
+                            { "key": "Content-Type", "value": "multipart/form-data" }
+                        ],
+                        "url": "{{base_url}}/api/auth/portfolio",
+                        "body": {
+                            "mode": "formdata",
+                            "formdata": [
+                                { "key": "title", "value": "My Project", "type": "text" },
+                                { "key": "description", "value": "Project description", "type": "text" },
+                                { "key": "project_url", "value": "https://example.com", "type": "text" },
+                                { "key": "github_url", "value": "https://github.com/example", "type": "text" },
+                                { "key": "technologies[]", "value": "Laravel", "type": "text" },
+                                { "key": "thumbnail", "type": "file", "src": "" }
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Get Public Portfolio",
+                    "request": {
+                        "method": "GET",
+                        "header": [ { "key": "Accept", "value": "application/json" } ],
+                        "url": "{{base_url}}/api/users/{{user_id}}/portfolio"
                     },
                     "response": []
                 }

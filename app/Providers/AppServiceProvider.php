@@ -18,6 +18,7 @@ use App\Models\ServiceRequest;
 use App\Models\Skill;
 use App\Models\User;
 use App\Models\UserSkill;
+use App\Models\PortfolioItem;
 use App\Observers\CourseObserver;
 use App\Observers\JobObserver;
 use App\Observers\PersonProfileObserver;
@@ -35,6 +36,7 @@ use App\Policies\LanguagePolicy;
 use App\Policies\ServiceProposalPolicy;
 use App\Policies\ServiceRequestPolicy;
 use App\Policies\SkillPolicy;
+use App\Policies\PortfolioItemPolicy;
 use App\Services\Translation\FallbackMachineTranslator;
 use App\Services\Translation\LibreTranslateMachineTranslator;
 use Illuminate\Cache\RateLimiting\Limit;
@@ -79,6 +81,7 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(ServiceProposal::class, ServiceProposalPolicy::class);
         Gate::policy(Category::class, CategoryPolicy::class);
         Gate::policy(Skill::class, SkillPolicy::class);
+        Gate::policy(PortfolioItem::class, PortfolioItemPolicy::class);
         Gate::policy(Language::class, LanguagePolicy::class);
         Gate::policy(Interest::class, InterestPolicy::class);
 

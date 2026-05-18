@@ -27,6 +27,7 @@ use App\Http\Controllers\Api\UserDocumentController;
 use App\Http\Controllers\Api\UserInterestController;
 use App\Http\Controllers\Api\UserLanguageController;
 use App\Http\Controllers\Api\UserSkillsController;
+use App\Http\Controllers\Api\Portfolio\PortfolioController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('categories', [CategoryController::class, 'index'])->name('categories.index');
@@ -34,6 +35,7 @@ Route::get('categories/{category}', [CategoryController::class, 'show'])->name('
 
 Route::get('jobs', [JobController::class, 'index'])->name('jobs.index');
 Route::get('jobs/{job}', [JobController::class, 'show'])->name('jobs.show');
+Route::get('users/{user}/portfolio', [PortfolioController::class, 'publicIndex'])->name('users.portfolio.index');
 Route::get('courses', [CourseController::class, 'index'])->name('courses.index');
 Route::get('courses/{course}', [CourseController::class, 'show'])->name('courses.show');
 Route::get('courses/{course}/reviews', [CourseReviewController::class, 'index'])->name('courses.reviews.index');
@@ -148,11 +150,14 @@ Route::prefix('auth')->name('auth.')->group(function () {
         Route::get('profile', [ProfileController::class, 'show'])->name('profile.show');
         Route::put('profile', [ProfileController::class, 'update'])->name('profile.update');
         Route::get('my-courses', [CourseController::class, 'myCourses'])->name('courses.my');
+        Route::get('my-applications', [ApplicationController::class, 'myApplications'])->name('applications.my');
         Route::get('my-service-requests', [ServiceRequestController::class, 'myRequests'])->name('service-requests.my');
         Route::get('saved-items', [SavedItemController::class, 'index'])->name('saved-items.index');
         Route::post('saved-items', [SavedItemController::class, 'store'])->name('saved-items.store');
         Route::delete('saved-items/{type}/{targetId}', [SavedItemController::class, 'destroy'])->name('saved-items.destroy');
         Route::get('saved-items/check', [SavedItemController::class, 'check'])->name('saved-items.check');
+
+        Route::apiResource('portfolio', PortfolioController::class);
 
         Route::post('logout', [AuthController::class, 'logout'])->name('logout');
         Route::post('logout-all', [AuthController::class, 'logoutAll'])->name('logout-all');

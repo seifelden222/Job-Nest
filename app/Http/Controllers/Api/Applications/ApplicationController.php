@@ -103,6 +103,22 @@ class ApplicationController extends Controller
         ]);
     }
 
+    public function myApplications(Request $request): JsonResponse
+    {
+        $user = $request->user();
+
+        $applications = Application::query()
+            ->with(['job:id,title,company_id', 'job.company:id,name', 'cvDocument'])
+            ->where('user_id', $user->id)
+            ->latest()
+            ->paginate((int) $request->query('per_page', 15));
+
+        return response()->json([
+            'message' => 'My applications fetched successfully.',
+            'data' => $applications,
+        ]);
+    }
+
     public function update(UpdateApplicationRequest $request, Application $application): JsonResponse
     {
         $this->authorize('update', $application);
