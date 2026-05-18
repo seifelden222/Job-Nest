@@ -1144,6 +1144,7 @@ Access legend:
   - `[Auth+OwnerOrApplicant] GET /api/applications/{application_id}`
   - `[Auth+Owner] PUT /api/applications/{application_id}`
   - `[Auth+Person+Owner] DELETE /api/applications/{application_id}`
+  - `[Auth] GET /api/auth/my-applications` — returns the authenticated user's applications (paginated), includes related `job`, `company`, and `cv_document`.
 
 ### 6.6 Conversations and Messages
 
@@ -1227,6 +1228,18 @@ Access legend:
   - `[Auth] PATCH /api/auth/notifications/{notification_id}`
   - `[Auth] PATCH /api/auth/notifications/mark-all-read`
   - `[Auth] DELETE /api/auth/notifications/{notification_id}`
+
+### 6.12 Portfolio
+
+- Public:
+  - `[Public] GET /api/users/{user_id}/portfolio` — list public portfolio items (paginated).
+  - `[Public] GET /api/users/{user_id}/portfolio/{portfolio_item_id}` — show a public portfolio item.
+- Authenticated (owner):
+  - `[Auth] GET /api/auth/portfolio` — list authenticated user's portfolio items (paginated).
+  - `[Auth] POST /api/auth/portfolio` — create portfolio item (form-data: `title`, `description`, `project_url`, `github_url`, `technologies[]`, `thumbnail`).
+  - `[Auth] GET /api/auth/portfolio/{portfolio_item_id}` — show own portfolio item.
+  - `[Auth] PUT /api/auth/portfolio/{portfolio_item_id}` — update own portfolio item.
+  - `[Auth] DELETE /api/auth/portfolio/{portfolio_item_id}` — delete own portfolio item.
 
 ## 7. Request/Response Examples
 
