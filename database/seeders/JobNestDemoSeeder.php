@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use function fake;
 use App\Enums\SavedItemType;
 use App\Models\Application;
 use App\Models\Category;
