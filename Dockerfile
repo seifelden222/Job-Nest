@@ -27,7 +27,7 @@ RUN composer install --no-dev --optimize-autoloader --no-interaction --prefer-di
 
 RUN npm ci && npm run build
 
-RUN php artisan filament:assets || true
+RUN php artisan filament:assets
 
 RUN mkdir -p storage/framework/cache storage/framework/sessions storage/framework/views storage/logs bootstrap/cache \
     && chmod -R 775 storage bootstrap/cache
@@ -39,6 +39,6 @@ CMD php artisan config:clear && \
     php artisan route:clear && \
     php artisan view:clear && \
     php artisan storage:link || true && \
-    php artisan migrate --force || true && \
-    php artisan db:seed --force || true && \
+    php artisan migrate --force && \
+    php artisan db:seed --force && \
     php artisan serve --host=0.0.0.0 --port=${PORT:-10000}
