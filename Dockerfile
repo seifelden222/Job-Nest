@@ -27,18 +27,17 @@ RUN composer install --no-dev --optimize-autoloader --no-interaction --prefer-di
 
 RUN npm ci && npm run build
 
-RUN php artisan filament:assets
+RUN php artisan filament:assets || true
 
 RUN mkdir -p storage/framework/cache storage/framework/sessions storage/framework/views storage/logs bootstrap/cache \
     && chmod -R 775 storage bootstrap/cache
 
 EXPOSE 10000
 
-CMD php artisan config:clear && \
-    php artisan cache:clear && \
-    php artisan route:clear && \
-    php artisan view:clear && \
-    php artisan storage:link || true && \
-    php artisan migrate --force && \
-    php artisan db:seed --force && \
+CMD php artisan config:clear ; \
+    php artisan cache:clear ; \
+    php artisan route:clear ; \
+    php artisan view:clear ; \
+    php artisan storage:link || true ; \
+    php artisan migrate --force || true ; \
     php artisan serve --host=0.0.0.0 --port=${PORT:-10000}
