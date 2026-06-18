@@ -12,6 +12,7 @@
         "laravel/sanctum": "^4.0",
         "laravel/tinker": "^3.0",
         "mcamara/laravel-localization": "^2.4",
+        "phpoffice/phpspreadsheet": "^5.8",
         "twilio/sdk": "^8.11"
     },
     "require-dev": {

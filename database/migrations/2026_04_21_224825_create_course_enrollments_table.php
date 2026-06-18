@@ -14,7 +14,7 @@ return new class extends Migration
             $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
             $table->enum('status', ['pending', 'enrolled', 'completed', 'cancelled'])->default('pending');
             $table->enum('payment_status', ['unpaid', 'paid', 'failed', 'refunded'])->default('unpaid');
-            $table->enum('payment_method', ['card', 'cash', 'free'])->nullable();
+            $table->string('payment_method')->nullable();
             $table->decimal('amount_paid', 10, 2)->default(0);
             $table->timestamp('enrolled_at')->nullable();
             $table->timestamp('completed_at')->nullable();
